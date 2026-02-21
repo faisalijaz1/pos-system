@@ -31,10 +31,10 @@ public class SecurityConfig {
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
+                    .requestMatchers("/v1/auth/login", "/v1/auth/refresh").permitAll()
                     .requestMatchers("/actuator/**").permitAll()
                     .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                    .requestMatchers("/api/v1/**").authenticated()
+                    .requestMatchers("/v1/**").authenticated()
                     .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
