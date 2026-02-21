@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/v1/purchases")
+@RequestMapping("/v1/purchases")
 @RequiredArgsConstructor
 public class PurchaseOrderController {
 
