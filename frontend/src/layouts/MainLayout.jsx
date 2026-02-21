@@ -208,7 +208,7 @@ export default function MainLayout({ themeMode, onThemeToggle }) {
             borderColor: 'divider',
           }}
         >
-          <Box sx={{ width: WIDTH_FULL, height: '100%', overflow: 'auto', pt: '64px' }}>
+          <Box sx={{ minWidth: WIDTH_FULL, width: WIDTH_FULL, height: '100%', overflow: 'auto', pt: '64px', boxSizing: 'border-box' }}>
             <Sidebar
               menuItems={filteredMenu}
               user={user}

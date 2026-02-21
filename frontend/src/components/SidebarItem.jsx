@@ -21,6 +21,10 @@ const SidebarItem = forwardRef(function SidebarItem(
         position: 'relative',
         overflow: 'hidden',
         transition: 'background-color 0.2s ease, color 0.2s ease',
+        ...(!showLabel && {
+          justifyContent: 'center',
+          minHeight: 44,
+        }),
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -46,20 +50,23 @@ const SidebarItem = forwardRef(function SidebarItem(
     >
       <ListItemIcon
         sx={{
-          minWidth: 40,
+          minWidth: showLabel ? 40 : 36,
           color: 'inherit',
           justifyContent: 'center',
+          ...(!showLabel && { marginRight: 0 }),
         }}
       >
         {icon}
       </ListItemIcon>
       {showLabel && (
         <ListItemText
-          primary={
-            <Typography variant="body2" fontWeight={500}>
-              {label}
-            </Typography>
-          }
+          primary={label}
+          primaryTypographyProps={{
+            variant: 'body2',
+            fontWeight: 500,
+            noWrap: false,
+          }}
+          sx={{ '& .MuiListItemText-primary': { overflow: 'visible', whiteSpace: 'nowrap' } }}
         />
       )}
     </ListItemButton>
