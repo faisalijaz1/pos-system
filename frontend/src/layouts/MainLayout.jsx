@@ -42,13 +42,7 @@ export default function MainLayout({ themeMode, onThemeToggle }) {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { user, logout, hasRole } = useAuth();
   const navigate = useNavigate();
-  const {
-    expanded,
-    isSlim,
-    hoverExpanded,
-    setHoverExpanded,
-    toggle,
-  } = useSidebarState();
+  const { expanded, isSlim, hoverExpanded, setHoverExpanded, toggle } = useSidebarState();
 
   const filteredMenu = menuItems.filter((item) => hasRole(...item.roles));
 
@@ -154,7 +148,7 @@ export default function MainLayout({ themeMode, onThemeToggle }) {
         </Box>
       </Drawer>
 
-      {/* Desktop: permanent sidebar */}
+      {/* Desktop: permanent sidebar (click chevron to expand/collapse; no hover overlay) */}
       <Box
         component="nav"
         sx={{
@@ -163,8 +157,6 @@ export default function MainLayout({ themeMode, onThemeToggle }) {
           transition: theme.transitions.create('width', { duration: TRANSITION_MS }),
           display: { xs: 'none', md: 'block' },
         }}
-        onMouseEnter={() => isSlim && setHoverExpanded(true)}
-        onMouseLeave={() => setHoverExpanded(false)}
       >
         <Drawer
           variant="permanent"
@@ -187,41 +179,6 @@ export default function MainLayout({ themeMode, onThemeToggle }) {
           {sidebarContent({})}
         </Drawer>
       </Box>
-
-      {/* Desktop: hover overlay when slim (behind AppBar zIndex; content padded so it starts below header) */}
-      {!isMobile && isSlim && (
-        <Box
-          onMouseLeave={() => setHoverExpanded(false)}
-          sx={{
-            position: 'fixed',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: hoverExpanded ? WIDTH_FULL : 0,
-            overflow: 'hidden',
-            zIndex: 1100,
-            transition: theme.transitions.create('width', { duration: TRANSITION_MS }),
-            pointerEvents: hoverExpanded ? 'auto' : 'none',
-            boxShadow: hoverExpanded ? theme.shadows[8] : 'none',
-            bgcolor: 'background.paper',
-            borderRight: 1,
-            borderColor: 'divider',
-          }}
-        >
-          <Box sx={{ minWidth: WIDTH_FULL, width: WIDTH_FULL, height: '100%', overflow: 'auto', pt: '64px', boxSizing: 'border-box' }}>
-            <Sidebar
-              menuItems={filteredMenu}
-              user={user}
-              expanded={expanded}
-              isSlim={isSlim}
-              hoverExpanded={hoverExpanded}
-              setHoverExpanded={setHoverExpanded}
-              toggle={toggle}
-              showAsOverlay={true}
-            />
-          </Box>
-        </Box>
-      )}
 
       {/* Main content */}
       <Box
