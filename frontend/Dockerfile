@@ -4,7 +4,7 @@ WORKDIR /app
 
 # VITE_API_URL: set at build time (e.g. Railway backend public URL). Default /api for same-origin.
 # Set API base URL at build time
-ARG VITE_API_URL=https://pos-system-production-5210.up.railway.app
+ARG VITE_API_URL=https://pos-system-production-0854.up.railway.app
 ENV VITE_API_URL=$VITE_API_URL
 
 COPY package.json package-lock.json* ./
