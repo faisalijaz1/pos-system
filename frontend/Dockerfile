@@ -10,16 +10,9 @@ RUN npm run build
 
 # Production stage
 FROM nginx:alpine
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl gettext   # <-- add gettext
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.railway.conf /etc/nginx/conf.d/default.conf
+COPY nginx.railway.conf /etc/nginx/conf.d/default.conf.template
 
-# Debug: show files
-RUN echo "=== Contents of /usr/share/nginx/html ===" && ls -la /usr/share/nginx/html/
-RUN echo "=== nginx config ===" && cat /etc/nginx/conf.d/default.conf
-
-# Use PORT env var (Railway sets this to 8080 typically)
-EXPOSE ${PORT:-8080}
-
-# No health check for now
-CMD ["nginx", "-g", "daemon off;"]
+# Substitute PORT at runtime
+CMD envsubst '${PORT}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'
