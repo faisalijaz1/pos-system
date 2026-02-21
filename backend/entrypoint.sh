@@ -1,25 +1,31 @@
 #!/bin/sh
-# entrypoint.sh — Convert Railway DATABASE_PUBLIC_URL to JDBC URL for Spring Boot
+# Convert internal DATABASE_URL to JDBC for Spring Boot
 
-# Only run if DATABASE_PUBLIC_URL is defined
-if [ -n "$DATABASE_PUBLIC_URL" ]; then
-  # Replace 'postgres://' with 'postgresql://' if needed
-  case "$DATABASE_PUBLIC_URL" in
-    postgres://*) 
-      DATABASE_PUBLIC_URL="postgresql://${DATABASE_PUBLIC_URL#postgres://}"
-      ;;
-  esac
+if [ -n "$DATABASE_URL" ]; then
+  # DATABASE_URL example: postgresql://user:pass@host:port/db
+  # Strip 'postgresql://'
+  url_no_proto="${DATABASE_URL#postgresql://}"
 
-  # Prepend 'jdbc:' for Spring Boot JDBC
-  export SPRING_DATASOURCE_URL="jdbc:${DATABASE_PUBLIC_URL}"
+  # Extract user:pass and host:port/db
+  userpass="${url_no_proto%@*}"
+  hostdb="${url_no_proto#*@}"
 
-  # Optional: split user/password (Spring Boot can auto-detect from JDBC, but explicit is safer)
-  # Extract username and password from URL
-  DB_USER=$(echo "$DATABASE_PUBLIC_URL" | sed -n 's#postgresql://\([^:]*\):.*@.*#\1#p')
-  DB_PASSWORD=$(echo "$DATABASE_PUBLIC_URL" | sed -n 's#postgresql://[^:]*:\([^@]*\)@.*#\1#p')
-  export SPRING_DATASOURCE_USERNAME=$DB_USER
-  export SPRING_DATASOURCE_PASSWORD=$DB_PASSWORD
+  DB_USER="${userpass%%:*}"
+  DB_PASSWORD="${userpass#*:}"
+
+  DB_HOST="${hostdb%%/*}"
+  DB_NAME="${hostdb#*/}"
+
+  DB_PORT=5432  # default
+  if echo "$DB_HOST" | grep -q ":"; then
+    DB_PORT="${DB_HOST#*:}"
+    DB_HOST="${DB_HOST%%:*}"
+  fi
+
+  # Set Spring Boot variables
+  export SPRING_DATASOURCE_URL="jdbc:postgresql://$DB_HOST:$DB_PORT/$DB_NAME"
+  export SPRING_DATASOURCE_USERNAME="$DB_USER"
+  export SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD"
 fi
 
-# Start Spring Boot application
 exec java -jar app.jar
