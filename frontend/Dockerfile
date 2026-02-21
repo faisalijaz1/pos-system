@@ -19,7 +19,7 @@ RUN echo "=== Contents of /usr/share/nginx/html ===" && ls -la /usr/share/nginx/
 RUN echo "=== nginx config ===" && cat /etc/nginx/conf.d/default.conf
 
 # Use PORT env var (Railway sets this to 8080 typically)
-EXPOSE ${PORT:-8086}
+EXPOSE ${PORT:-8080}
 
 # No health check for now
 CMD ["nginx", "-g", "daemon off;"]
