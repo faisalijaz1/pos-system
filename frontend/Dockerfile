@@ -15,4 +15,4 @@ COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.railway.conf /etc/nginx/conf.d/default.conf.template
 
 # Substitute PORT at runtime
-CMD envsubst '${PORT}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'
+CMD envsubst 8080 < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'
