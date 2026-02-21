@@ -1,0 +1,4 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "description": "POS monorepo: add two services (Root Directory: frontend | backend) and PostgreSQL. See DEPLOYMENT.md."
+}

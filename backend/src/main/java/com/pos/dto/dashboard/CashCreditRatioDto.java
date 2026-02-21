@@ -1,0 +1,20 @@
+package com.pos.dto.dashboard;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class CashCreditRatioDto {
+
+    private BigDecimal cashSalesTotal;
+    private BigDecimal creditSalesTotal;
+    private BigDecimal cashRatio;   // 0-1
+    private BigDecimal creditRatio; // 0-1
+}
