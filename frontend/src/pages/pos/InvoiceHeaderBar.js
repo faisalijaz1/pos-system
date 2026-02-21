@@ -47,7 +47,14 @@ export default function InvoiceHeaderBar({
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Typography variant="body2" fontWeight={700} color="primary" sx={{ flexShrink: 0 }}>
+        <Typography
+          variant="body2"
+          fontWeight={700}
+          sx={{
+            flexShrink: 0,
+            color: theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.main,
+          }}
+        >
           Invoice #
         </Typography>
         <Typography
@@ -59,8 +66,8 @@ export default function InvoiceHeaderBar({
             px: 1.25,
             py: 0.5,
             borderRadius: 0.75,
-            bgcolor: alpha(theme.palette.primary.main, 0.12),
-            color: theme.palette.primary.dark,
+            bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.24 : 0.12),
+            color: theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.dark,
             minWidth: 140,
             display: 'inline-block',
           }}
@@ -74,7 +81,12 @@ export default function InvoiceHeaderBar({
         value={invoiceDate}
         onChange={(e) => onDateChange(e.target.value)}
         InputLabelProps={{ shrink: true }}
-        sx={DATE_INPUT_SX}
+        sx={[
+          DATE_INPUT_SX,
+          theme.palette.mode === 'dark' && {
+            '& input[type="date"]::-webkit-calendar-picker-indicator': { filter: 'invert(1)', opacity: 0.8 },
+          },
+        ]}
         inputProps={{ 'aria-label': 'Invoice date' }}
       />
       <TextField
@@ -83,7 +95,12 @@ export default function InvoiceHeaderBar({
         value={invoiceTime}
         onChange={(e) => onTimeChange(e.target.value)}
         InputLabelProps={{ shrink: true }}
-        sx={TIME_INPUT_SX}
+        sx={[
+          TIME_INPUT_SX,
+          theme.palette.mode === 'dark' && {
+            '& input[type="time"]::-webkit-calendar-picker-indicator': { filter: 'invert(1)', opacity: 0.8 },
+          },
+        ]}
         inputProps={{ 'aria-label': 'Invoice time' }}
       />
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
