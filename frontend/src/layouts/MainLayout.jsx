@@ -1,18 +1,15 @@
 import { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import {
   Box,
   Drawer,
   AppBar,
   Toolbar,
   IconButton,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Typography,
   useTheme,
   useMediaQuery,
+  alpha,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -26,8 +23,8 @@ import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../contexts/AuthContext';
-
-const DRAWER_WIDTH = 260;
+import { useSidebarState } from '../hooks/useSidebarState';
+import Sidebar, { WIDTH_FULL, WIDTH_SLIM, TRANSITION_MS } from '../components/Sidebar';
 
 const menuItems = [
   { to: '/', label: 'Dashboard', icon: <DashboardIcon />, roles: ['ADMIN', 'MANAGER'] },
@@ -45,52 +42,53 @@ export default function MainLayout({ themeMode, onThemeToggle }) {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { user, logout, hasRole } = useAuth();
   const navigate = useNavigate();
+  const {
+    expanded,
+    isSlim,
+    hoverExpanded,
+    setHoverExpanded,
+    toggle,
+  } = useSidebarState();
 
   const filteredMenu = menuItems.filter((item) => hasRole(...item.roles));
 
-  const drawer = (
-    <Box sx={{ pt: 2, pb: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Typography variant="h6" sx={{ px: 2, mb: 2, fontWeight: 700, color: 'primary.main' }}>
-        POS
-      </Typography>
-      <List sx={{ flex: 1 }}>
-        {filteredMenu.map((item) => (
-          <ListItemButton
-            key={item.to}
-            component={NavLink}
-            to={item.to}
-            sx={{
-              mx: 1,
-              borderRadius: 2,
-              mb: 0.5,
-              '&.active': {
-                bgcolor: 'primary.main',
-                color: 'white',
-                '& .MuiListItemIcon-root': { color: 'white' },
-              },
-            }}
-            onClick={() => isMobile && setMobileOpen(false)}
-          >
-            <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} />
-          </ListItemButton>
-        ))}
-      </List>
-      <Box sx={{ px: 2 }}>
-        <Typography variant="caption" color="text.secondary">
-          {user?.username} · {user?.role}
-        </Typography>
-      </Box>
+  const sidebarWidth = expanded ? WIDTH_FULL : WIDTH_SLIM;
+  const mainMargin = isMobile ? 0 : sidebarWidth;
+
+  const sidebarContent = (options = {}) => (
+    <Box
+      sx={{
+        pt: 0,
+        pb: 0,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        width: options.width || sidebarWidth,
+      }}
+    >
+      <Sidebar
+        menuItems={filteredMenu}
+        user={user}
+        expanded={expanded}
+        isSlim={isSlim}
+        hoverExpanded={hoverExpanded}
+        setHoverExpanded={setHoverExpanded}
+        toggle={toggle}
+        onItemClick={() => isMobile && setMobileOpen(false)}
+        showAsOverlay={!!options.showAsOverlay}
+      />
     </Box>
   );
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+      {/* Mobile menu button in AppBar */}
       <AppBar
         position="fixed"
         sx={{
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-          ml: { md: `${DRAWER_WIDTH}px` },
+          width: { md: `calc(100% - ${mainMargin}px)` },
+          ml: { md: `${mainMargin}px` },
+          transition: theme.transitions.create(['margin', 'width'], { duration: TRANSITION_MS }),
           bgcolor: 'background.paper',
           color: 'text.primary',
           boxShadow: 1,
@@ -102,6 +100,7 @@ export default function MainLayout({ themeMode, onThemeToggle }) {
             edge="start"
             onClick={() => setMobileOpen(!mobileOpen)}
             sx={{ mr: 2, display: { md: 'none' } }}
+            aria-label="Open menu"
           >
             <MenuIcon />
           </IconButton>
@@ -122,50 +121,123 @@ export default function MainLayout({ themeMode, onThemeToggle }) {
           </IconButton>
         </Toolbar>
       </AppBar>
+
+      {/* Mobile drawer (temporary) */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: WIDTH_FULL,
+            borderRight: 1,
+            borderColor: 'divider',
+            transition: theme.transitions.create('width', { duration: TRANSITION_MS }),
+          },
+        }}
+      >
+        <Box sx={{ width: WIDTH_FULL, height: '100%' }}>
+          <Sidebar
+            menuItems={filteredMenu}
+            user={user}
+            expanded
+            isSlim={false}
+            hoverExpanded={false}
+            setHoverExpanded={() => {}}
+            toggle={() => setMobileOpen(false)}
+            onItemClick={() => setMobileOpen(false)}
+            showAsOverlay={false}
+          />
+        </Box>
+      </Drawer>
+
+      {/* Desktop: permanent sidebar */}
       <Box
         component="nav"
-        sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
+        sx={{
+          width: { xs: 0, md: sidebarWidth },
+          flexShrink: { md: 0 },
+          transition: theme.transitions.create('width', { duration: TRANSITION_MS }),
+          display: { xs: 'none', md: 'block' },
+        }}
+        onMouseEnter={() => isSlim && setHoverExpanded(true)}
+        onMouseLeave={() => setHoverExpanded(false)}
       >
         <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={() => setMobileOpen(false)}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: DRAWER_WIDTH },
-          }}
-        >
-          {drawer}
-        </Drawer>
-        <Drawer
           variant="permanent"
+          open
           sx={{
             display: { xs: 'none', md: 'block' },
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
-              width: DRAWER_WIDTH,
+              width: sidebarWidth,
+              top: 0,
+              bottom: 0,
+              transition: theme.transitions.create('width', { duration: TRANSITION_MS }),
               borderRight: 1,
               borderColor: 'divider',
+              overflowX: 'hidden',
+              overflowY: 'auto',
             },
           }}
-          open
         >
-          {drawer}
+          {sidebarContent({})}
         </Drawer>
       </Box>
+
+      {/* Desktop: hover overlay when slim (behind AppBar zIndex; content padded so it starts below header) */}
+      {!isMobile && isSlim && (
+        <Box
+          onMouseLeave={() => setHoverExpanded(false)}
+          sx={{
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: hoverExpanded ? WIDTH_FULL : 0,
+            overflow: 'hidden',
+            zIndex: 1100,
+            transition: theme.transitions.create('width', { duration: TRANSITION_MS }),
+            pointerEvents: hoverExpanded ? 'auto' : 'none',
+            boxShadow: hoverExpanded ? theme.shadows[8] : 'none',
+            bgcolor: 'background.paper',
+            borderRight: 1,
+            borderColor: 'divider',
+          }}
+        >
+          <Box sx={{ width: WIDTH_FULL, height: '100%', overflow: 'auto', pt: '64px' }}>
+            <Sidebar
+              menuItems={filteredMenu}
+              user={user}
+              expanded={expanded}
+              isSlim={isSlim}
+              hoverExpanded={hoverExpanded}
+              setHoverExpanded={setHoverExpanded}
+              toggle={toggle}
+              showAsOverlay={true}
+            />
+          </Box>
+        </Box>
+      )}
+
+      {/* Main content */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          width: { md: `calc(100% - ${mainMargin}px)` },
           mt: 8,
           minHeight: '100vh',
+          transition: theme.transitions.create(['margin', 'width'], { duration: TRANSITION_MS }),
         }}
       >
         <Outlet />
       </Box>
+
     </Box>
   );
 }
