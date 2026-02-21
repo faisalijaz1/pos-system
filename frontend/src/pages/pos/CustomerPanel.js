@@ -22,7 +22,7 @@ export default function CustomerPanel({
 
   return (
     <>
-      <Typography variant="subtitle2" fontWeight={700} color="primary">
+      <Typography variant="subtitle1" fontWeight={700} color="primary" sx={{ fontSize: '1.0625rem', mb: 0.5 }}>
         Customer
       </Typography>
       <FormControlLabel
@@ -49,11 +49,11 @@ export default function CustomerPanel({
               <TextField {...params} placeholder="Customer name/code" />
             )}
           />
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9375rem', mt: 0.5 }}>
             <span>Prev. Balance</span>
             <strong>{formatMoney(prevBalance)}</strong>
           </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9375rem', mt: 0.25 }}>
             <span>With this Bill</span>
             <strong>{formatMoney(withThisBill)}</strong>
           </Box>

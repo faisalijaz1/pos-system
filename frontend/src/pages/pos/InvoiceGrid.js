@@ -48,8 +48,8 @@ export default function InvoiceGrid({
                 '& th': {
                   color: 'white',
                   fontWeight: 600,
-                  py: 0.75,
-                  fontSize: '0.75rem',
+                  py: 1,
+                  fontSize: '0.9375rem',
                 },
               }}
             >
@@ -72,7 +72,8 @@ export default function InvoiceGrid({
                 selected={focusedRowIndex === idx}
                 onClick={() => onRowClick(idx)}
                 sx={{
-                  '& td': { py: 0.5, fontSize: '0.8rem' },
+                  '& td': { py: 0.75, fontSize: '0.9375rem', minHeight: 44 },
+                  minHeight: 44,
                   bgcolor:
                     focusedRowIndex === idx
                       ? alpha(theme.palette.primary.main, 0.08)
@@ -186,7 +187,7 @@ export default function InvoiceGrid({
             alignItems: 'center',
             justifyContent: 'center',
             color: 'text.secondary',
-            fontSize: '0.875rem',
+            fontSize: '0.9375rem',
             py: 4,
           }}
         >

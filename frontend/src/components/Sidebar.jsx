@@ -50,7 +50,7 @@ export default function Sidebar({
             sx={{
               fontWeight: 700,
               color: 'primary.main',
-              fontSize: '1.1rem',
+              fontSize: '1.0625rem',
             }}
           >
             POS
@@ -90,17 +90,18 @@ export default function Sidebar({
           borderColor: 'divider',
         }}
       >
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{
-            display: 'block',
-            textAlign: showLabels ? 'left' : 'center',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: showLabels ? 'normal' : 'nowrap',
-          }}
-        >
+<Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{
+          display: 'block',
+          textAlign: showLabels ? 'left' : 'center',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: showLabels ? 'normal' : 'nowrap',
+          fontSize: '0.8125rem',
+        }}
+      >
           {user?.username}
           {showLabels && user?.role && ` · ${user.role}`}
         </Typography>

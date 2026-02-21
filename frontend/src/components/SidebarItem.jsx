@@ -65,6 +65,7 @@ const SidebarItem = forwardRef(function SidebarItem(
             variant: 'body2',
             fontWeight: 500,
             noWrap: false,
+            fontSize: '0.9375rem',
           }}
           sx={{ '& .MuiListItemText-primary': { overflow: 'visible', whiteSpace: 'nowrap' } }}
         />

@@ -187,6 +187,7 @@ export default function MainLayout({ themeMode, onThemeToggle }) {
           flexGrow: 1,
           p: 3,
           width: { md: `calc(100% - ${mainMargin}px)` },
+          minWidth: 0,
           mt: 8,
           minHeight: '100vh',
           transition: theme.transitions.create(['margin', 'width'], { duration: TRANSITION_MS }),

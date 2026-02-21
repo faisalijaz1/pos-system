@@ -388,7 +388,7 @@ export default function PosBillingPage() {
   }).join('\n');
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 88px)', minHeight: 480 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 88px)', minHeight: 480, minWidth: 0, overflow: 'hidden' }}>
       <InvoiceHeaderBar
         invoiceNumber={invoiceNumber}
         invoiceDate={invoiceDate}
@@ -420,7 +420,7 @@ export default function PosBillingPage() {
           </Box>
           <InvoiceGrid cart={cart} focusedRowIndex={focusedRowIndex} onRowClick={setFocusedRowIndex} onQtyChange={updateQty} onQtyDirect={setQtyDirect} onRemove={removeFromCart} uomList={uomList} onUnitChange={setUnit} />
         </Paper>
-        <Paper elevation={2} sx={{ flex: '0 0 30%', minWidth: 280, maxWidth: 380, p: 1.5, display: 'flex', flexDirection: 'column', gap: 1, borderRadius: 1, overflow: 'auto' }}>
+        <Paper elevation={2} sx={{ flex: '0 0 30%', minWidth: 260, maxWidth: 380, p: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5, borderRadius: 1, overflow: 'auto', overflowX: 'hidden' }}>
           <CustomerPanel
             isCashCustomer={isCashCustomer}
             onCashCustomerChange={function (v) { setIsCashCustomer(v); if (v) { setSelectedCustomer(null); setCustomerInput(''); } }}
@@ -434,7 +434,7 @@ export default function PosBillingPage() {
           />
           <TotalsPanel noOfTitles={noOfTitles} totalQuantity={totalQuantity} grandTotal={grandTotal} additionalDiscount={additionalDiscount} additionalExpenses={additionalExpenses} netTotal={netTotal} onDiscountChange={setAdditionalDiscount} onExpensesChange={setAdditionalExpenses} />
           <TextField size="small" fullWidth label="Remarks" value={remarks} onChange={function (e) { setRemarks(e.target.value); }} multiline minRows={1} placeholder="Optional" />
-          <Button fullWidth variant="contained" color="primary" size="large" startIcon={<PaymentIcon />} onClick={function () { setPaymentOpen(true); }} disabled={cart.length === 0} sx={{ py: 1.25, fontWeight: 700 }}>Complete Sale (F4)</Button>
+          <Button fullWidth variant="contained" color="primary" size="large" startIcon={<PaymentIcon />} onClick={function () { setPaymentOpen(true); }} disabled={cart.length === 0} sx={{ py: 1.5, fontWeight: 700, minHeight: 48 }}>Complete Sale (F4)</Button>
           <Box>
             <Button size="small" startIcon={billingDetailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />} onClick={function () { setBillingDetailsOpen(!billingDetailsOpen); }}>Billing details</Button>
             <Collapse in={billingDetailsOpen}>

@@ -33,7 +33,7 @@ export default function InvoiceHeaderBar({
     <Paper
       elevation={0}
       sx={{
-        py: 1.25,
+        py: 1.5,
         px: 2,
         display: 'flex',
         flexWrap: 'wrap',
@@ -117,7 +117,7 @@ export default function InvoiceHeaderBar({
       <Typography
         variant="caption"
         color="text.secondary"
-        sx={{ ml: 'auto', flexShrink: 0 }}
+        sx={{ ml: 'auto', flexShrink: 0, fontSize: '0.875rem', letterSpacing: '0.02em' }}
       >
         {KEYBOARD_HINTS}
       </Typography>

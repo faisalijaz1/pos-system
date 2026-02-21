@@ -50,10 +50,11 @@ export default function ProductSearchBar(props) {
   );
 
   return (
-    <Box ref={containerRef} sx={{ p: 1, borderBottom: 1, borderColor: 'divider', position: 'relative' }}>
+    <Box ref={containerRef} sx={{ p: 1.25, borderBottom: 1, borderColor: 'divider', position: 'relative' }}>
       <TextField
         fullWidth
         size="small"
+        sx={{ '& .MuiInputBase-root': { minHeight: 44 }, '& .MuiInputBase-input': { fontSize: '0.9375rem' } }}
         placeholder={placeholder}
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
@@ -77,7 +78,7 @@ export default function ProductSearchBar(props) {
         variant="caption"
         color="text.secondary"
         component="span"
-        sx={{ display: 'block', mt: 0.5, lineHeight: 1.4 }}
+        sx={{ display: 'block', mt: 0.5, lineHeight: 1.4, fontSize: '0.875rem' }}
         aria-hidden
       >
         ↑↓ select · Enter add
