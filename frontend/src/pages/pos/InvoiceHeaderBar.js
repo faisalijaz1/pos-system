@@ -8,13 +8,16 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Button,
+  ButtonGroup,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
 import { DELIVERY_MODES, TRANSACTION_TYPES, KEYBOARD_HINTS, DATE_INPUT_SX, TIME_INPUT_SX } from './posUtils';
 
 /**
- * Invoice context bar: Invoice #, Date, Time, Trans type, Delivery mode, shortcuts.
+ * Invoice header: Invoice #, Date, Time, Trans type, Del mode, form actions (Save / Cancel / Clear), shortcuts.
+ * Form actions = form lifecycle; Complete Sale stays separate at bottom (payment commitment).
  */
 export default function InvoiceHeaderBar({
   invoiceNumber,
@@ -27,6 +30,11 @@ export default function InvoiceHeaderBar({
   onTimeChange,
   onTransactionTypeChange,
   onDeliveryModeChange,
+  onSaveDraft,
+  onCancel,
+  onClear,
+  saveDraftDisabled,
+  loading,
 }) {
   const theme = useTheme();
 
@@ -134,6 +142,11 @@ export default function InvoiceHeaderBar({
           ))}
         </Select>
       </FormControl>
+      <ButtonGroup size="small" variant="outlined" sx={{ ml: 1 }}>
+        <Button onClick={onSaveDraft} disabled={saveDraftDisabled || loading}>{loading ? '…' : 'Save'}</Button>
+        <Button onClick={onCancel} disabled={loading}>Cancel</Button>
+        <Button onClick={onClear} disabled={loading}>Clear</Button>
+      </ButtonGroup>
       {successMsg && (
         <Typography variant="caption" color="success.main" fontWeight={600}>
           {successMsg}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, TextField } from '@mui/material';
+import { Box, Typography, TextField, Divider } from '@mui/material';
 import { formatMoney } from './posUtils';
 
 export default function TotalsPanel({
@@ -13,7 +13,10 @@ export default function TotalsPanel({
   onExpensesChange,
 }) {
   return (
-    <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 1, mt: 0.5 }}>
+    <Box>
+      <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ mb: 0.5 }}>Totals</Typography>
+      <Divider sx={{ mb: 1 }} />
+      <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
         <span>No. of titles</span>
         <strong>{noOfTitles}</strong>

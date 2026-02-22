@@ -1,7 +1,21 @@
 import React from 'react';
-import { Box, Typography, TextField, FormControlLabel, Checkbox, Autocomplete } from '@mui/material';
+import {
+  Box,
+  Typography,
+  TextField,
+  FormControlLabel,
+  Checkbox,
+  Autocomplete,
+  Divider,
+} from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 
+/**
+ * Customer Details Panel — desktop-parity: Cash Customer, searchable Customer,
+ * ID (readonly), Prev Bal (readonly, highlighted), This Bill (live-calculated).
+ */
 export default function CustomerPanel({
   isCashCustomer,
   onCashCustomerChange,
@@ -13,6 +27,8 @@ export default function CustomerPanel({
   prevBalance,
   withThisBill,
 }) {
+  const theme = useTheme();
+
   const getOptionLabel = (o) => {
     if (typeof o === 'string') return o;
     const name = o.name || o.nameEnglish || '';
@@ -21,10 +37,11 @@ export default function CustomerPanel({
   };
 
   return (
-    <>
-      <Typography variant="subtitle2" fontWeight={700} color="primary">
-        Customer
+    <Box sx={{ mb: 0 }}>
+      <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ mb: 0.75 }}>
+        Customer Details
       </Typography>
+      <Divider sx={{ mb: 1 }} />
       <FormControlLabel
         control={
           <Checkbox
@@ -34,9 +51,13 @@ export default function CustomerPanel({
           />
         }
         label={<Typography variant="body2">Cash Customer</Typography>}
+        sx={{ mb: 1 }}
       />
       {!isCashCustomer && (
         <>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25 }}>
+            Customer
+          </Typography>
           <Autocomplete
             size="small"
             options={customerOptions}
@@ -46,27 +67,60 @@ export default function CustomerPanel({
             onInputChange={(_, v) => onCustomerInputChange(v)}
             onChange={(_, v) => onCustomerChange(v)}
             renderInput={(params) => (
-              <TextField {...params} placeholder="Customer name/code" />
+              <TextField {...params} placeholder="Search name or code" />
             )}
+            sx={{ mb: 1 }}
           />
-          {selectedCustomer && (
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', mt: 0.5 }}>
-              <span>ID</span>
-              <Typography component="span" variant="body2" fontWeight={600} color="text.secondary">
-                {selectedCustomer.customerId}
-              </Typography>
-            </Box>
-          )}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', mt: 0.25 }}>
-            <span>Prev. Balance</span>
-            <strong>{formatMoney(prevBalance)}</strong>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
-            <span>With this Bill</span>
-            <strong>{formatMoney(withThisBill)}</strong>
-          </Box>
         </>
       )}
-    </>
+      {selectedCustomer && !isCashCustomer && (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'auto 1fr',
+            alignItems: 'center',
+            gap: 0.5,
+            columnGap: 1.5,
+            fontSize: '0.8125rem',
+          }}
+        >
+          <Typography variant="caption" color="text.secondary">
+            ID
+          </Typography>
+          <Typography component="span" variant="body2" fontWeight={600}>
+            {selectedCustomer.customerId}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Prev Bal
+          </Typography>
+          <Box
+            component="span"
+            sx={{
+              fontWeight: 700,
+              px: 1,
+              py: 0.25,
+              borderRadius: 0.5,
+              bgcolor: alpha(theme.palette.warning.main, 0.15),
+              color: theme.palette.mode === 'dark' ? theme.palette.warning.light : theme.palette.warning.dark,
+              textAlign: 'right',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {formatMoney(prevBalance)}
+          </Box>
+          <Typography variant="caption" color="text.secondary">
+            This Bill
+          </Typography>
+          <Typography component="span" variant="body2" fontWeight={700} sx={{ fontVariantNumeric: 'tabular-nums' }}>
+            {formatMoney(withThisBill)}
+          </Typography>
+        </Box>
+      )}
+      {isCashCustomer && (
+        <Typography variant="caption" color="text.secondary">
+          Cash sale — no customer balance.
+        </Typography>
+      )}
+    </Box>
   );
 }

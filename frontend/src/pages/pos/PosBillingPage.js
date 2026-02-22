@@ -13,6 +13,7 @@ import TableRow from '@mui/material/TableRow';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import Collapse from '@mui/material/Collapse';
+import Divider from '@mui/material/Divider';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import { alpha } from '@mui/material/styles';
@@ -37,6 +38,7 @@ import TotalsPanel from './TotalsPanel';
 import PaymentModal from './PaymentModal';
 import InvoiceDetailModal from './InvoiceDetailModal';
 import ProductSearchModal from './ProductSearchModal';
+import SoldHistoryPanel from './SoldHistoryPanel';
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -456,6 +458,11 @@ export default function PosBillingPage() {
         onTimeChange={setInvoiceTime}
         onTransactionTypeChange={setTransactionTypeCode}
         onDeliveryModeChange={setDeliveryModeId}
+        onSaveDraft={handleSaveDraft}
+        onCancel={clearScreen}
+        onClear={clearScreen}
+        saveDraftDisabled={cart.length === 0}
+        loading={loading}
       />
       <Tabs value={tab} onChange={function (_, v) { setTab(v); }} sx={{ minHeight: 40, mb: 1 }}>
         <Tab label="Billing" id="pos-tab-0" />
@@ -476,6 +483,15 @@ export default function PosBillingPage() {
             />
           </Box>
           <InvoiceGrid cart={cart} focusedRowIndex={focusedRowIndex} onRowClick={setFocusedRowIndex} onQtyChange={updateQty} onQtyDirect={setQtyDirect} onRemove={removeFromCart} uomList={uomList} onUnitChange={setUnit} />
+          <Box sx={{ px: 1, pb: 1, pt: 0.5 }}>
+            <SoldHistoryPanel
+            productId={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productId : null}
+            productCode={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productCode : null}
+            productName={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productName : null}
+            customerId={selectedCustomer && selectedCustomer.customerId}
+            productsApiGetLastSale={function (pid, cid) { return productsApi.getLastSale(pid, cid); }}
+            />
+          </Box>
         </Paper>
         <Paper elevation={2} sx={{ flex: '0 0 30%', minWidth: 280, maxWidth: 380, p: 1.5, display: 'flex', flexDirection: 'column', gap: 1, borderRadius: 1, overflow: 'auto' }}>
           <CustomerPanel
@@ -491,23 +507,20 @@ export default function PosBillingPage() {
           />
           <TotalsPanel noOfTitles={noOfTitles} totalQuantity={totalQuantity} grandTotal={grandTotal} additionalDiscount={additionalDiscount} additionalExpenses={additionalExpenses} netTotal={netTotal} onDiscountChange={setAdditionalDiscount} onExpensesChange={setAdditionalExpenses} />
           <TextField size="small" fullWidth label="Remarks" value={remarks} onChange={function (e) { setRemarks(e.target.value); }} multiline minRows={1} placeholder="Optional" />
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+          <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 1.5, mt: 0.5 }}>
             <Button fullWidth variant="contained" color="primary" size="large" startIcon={<PaymentIcon />} onClick={function () { setPaymentOpen(true); }} disabled={cart.length === 0 || loading} sx={{ py: 1.25, fontWeight: 700 }}>Complete Sale (F4)</Button>
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              <Button size="small" variant="outlined" onClick={handleSaveDraft} disabled={cart.length === 0 || loading}>Save Draft</Button>
-              <Button size="small" variant="outlined" color="secondary" onClick={clearScreen}>Clear Screen</Button>
-              <Button size="small" variant="outlined" color="error" onClick={clearScreen}>Cancel Invoice</Button>
-            </Box>
           </Box>
           <Box>
-            <Button size="small" startIcon={billingDetailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />} onClick={function () { setBillingDetailsOpen(!billingDetailsOpen); }}>Billing details</Button>
+            <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ mb: 0.5 }}>Billing Details</Typography>
+            <Divider sx={{ mb: 1 }} />
+            <Button size="small" startIcon={billingDetailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />} onClick={function () { setBillingDetailsOpen(!billingDetailsOpen); }} fullWidth sx={{ justifyContent: 'flex-start', mb: 0.5 }}>Show billing fields</Button>
             <Collapse in={billingDetailsOpen}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.5 }}>
-                <TextField size="small" label="Billing No." value={billingNo} onChange={function (e) { setBillingNo(e.target.value); }} />
-                <TextField size="small" type="date" label="Billing Date" value={billingDate} onChange={function (e) { setBillingDate(e.target.value); }} InputLabelProps={{ shrink: true }} sx={DATE_INPUT_SX} />
-                <TextField size="small" label="Packing" value={billingPacking} onChange={function (e) { setBillingPacking(e.target.value); }} />
-                <TextField size="small" label="Adda" value={billingAdda} onChange={function (e) { setBillingAdda(e.target.value); }} />
-                <FormControlLabel control={<Checkbox size="small" checked={printWithoutBalance} onChange={function (e) { setPrintWithoutBalance(e.target.checked); }} />} label="Print without balance" sx={{ mt: 0.5 }} />
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 0.5 }}>
+                <TextField size="small" label="Billing No." value={billingNo} onChange={function (e) { setBillingNo(e.target.value); }} fullWidth />
+                <TextField size="small" type="date" label="Billing Date" value={billingDate} onChange={function (e) { setBillingDate(e.target.value); }} InputLabelProps={{ shrink: true }} sx={DATE_INPUT_SX} fullWidth />
+                <TextField size="small" label="Packing" value={billingPacking} onChange={function (e) { setBillingPacking(e.target.value); }} fullWidth />
+                <TextField size="small" label="Adda" value={billingAdda} onChange={function (e) { setBillingAdda(e.target.value); }} fullWidth />
+                <FormControlLabel control={<Checkbox size="small" checked={printWithoutBalance} onChange={function (e) { setPrintWithoutBalance(e.target.checked); }} />} label="Print without balance" />
                 <FormControlLabel control={<Checkbox size="small" checked={printWithoutHeader} onChange={function (e) { setPrintWithoutHeader(e.target.checked); }} />} label="Print without header" />
               </Box>
             </Collapse>
