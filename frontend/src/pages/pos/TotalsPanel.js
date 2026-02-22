@@ -50,6 +50,7 @@ export default function TotalsPanel({
       <Typography variant="subtitle1" fontWeight={700} sx={{ mt: 1 }}>
         Net Total: {formatMoney(netTotal)}
       </Typography>
+      </Box>
     </Box>
   );
 }
