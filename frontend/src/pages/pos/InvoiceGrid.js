@@ -46,22 +46,23 @@ export default function InvoiceGrid({
               sx={{
                 bgcolor: theme.palette.primary.main,
                 '& th': {
-                  color: 'white',
+                  color: theme.palette.primary.contrastText || 'white',
                   fontWeight: 600,
                   py: 0.75,
                   fontSize: '0.75rem',
+                  borderBottom: 'none',
                 },
               }}
             >
-              <TableCell>Sr</TableCell>
-              <TableCell>Code</TableCell>
-              <TableCell>Product</TableCell>
-              <TableCell align="right">Stock</TableCell>
-              <TableCell align="right">Qty</TableCell>
-              <TableCell>Unit</TableCell>
-              <TableCell align="right">Rate</TableCell>
-              <TableCell align="right">Total</TableCell>
-              <TableCell align="right" width={40} />
+              <TableCell component="th" scope="col">Sr #</TableCell>
+              <TableCell component="th" scope="col">Code</TableCell>
+              <TableCell component="th" scope="col">Product Name</TableCell>
+              <TableCell component="th" scope="col" align="right">Stock</TableCell>
+              <TableCell component="th" scope="col" align="right">Qty</TableCell>
+              <TableCell component="th" scope="col">Unit</TableCell>
+              <TableCell component="th" scope="col" align="right">Price</TableCell>
+              <TableCell component="th" scope="col" align="right">Total</TableCell>
+              <TableCell component="th" scope="col" align="right" width={40} />
             </TableRow>
           </TableHead>
           <TableBody>

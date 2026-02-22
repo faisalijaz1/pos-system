@@ -13,8 +13,8 @@ import { useTheme } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 
 /**
- * Customer Details Panel — desktop-parity: Cash Customer, searchable Customer,
- * ID (readonly), Prev Bal (readonly, highlighted), This Bill (live-calculated).
+ * Customer Details Panel — desktop-parity: always show same layout.
+ * Cash Customer, Customer dropdown, ID, Prev Bal (highlighted), This Bill (live).
  */
 export default function CustomerPanel({
   isCashCustomer,
@@ -26,6 +26,7 @@ export default function CustomerPanel({
   onCustomerChange,
   prevBalance,
   withThisBill,
+  netTotal,
 }) {
   const theme = useTheme();
 
@@ -35,6 +36,12 @@ export default function CustomerPanel({
     const code = o.customerCode ? ` (${o.customerCode})` : '';
     return (name + code).trim() || 'Select';
   };
+
+  const showCustomerFields = !isCashCustomer && selectedCustomer;
+  const idValue = showCustomerFields ? selectedCustomer.customerId : '—';
+  const prevBalValue = showCustomerFields ? prevBalance : (isCashCustomer ? '—' : 0);
+  const thisBillValue = showCustomerFields ? withThisBill : (netTotal != null ? netTotal : 0);
+  const hasPrevBal = showCustomerFields && prevBalance != null && Number(prevBalance) !== 0;
 
   return (
     <Box sx={{ mb: 0 }}>
@@ -53,74 +60,68 @@ export default function CustomerPanel({
         label={<Typography variant="body2">Cash Customer</Typography>}
         sx={{ mb: 1 }}
       />
-      {!isCashCustomer && (
-        <>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25 }}>
-            Customer
-          </Typography>
-          <Autocomplete
-            size="small"
-            options={customerOptions}
-            getOptionLabel={getOptionLabel}
-            value={selectedCustomer}
-            inputValue={customerInput}
-            onInputChange={(_, v) => onCustomerInputChange(v)}
-            onChange={(_, v) => onCustomerChange(v)}
-            renderInput={(params) => (
-              <TextField {...params} placeholder="Search name or code" />
-            )}
-            sx={{ mb: 1 }}
-          />
-        </>
-      )}
-      {selectedCustomer && !isCashCustomer && (
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25 }}>
+        Customer
+      </Typography>
+      <Autocomplete
+        size="small"
+        options={customerOptions}
+        getOptionLabel={getOptionLabel}
+        value={isCashCustomer ? null : selectedCustomer}
+        inputValue={customerInput}
+        onInputChange={(_, v) => onCustomerInputChange(v)}
+        onChange={(_, v) => onCustomerChange(v)}
+        disabled={isCashCustomer}
+        renderInput={(params) => (
+          <TextField {...params} placeholder={isCashCustomer ? 'Cash sale' : 'Search name or code'} />
+        )}
+        sx={{ mb: 1 }}
+      />
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr',
+          alignItems: 'center',
+          gap: 0.5,
+          columnGap: 1.5,
+          fontSize: '0.8125rem',
+        }}
+      >
+        <Typography variant="caption" color="text.secondary">
+          ID
+        </Typography>
+        <Typography component="span" variant="body2" fontWeight={600}>
+          {idValue}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Prev Bal
+        </Typography>
         <Box
+          component="span"
           sx={{
-            display: 'grid',
-            gridTemplateColumns: 'auto 1fr',
-            alignItems: 'center',
-            gap: 0.5,
-            columnGap: 1.5,
-            fontSize: '0.8125rem',
+            fontWeight: 700,
+            px: 1,
+            py: 0.25,
+            borderRadius: 0.5,
+            textAlign: 'right',
+            fontVariantNumeric: 'tabular-nums',
+            ...(hasPrevBal
+              ? {
+                  bgcolor: alpha(theme.palette.warning.main, 0.15),
+                  color: theme.palette.mode === 'dark' ? theme.palette.warning.light : theme.palette.warning.dark,
+                }
+              : { color: 'text.secondary' }),
           }}
         >
-          <Typography variant="caption" color="text.secondary">
-            ID
-          </Typography>
-          <Typography component="span" variant="body2" fontWeight={600}>
-            {selectedCustomer.customerId}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Prev Bal
-          </Typography>
-          <Box
-            component="span"
-            sx={{
-              fontWeight: 700,
-              px: 1,
-              py: 0.25,
-              borderRadius: 0.5,
-              bgcolor: alpha(theme.palette.warning.main, 0.15),
-              color: theme.palette.mode === 'dark' ? theme.palette.warning.light : theme.palette.warning.dark,
-              textAlign: 'right',
-              fontVariantNumeric: 'tabular-nums',
-            }}
-          >
-            {formatMoney(prevBalance)}
-          </Box>
-          <Typography variant="caption" color="text.secondary">
-            This Bill
-          </Typography>
-          <Typography component="span" variant="body2" fontWeight={700} sx={{ fontVariantNumeric: 'tabular-nums' }}>
-            {formatMoney(withThisBill)}
-          </Typography>
+          {prevBalValue === '—' ? '—' : formatMoney(prevBalValue)}
         </Box>
-      )}
-      {isCashCustomer && (
         <Typography variant="caption" color="text.secondary">
-          Cash sale — no customer balance.
+          This Bill
         </Typography>
-      )}
+        <Typography component="span" variant="body2" fontWeight={700} sx={{ fontVariantNumeric: 'tabular-nums' }}>
+          {thisBillValue === '—' ? '—' : formatMoney(thisBillValue)}
+        </Typography>
+      </Box>
     </Box>
   );
 }

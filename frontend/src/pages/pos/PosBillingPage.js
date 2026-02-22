@@ -504,6 +504,7 @@ export default function PosBillingPage() {
             onCustomerChange={setSelectedCustomer}
             prevBalance={prevBalance}
             withThisBill={withThisBill}
+            netTotal={netTotal}
           />
           <TotalsPanel noOfTitles={noOfTitles} totalQuantity={totalQuantity} grandTotal={grandTotal} additionalDiscount={additionalDiscount} additionalExpenses={additionalExpenses} netTotal={netTotal} onDiscountChange={setAdditionalDiscount} onExpensesChange={setAdditionalExpenses} />
           <TextField size="small" fullWidth label="Remarks" value={remarks} onChange={function (e) { setRemarks(e.target.value); }} multiline minRows={1} placeholder="Optional" />
