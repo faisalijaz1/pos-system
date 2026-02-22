@@ -40,17 +40,30 @@ export default function InvoiceGrid({
   return (
     <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-        <Table size="small" stickyHeader>
+        <Table
+          size="small"
+          stickyHeader
+          sx={{
+            '& thead th': {
+              zIndex: 1,
+              top: 0,
+              backgroundColor: theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main,
+              boxShadow: theme.palette.mode === 'dark' ? '0 1px 0 rgba(255,255,255,0.08)' : '0 1px 0 rgba(0,0,0,0.08)',
+            },
+          }}
+        >
           <TableHead>
             <TableRow
               sx={{
-                bgcolor: theme.palette.primary.main,
+                // Fixed dark header + white text so column names are visible in both light and dark mode
+                bgcolor: theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main,
                 '& th': {
-                  color: theme.palette.primary.contrastText || 'white',
+                  color: '#fff',
                   fontWeight: 600,
                   py: 0.75,
                   fontSize: '0.75rem',
                   borderBottom: 'none',
+                  whiteSpace: 'nowrap',
                 },
               }}
             >
