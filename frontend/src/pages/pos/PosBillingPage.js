@@ -36,6 +36,7 @@ import CustomerPanel from './CustomerPanel';
 import TotalsPanel from './TotalsPanel';
 import PaymentModal from './PaymentModal';
 import InvoiceDetailModal from './InvoiceDetailModal';
+import ProductSearchModal from './ProductSearchModal';
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -45,7 +46,7 @@ export default function PosBillingPage() {
   const [invoiceNumber, setInvoiceNumber] = useState(generateInvoiceNumber);
   const [invoiceDate, setInvoiceDate] = useState(today);
   const [invoiceTime, setInvoiceTime] = useState(formatTime(new Date()));
-  const [transactionTypeCode] = useState('SALE');
+  const [transactionTypeCode, setTransactionTypeCode] = useState('SALE');
   const [deliveryModeId, setDeliveryModeId] = useState(1);
   const [search, setSearch] = useState('');
   const [products, setProducts] = useState([]);
@@ -84,6 +85,7 @@ export default function PosBillingPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [uomList, setUomList] = useState([]);
   const [searchHighlightIndex, setSearchHighlightIndex] = useState(0);
+  const [productSearchModalOpen, setProductSearchModalOpen] = useState(false);
 
   const grandTotal = cart.reduce((s, r) => s + Number(r.lineTotal || 0), 0);
   const netTotal = Math.max(0, grandTotal - Number(additionalDiscount) + Number(additionalExpenses));
@@ -150,12 +152,11 @@ export default function PosBillingPage() {
         e.preventDefault();
         e.stopPropagation();
         if (tab === 0) {
-          setTimeout(function () {
-            var wrapper = searchRef.current;
-            if (!wrapper) return;
-            var input = wrapper.querySelector ? wrapper.querySelector('input') : null;
-            if (input && typeof input.focus === 'function') input.focus();
-          }, 0);
+          if (productSearchModalOpen) {
+            setProductSearchModalOpen(false);
+          } else {
+            setProductSearchModalOpen(true);
+          }
         }
         return;
       }
@@ -193,7 +194,7 @@ export default function PosBillingPage() {
       document.removeEventListener('keydown', onKey, useCapture);
       window.removeEventListener('keydown', onKey, useCapture);
     };
-  }, [tab, cart.length, focusedRowIndex, searchProducts, safeHighlightIndex, search.trim(), detailOpen, detailInvoice]);
+  }, [tab, cart.length, focusedRowIndex, searchProducts, safeHighlightIndex, search.trim(), detailOpen, detailInvoice, productSearchModalOpen]);
 
   function addToCart(product, qty) {
     qty = qty || 1;
@@ -280,6 +281,57 @@ export default function PosBillingPage() {
     }
   }
 
+  function clearScreen() {
+    setCart([]);
+    setAmountReceived('');
+    setAdditionalDiscount(0);
+    setAdditionalExpenses(0);
+    setRemarks('');
+    setPaymentOpen(false);
+    setFocusedRowIndex(-1);
+    setInvoiceNumber(generateInvoiceNumber());
+    setBillingNo('');
+    setBillingDate('');
+    setBillingPacking('');
+    setBillingAdda('');
+  }
+
+  function handleSaveDraft() {
+    if (cart.length === 0) return;
+    setLoading(true);
+    setSuccessMsg('');
+    const body = {
+      invoiceNumber,
+      customerId: isCashCustomer ? null : (selectedCustomer && selectedCustomer.customerId) || null,
+      invoiceDate,
+      invoiceTime: invoiceTime ? (invoiceTime.length === 5 ? invoiceTime + ':00' : invoiceTime) : null,
+      transactionTypeCode: transactionTypeCode || 'SALE',
+      deliveryModeId: deliveryModeId != null ? Number(deliveryModeId) : null,
+      isCashCustomer: !!isCashCustomer,
+      items: cart.map(function (c) { return { productId: c.productId, quantity: c.quantity, unitPrice: c.unitPrice, uomId: c.uomId || null }; }),
+      additionalDiscount: Number(additionalDiscount) || 0,
+      additionalExpenses: Number(additionalExpenses) || 0,
+      amountReceived: 0,
+      changeReturned: 0,
+      saveAsDraft: true,
+      printWithoutHeader: !!printWithoutHeader,
+      printWithoutBalance: !!printWithoutBalance,
+      remarks: remarks.trim() || null,
+      billingNo: billingNo.trim() || null,
+      billingDate: billingDate || null,
+      billingPacking: billingPacking.trim() || null,
+      billingAdda: billingAdda.trim() || null,
+    };
+    invoicesApi.create(body).then(function (res) {
+      clearScreen();
+      setSuccessMsg('Draft saved.');
+      setTimeout(function () { setSuccessMsg(''); }, 3000);
+      if (tab === 1) loadHistory();
+    }).catch(function (err) {
+      alert((err.response && err.response.data && err.response.data.message) || 'Failed to save draft');
+    }).finally(function () { setLoading(false); });
+  }
+
   function handleCompleteSale() {
     if (cart.length === 0) return;
     setLoading(true);
@@ -289,13 +341,17 @@ export default function PosBillingPage() {
       customerId: isCashCustomer ? null : (selectedCustomer && selectedCustomer.customerId) || null,
       invoiceDate,
       invoiceTime: invoiceTime ? (invoiceTime.length === 5 ? invoiceTime + ':00' : invoiceTime) : null,
-      transactionTypeCode: 'SALE',
+      transactionTypeCode: transactionTypeCode || 'SALE',
       deliveryModeId: deliveryModeId != null ? Number(deliveryModeId) : null,
       isCashCustomer: !!isCashCustomer,
       items: cart.map(function (c) { return { productId: c.productId, quantity: c.quantity, unitPrice: c.unitPrice, uomId: c.uomId || null }; }),
       additionalDiscount: Number(additionalDiscount) || 0,
       additionalExpenses: Number(additionalExpenses) || 0,
       amountReceived: amtReceived,
+      changeReturned: change,
+      saveAsDraft: false,
+      printWithoutHeader: !!printWithoutHeader,
+      printWithoutBalance: !!printWithoutBalance,
       remarks: remarks.trim() || null,
       billingNo: billingNo.trim() || null,
       billingDate: billingDate || null,
@@ -398,6 +454,7 @@ export default function PosBillingPage() {
         successMsg={successMsg}
         onDateChange={setInvoiceDate}
         onTimeChange={setInvoiceTime}
+        onTransactionTypeChange={setTransactionTypeCode}
         onDeliveryModeChange={setDeliveryModeId}
       />
       <Tabs value={tab} onChange={function (_, v) { setTab(v); }} sx={{ minHeight: 40, mb: 1 }}>
@@ -434,20 +491,27 @@ export default function PosBillingPage() {
           />
           <TotalsPanel noOfTitles={noOfTitles} totalQuantity={totalQuantity} grandTotal={grandTotal} additionalDiscount={additionalDiscount} additionalExpenses={additionalExpenses} netTotal={netTotal} onDiscountChange={setAdditionalDiscount} onExpensesChange={setAdditionalExpenses} />
           <TextField size="small" fullWidth label="Remarks" value={remarks} onChange={function (e) { setRemarks(e.target.value); }} multiline minRows={1} placeholder="Optional" />
-          <Button fullWidth variant="contained" color="primary" size="large" startIcon={<PaymentIcon />} onClick={function () { setPaymentOpen(true); }} disabled={cart.length === 0} sx={{ py: 1.25, fontWeight: 700 }}>Complete Sale (F4)</Button>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+            <Button fullWidth variant="contained" color="primary" size="large" startIcon={<PaymentIcon />} onClick={function () { setPaymentOpen(true); }} disabled={cart.length === 0 || loading} sx={{ py: 1.25, fontWeight: 700 }}>Complete Sale (F4)</Button>
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              <Button size="small" variant="outlined" onClick={handleSaveDraft} disabled={cart.length === 0 || loading}>Save Draft</Button>
+              <Button size="small" variant="outlined" color="secondary" onClick={clearScreen}>Clear Screen</Button>
+              <Button size="small" variant="outlined" color="error" onClick={clearScreen}>Cancel Invoice</Button>
+            </Box>
+          </Box>
           <Box>
             <Button size="small" startIcon={billingDetailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />} onClick={function () { setBillingDetailsOpen(!billingDetailsOpen); }}>Billing details</Button>
             <Collapse in={billingDetailsOpen}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.5 }}>
-                <TextField size="small" label="No." value={billingNo} onChange={function (e) { setBillingNo(e.target.value); }} />
-                <TextField size="small" type="date" label="Date" value={billingDate} onChange={function (e) { setBillingDate(e.target.value); }} InputLabelProps={{ shrink: true }} sx={DATE_INPUT_SX} />
+                <TextField size="small" label="Billing No." value={billingNo} onChange={function (e) { setBillingNo(e.target.value); }} />
+                <TextField size="small" type="date" label="Billing Date" value={billingDate} onChange={function (e) { setBillingDate(e.target.value); }} InputLabelProps={{ shrink: true }} sx={DATE_INPUT_SX} />
                 <TextField size="small" label="Packing" value={billingPacking} onChange={function (e) { setBillingPacking(e.target.value); }} />
                 <TextField size="small" label="Adda" value={billingAdda} onChange={function (e) { setBillingAdda(e.target.value); }} />
+                <FormControlLabel control={<Checkbox size="small" checked={printWithoutBalance} onChange={function (e) { setPrintWithoutBalance(e.target.checked); }} />} label="Print without balance" sx={{ mt: 0.5 }} />
+                <FormControlLabel control={<Checkbox size="small" checked={printWithoutHeader} onChange={function (e) { setPrintWithoutHeader(e.target.checked); }} />} label="Print without header" />
               </Box>
             </Collapse>
           </Box>
-          <FormControlLabel control={<Checkbox size="small" checked={printWithoutBalance} onChange={function (e) { setPrintWithoutBalance(e.target.checked); }} />} label="Print without balance" />
-          <FormControlLabel control={<Checkbox size="small" checked={printWithoutHeader} onChange={function (e) { setPrintWithoutHeader(e.target.checked); }} />} label="Print without header" />
         </Paper>
       </Box>
       <Box role="region" id="pos-panel-1" hidden={tab !== 1} sx={{ flex: 1, display: tab === 1 ? 'flex' : 'none', flexDirection: 'column', minHeight: 0 }}>
@@ -496,6 +560,13 @@ export default function PosBillingPage() {
       </Box>
       <PaymentModal open={paymentOpen} onClose={function () { if (!loading) setPaymentOpen(false); }} netTotal={netTotal} amountReceived={amountReceived} onAmountChange={setAmountReceived} change={change} receiptPreviewLines={receiptPreviewLines} printReceiptAfterSave={printReceiptAfterSave} onPrintReceiptChange={setPrintReceiptAfterSave} onConfirm={handleCompleteSale} loading={loading} cartLength={cart.length} />
       <InvoiceDetailModal open={detailOpen} onClose={function () { setDetailOpen(false); }} invoice={detailInvoice} onPrint={handlePrint} />
+      <ProductSearchModal
+        open={productSearchModalOpen}
+        onClose={function () { setProductSearchModalOpen(false); }}
+        products={products}
+        uomList={uomList}
+        onSelectProduct={function (p) { addToCart(p, 1); setProductSearchModalOpen(false); setFocusedRowIndex(cart.length); }}
+      />
     </Box>
   );
 }

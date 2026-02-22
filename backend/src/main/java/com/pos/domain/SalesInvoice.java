@@ -71,6 +71,18 @@ public class SalesInvoice {
     @Column(name = "amount_received", nullable = false, precision = 18, scale = 2)
     private BigDecimal amountReceived = BigDecimal.ZERO;
 
+    @Column(name = "change_returned", nullable = false, precision = 18, scale = 2)
+    private BigDecimal changeReturned = BigDecimal.ZERO;
+
+    @Column(name = "invoice_status", nullable = false, length = 20)
+    private String invoiceStatus = "COMPLETED";
+
+    @Column(name = "print_without_header", nullable = false)
+    private Boolean printWithoutHeader = false;
+
+    @Column(name = "print_without_balance", nullable = false)
+    private Boolean printWithoutBalance = false;
+
     @Column(name = "remarks", columnDefinition = "TEXT")
     private String remarks;
 

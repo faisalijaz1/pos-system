@@ -7,6 +7,7 @@ PostgreSQL schema and seed data for the web-based POS system.
 1. **01_schema.sql** — Creates all tables, indexes, and the ledger running-balance view.
 2. **02_seed_data.sql** — Inserts roles, payment methods, delivery modes, transaction types, business info, default admin user, and units of measure.
 3. **03_seed_products.sql** — Optional. Inserts UOMs, brands, categories, and sample products (safe to run on existing DB; use when `/api/v1/products` returns empty).
+4. **04_migration_pos_upgrades.sql** — Run once on existing DB to add invoice columns: `change_returned`, `print_without_header`, `print_without_balance`, `invoice_status`, and transaction type `EXCHANGE`. Idempotent (safe to run multiple times on PostgreSQL 9.6+).
 
 ## Default admin
 

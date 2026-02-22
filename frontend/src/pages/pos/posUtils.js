@@ -29,6 +29,13 @@ export const DELIVERY_MODES = [
   { deliveryModeId: 2, modeName: 'Delivery' },
 ];
 
+/** Transaction types for invoice header (Sale, Sale Return, Exchange). */
+export const TRANSACTION_TYPES = [
+  { code: 'SALE', name: 'Sale' },
+  { code: 'RETURN', name: 'Sale Return' },
+  { code: 'EXCHANGE', name: 'Exchange' },
+];
+
 export const KEYBOARD_HINTS = 'F2 Search · Enter Add · +/- Qty · F4 Payment · Ctrl+P Print · Esc Close';
 
 /** Date input sx so value is never clipped (e.g. 02/20/2026). Use on all type="date" TextFields. */

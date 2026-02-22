@@ -37,6 +37,17 @@ public class CustomerService {
         return toSummaryDto(c);
     }
 
+    @Transactional(readOnly = true)
+    public java.math.BigDecimal getBalance(Integer customerId) {
+        Customer c = customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer", customerId));
+        if (c.getDeletedAt() != null) {
+            throw new ResourceNotFoundException("Customer", customerId);
+        }
+        Account acc = c.getAccount();
+        return acc != null ? acc.getCurrentBalance() : java.math.BigDecimal.ZERO;
+    }
+
     private CustomerSummaryDto toSummaryDto(Customer c) {
         Account acc = c.getAccount();
         return CustomerSummaryDto.builder()

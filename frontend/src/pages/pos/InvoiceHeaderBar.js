@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
-import { DELIVERY_MODES, KEYBOARD_HINTS, DATE_INPUT_SX, TIME_INPUT_SX } from './posUtils';
+import { DELIVERY_MODES, TRANSACTION_TYPES, KEYBOARD_HINTS, DATE_INPUT_SX, TIME_INPUT_SX } from './posUtils';
 
 /**
  * Invoice context bar: Invoice #, Date, Time, Trans type, Delivery mode, shortcuts.
@@ -25,6 +25,7 @@ export default function InvoiceHeaderBar({
   successMsg,
   onDateChange,
   onTimeChange,
+  onTransactionTypeChange,
   onDeliveryModeChange,
 }) {
   const theme = useTheme();
@@ -103,14 +104,21 @@ export default function InvoiceHeaderBar({
         ]}
         inputProps={{ 'aria-label': 'Invoice time' }}
       />
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-        <Typography variant="body2" color="text.secondary">
-          Trans.
-        </Typography>
-        <Typography variant="body2" fontWeight={600}>
-          {transactionTypeCode}
-        </Typography>
-      </Box>
+      <FormControl size="small" sx={{ minWidth: 140 }}>
+        <InputLabel id="trans-type-label">Trans. Type</InputLabel>
+        <Select
+          labelId="trans-type-label"
+          value={transactionTypeCode || 'SALE'}
+          label="Trans. Type"
+          onChange={(e) => onTransactionTypeChange && onTransactionTypeChange(e.target.value)}
+        >
+          {TRANSACTION_TYPES.map((t) => (
+            <MenuItem key={t.code} value={t.code}>
+              {t.name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
       <FormControl size="small" sx={{ minWidth: 128 }}>
         <InputLabel id="del-mode-label">Del. Mode</InputLabel>
         <Select

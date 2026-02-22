@@ -32,4 +32,10 @@ public class CustomerController {
     public ResponseEntity<CustomerSummaryDto> getById(@PathVariable Integer id) {
         return ResponseEntity.ok(customerService.findById(id));
     }
+
+    @GetMapping("/{id}/balance")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    public ResponseEntity<java.util.Map<String, java.math.BigDecimal>> getBalance(@PathVariable Integer id) {
+        return ResponseEntity.ok(java.util.Map.of("balance", customerService.getBalance(id)));
+    }
 }

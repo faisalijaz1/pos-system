@@ -47,11 +47,14 @@ public class SalesInvoiceService {
         User user = userRepository.findByUsernameAndDeletedAtIsNull(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", username));
 
-        TransactionType saleType = transactionTypeRepository.findByTypeCode(TRANSACTION_TYPE_SALE)
-                .orElseThrow(() -> new BadRequestException("Transaction type SALE not found. Run seed data."));
+        String txnCode = request.getTransactionTypeCode() != null ? request.getTransactionTypeCode().trim().toUpperCase() : TRANSACTION_TYPE_SALE;
+        TransactionType invoiceTxnType = transactionTypeRepository.findByTypeCode(txnCode)
+                .orElseThrow(() -> new BadRequestException("Transaction type not found: " + txnCode + ". Use SALE, RETURN, or EXCHANGE."));
 
-        TransactionType stockOutType = transactionTypeRepository.findByTypeCode(TRANSACTION_TYPE_STOCK_OUT)
-                .orElseThrow(() -> new BadRequestException("Transaction type STOCK_OUT not found. Run seed data."));
+        boolean isReturn = "RETURN".equals(txnCode) || "EXCHANGE".equals(txnCode);
+        TransactionType stockType = isReturn
+                ? transactionTypeRepository.findByTypeCode("STOCK_IN").orElseThrow(() -> new BadRequestException("Transaction type STOCK_IN not found."))
+                : transactionTypeRepository.findByTypeCode(TRANSACTION_TYPE_STOCK_OUT).orElseThrow(() -> new BadRequestException("Transaction type STOCK_OUT not found."));
 
         if (salesInvoiceRepository.findByInvoiceNumber(request.getInvoiceNumber()).isPresent()) {
             throw new BadRequestException("Invoice number already exists: " + request.getInvoiceNumber());
@@ -74,6 +77,7 @@ public class SalesInvoiceService {
                 ? deliveryModeRepository.findById(request.getDeliveryModeId()).orElse(null)
                 : null;
 
+        boolean saveAsDraft = Boolean.TRUE.equals(request.getSaveAsDraft());
         BigDecimal grandTotal = BigDecimal.ZERO;
         List<SalesInvoiceItem> invoiceItems = new ArrayList<>();
         List<StockTransactionItem> stockItems = new ArrayList<>();
@@ -87,7 +91,7 @@ public class SalesInvoiceService {
             }
 
             BigDecimal qty = itemReq.getQuantity();
-            if (product.getCurrentStock().compareTo(qty) < 0) {
+            if (!saveAsDraft && !isReturn && product.getCurrentStock().compareTo(qty) < 0) {
                 throw new BadRequestException(
                         "Insufficient stock for product " + product.getCode() + ". Available: " + product.getCurrentStock() + ", requested: " + qty);
             }
@@ -110,21 +114,30 @@ public class SalesInvoiceService {
                     .build();
             invoiceItems.add(invItem);
 
+            BigDecimal quantityChange = isReturn ? qty : qty.negate();
             StockTransactionItem stItem = StockTransactionItem.builder()
                     .product(product)
-                    .quantityChange(qty.negate())
+                    .quantityChange(quantityChange)
                     .priceAtTransaction(unitPrice)
                     .build();
             stockItems.add(stItem);
 
-            product.setCurrentStock(product.getCurrentStock().subtract(qty));
-            productRepository.save(product);
+            if (!saveAsDraft) {
+                if (isReturn) {
+                    product.setCurrentStock(product.getCurrentStock().add(qty));
+                } else {
+                    product.setCurrentStock(product.getCurrentStock().subtract(qty));
+                }
+                productRepository.save(product);
+            }
         }
 
         BigDecimal additionalDiscount = request.getAdditionalDiscount() != null ? request.getAdditionalDiscount() : BigDecimal.ZERO;
         BigDecimal additionalExpenses = request.getAdditionalExpenses() != null ? request.getAdditionalExpenses() : BigDecimal.ZERO;
         BigDecimal netTotal = grandTotal.subtract(additionalDiscount).add(additionalExpenses);
         BigDecimal amountReceived = request.getAmountReceived() != null ? request.getAmountReceived() : BigDecimal.ZERO;
+        BigDecimal changeReturned = request.getChangeReturned() != null ? request.getChangeReturned() : BigDecimal.ZERO;
+        String invoiceStatus = saveAsDraft ? "DRAFT" : "COMPLETED";
 
         SalesInvoice invoice = SalesInvoice.builder()
                 .invoiceNumber(request.getInvoiceNumber())
@@ -133,7 +146,7 @@ public class SalesInvoiceService {
                 .user(user)
                 .invoiceDate(request.getInvoiceDate())
                 .invoiceTime(request.getInvoiceTime())
-                .transactionType(saleType)
+                .transactionType(invoiceTxnType)
                 .deliveryMode(deliveryMode)
                 .isCashCustomer(Boolean.TRUE.equals(request.getIsCashCustomer()))
                 .grandTotal(grandTotal)
@@ -141,6 +154,10 @@ public class SalesInvoiceService {
                 .additionalExpenses(additionalExpenses)
                 .netTotal(netTotal)
                 .amountReceived(amountReceived)
+                .changeReturned(changeReturned)
+                .invoiceStatus(invoiceStatus)
+                .printWithoutHeader(Boolean.TRUE.equals(request.getPrintWithoutHeader()))
+                .printWithoutBalance(Boolean.TRUE.equals(request.getPrintWithoutBalance()))
                 .remarks(request.getRemarks())
                 .billingNo(request.getBillingNo())
                 .billingDate(request.getBillingDate())
@@ -154,27 +171,29 @@ public class SalesInvoiceService {
         }
         salesInvoiceRepository.saveAndFlush(invoice);
 
-        String recordNo = "ST-OUT-" + request.getInvoiceNumber() + "-" + UUID.randomUUID().toString().substring(0, 8);
-        while (stockTransactionRepository.existsByRecordNo(recordNo)) {
-            recordNo = "ST-OUT-" + request.getInvoiceNumber() + "-" + UUID.randomUUID().toString().substring(0, 8);
+        if (!saveAsDraft) {
+            String recordNo = "ST-" + (isReturn ? "IN" : "OUT") + "-" + request.getInvoiceNumber() + "-" + UUID.randomUUID().toString().substring(0, 8);
+            while (stockTransactionRepository.existsByRecordNo(recordNo)) {
+                recordNo = "ST-" + (isReturn ? "IN" : "OUT") + "-" + request.getInvoiceNumber() + "-" + UUID.randomUUID().toString().substring(0, 8);
+            }
+
+            StockTransaction stockTxn = StockTransaction.builder()
+                    .recordNo(recordNo)
+                    .branch(branch)
+                    .transactionDate(request.getInvoiceDate())
+                    .transactionType(stockType)
+                    .description((isReturn ? "Return" : "Sale") + ", Invoice # " + request.getInvoiceNumber())
+                    .user(user)
+                    .refSalesInvoice(invoice)
+                    .build();
+            for (StockTransactionItem sti : stockItems) {
+                sti.setStockTransaction(stockTxn);
+                stockTxn.getItems().add(sti);
+            }
+            stockTransactionRepository.save(stockTxn);
         }
 
-        StockTransaction stockTxn = StockTransaction.builder()
-                .recordNo(recordNo)
-                .branch(branch)
-                .transactionDate(request.getInvoiceDate())
-                .transactionType(stockOutType)
-                .description("Sale, Invoice # " + request.getInvoiceNumber())
-                .user(user)
-                .refSalesInvoice(invoice)
-                .build();
-        for (StockTransactionItem sti : stockItems) {
-            sti.setStockTransaction(stockTxn);
-            stockTxn.getItems().add(sti);
-        }
-        stockTransactionRepository.save(stockTxn);
-
-        if (customer != null && netTotal.compareTo(BigDecimal.ZERO) > 0) {
+        if (!saveAsDraft && customer != null && netTotal.compareTo(BigDecimal.ZERO) > 0) {
             Account revenueAccount = accountRepository.findFirstByAccountTypeAndIsActiveTrue(ACCOUNT_TYPE_REVENUE)
                     .orElseThrow(() -> new BadRequestException("Sales Revenue account not found. Add an account with type 'Revenue' (e.g. code REV001)."));
             ledgerService.post(
@@ -247,6 +266,10 @@ public class SalesInvoiceService {
                 .additionalExpenses(inv.getAdditionalExpenses())
                 .netTotal(inv.getNetTotal())
                 .amountReceived(inv.getAmountReceived())
+                .changeReturned(inv.getChangeReturned() != null ? inv.getChangeReturned() : BigDecimal.ZERO)
+                .invoiceStatus(inv.getInvoiceStatus())
+                .printWithoutHeader(inv.getPrintWithoutHeader())
+                .printWithoutBalance(inv.getPrintWithoutBalance())
                 .remarks(inv.getRemarks())
                 .billingNo(inv.getBillingNo())
                 .billingDate(inv.getBillingDate())

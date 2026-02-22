@@ -45,6 +45,14 @@ public class CreateInvoiceRequest {
     @DecimalMin(value = "0", message = "Amount received must be non-negative")
     private BigDecimal amountReceived = BigDecimal.ZERO;
 
+    @DecimalMin(value = "0", message = "Change returned must be non-negative")
+    private BigDecimal changeReturned = BigDecimal.ZERO;
+
+    private Boolean saveAsDraft = false;
+
+    private Boolean printWithoutHeader = false;
+    private Boolean printWithoutBalance = false;
+
     private String remarks;
     private String billingNo;
     private LocalDate billingDate;

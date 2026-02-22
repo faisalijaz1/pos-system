@@ -34,6 +34,10 @@ public class InvoiceResponse {
     private BigDecimal additionalExpenses;
     private BigDecimal netTotal;
     private BigDecimal amountReceived;
+    private BigDecimal changeReturned;
+    private String invoiceStatus;
+    private Boolean printWithoutHeader;
+    private Boolean printWithoutBalance;
     private String remarks;
     private String billingNo;
     private LocalDate billingDate;

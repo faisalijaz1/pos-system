@@ -49,7 +49,15 @@ export default function CustomerPanel({
               <TextField {...params} placeholder="Customer name/code" />
             )}
           />
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+          {selectedCustomer && (
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', mt: 0.5 }}>
+              <span>ID</span>
+              <Typography component="span" variant="body2" fontWeight={600} color="text.secondary">
+                {selectedCustomer.customerId}
+              </Typography>
+            </Box>
+          )}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', mt: 0.25 }}>
             <span>Prev. Balance</span>
             <strong>{formatMoney(prevBalance)}</strong>
           </Box>
