@@ -67,13 +67,15 @@ export default function CustomerPanel({
         size="small"
         options={customerOptions}
         getOptionLabel={getOptionLabel}
-        value={isCashCustomer ? null : selectedCustomer}
+        value={selectedCustomer}
         inputValue={customerInput}
         onInputChange={(_, v) => onCustomerInputChange(v)}
-        onChange={(_, v) => onCustomerChange(v)}
-        disabled={isCashCustomer}
+        onChange={(_, v) => {
+          onCustomerChange(v);
+          if (v != null) onCashCustomerChange(false);
+        }}
         renderInput={(params) => (
-          <TextField {...params} placeholder={isCashCustomer ? 'Cash sale' : 'Search name or code'} />
+          <TextField {...params} placeholder="Search name or code (min 2 chars)" />
         )}
         sx={{ mb: 1 }}
       />
