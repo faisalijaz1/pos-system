@@ -59,7 +59,7 @@ export default function InvoiceGrid({
         borderRadius: 1,
       }}
     >
-      <TableContainer sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+      <TableContainer sx={{ flex: 1, minHeight: 0, overflow: 'auto' }} component="div">
         <Table
           size="small"
           stickyHeader
@@ -78,9 +78,17 @@ export default function InvoiceGrid({
               whiteSpace: 'nowrap',
               boxShadow: theme.palette.mode === 'dark' ? '0 1px 0 rgba(255,255,255,0.08)' : '0 1px 0 rgba(0,0,0,0.08)',
             },
+            '& tbody': {
+              minHeight: 120,
+            },
             '& tbody td': {
               borderColor: 'divider',
               borderBottomWidth: 1,
+              color: 'text.primary',
+              bgcolor: 'background.paper',
+            },
+            '& tbody tr:hover td': {
+              bgcolor: 'action.hover',
             },
           }}
         >
@@ -100,7 +108,7 @@ export default function InvoiceGrid({
           <TableBody>
             {items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} align="center" sx={{ py: 4, color: 'text.secondary', fontSize: '0.875rem' }}>
+                <TableCell colSpan={9} align="center" sx={{ py: 4, color: 'text.primary', fontSize: '0.875rem', bgcolor: 'background.default' }}>
                   {emptyMessage}
                 </TableCell>
               </TableRow>
@@ -162,7 +170,7 @@ export default function InvoiceGrid({
                     {uomList.length && onUnitChange ? (
                       <FormControl size="small" sx={{ minWidth: 88 }} onClick={(e) => e.stopPropagation()}>
                         <Select
-                          value={r.uomId ?? ''}
+                          value={r.uomId ?? r.uom_id ?? ''}
                           onChange={(e) => onUnitChange(rowId, e.target.value)}
                           displayEmpty
                           sx={{ height: 28, fontSize: '0.8rem' }}

@@ -187,7 +187,8 @@ export default function PosBillingPage() {
 
   function addToCart(product, qty) {
     qty = qty || 1;
-    const pid = product.productId ?? product.product_id;
+    const pid = product.productId ?? product.product_id ?? product.id;
+    if (pid == null) return;
     const existing = cart.find(function (c) { return (c.productId ?? c.product_id) === pid; });
     const price = Number(product.sellingPrice) || Number(product.selling_price) || 0;
     const stock = product.currentStock != null ? Number(product.currentStock) : (product.current_stock != null ? Number(product.current_stock) : null);
@@ -484,19 +485,19 @@ export default function PosBillingPage() {
               onKeyDown={handleSearchKeyDown}
             />
           </Box>
-          <Box sx={{ flexShrink: 0, height: 320, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <InvoiceGrid cartItems={cart} cart={cart} focusedRowIndex={focusedRowIndex} onRowClick={setFocusedRowIndex} onQtyChange={updateQty} onQtyDirect={setQtyDirect} onRemove={removeFromCart} uomList={uomList} onUnitChange={setUnit} />
-          </Box>
-          <Box sx={{ flexShrink: 0 }}>
+          <Box sx={{ flexShrink: 0, border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'hidden', bgcolor: 'background.paper' }}>
+            <Box sx={{ height: 320, minHeight: 320, display: 'flex', flexDirection: 'column' }}>
+              <InvoiceGrid cartItems={cart} cart={cart} focusedRowIndex={focusedRowIndex} onRowClick={setFocusedRowIndex} onQtyChange={updateQty} onQtyDirect={setQtyDirect} onRemove={removeFromCart} uomList={uomList} onUnitChange={setUnit} />
+            </Box>
             <InvoiceBottomStrip
-            noOfTitles={noOfTitles}
-            totalQuantity={totalQuantity}
-            grandTotal={grandTotal}
-            additionalDiscount={additionalDiscount}
-            additionalExpenses={additionalExpenses}
-            netTotal={netTotal}
-            onDiscountChange={setAdditionalDiscount}
-            onExpensesChange={setAdditionalExpenses}
+              noOfTitles={noOfTitles}
+              totalQuantity={totalQuantity}
+              grandTotal={grandTotal}
+              additionalDiscount={additionalDiscount}
+              additionalExpenses={additionalExpenses}
+              netTotal={netTotal}
+              onDiscountChange={setAdditionalDiscount}
+              onExpensesChange={setAdditionalExpenses}
             />
           </Box>
           <Box sx={{ px: 1, pb: 1, flexShrink: 0 }}>

@@ -34,6 +34,7 @@ export default function InvoiceBottomStrip({
         borderTop: '2px solid',
         borderColor: 'divider',
         borderRadius: 0,
+        minHeight: 56,
       }}
     >
       <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
