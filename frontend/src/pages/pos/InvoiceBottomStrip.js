@@ -84,7 +84,7 @@ export default function InvoiceBottomStrip({
         }}
       >
         <Typography className="net-total-label" variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-          Net Total
+          NET Total
         </Typography>
         <Box
           className="net-total-value"
