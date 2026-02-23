@@ -520,8 +520,8 @@ export default function PosBillingPage() {
               onKeyDown={handleSearchKeyDown}
             />
           </Box>
-          <Box sx={{ flexShrink: 0, border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'hidden', bgcolor: 'background.paper' }}>
-            <Box sx={{ height: 320, minHeight: 320, display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ flexShrink: 0, border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'visible', bgcolor: 'background.paper' }}>
+            <Box sx={{ height: 320, minHeight: 320, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <InvoiceGrid cartItems={cart} cart={cart} focusedRowIndex={focusedRowIndex} onRowClick={setFocusedRowIndex} onQtyChange={updateQty} onQtyDirect={setQtyDirect} onRemove={removeFromCart} uomList={uomList} onUnitChange={setUnit} />
             </Box>
             <InvoiceBottomStrip
