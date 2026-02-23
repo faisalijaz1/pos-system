@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, FormControl, Select, MenuItem, TextField, IconButton } from '@mui/material';
+import { Box, Typography, FormControl, Select, MenuItem, TextField, IconButton, FormControlLabel, Checkbox } from '@mui/material';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
 import { DELIVERY_MODES, TRANSACTION_TYPES, KEYBOARD_HINTS } from './posUtils';
 
@@ -14,6 +14,8 @@ export default function InvoiceTopBar({
   onTransactionTypeChange,
   onDeliveryModeChange,
   onClear,
+  isCashCustomer,
+  onCashCustomerChange,
 }) {
   return (
     <Box
@@ -37,6 +39,20 @@ export default function InvoiceTopBar({
           <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace', fontWeight: 500 }}>
             Invoice # {invoiceNumber}
           </Typography>
+          {typeof isCashCustomer === 'boolean' && onCashCustomerChange && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="small"
+                  checked={isCashCustomer}
+                  onChange={(e) => onCashCustomerChange(e.target.checked)}
+                  inputProps={{ 'aria-label': 'Cash customer' }}
+                />
+              }
+              label={<Typography variant="caption">Cash Customer</Typography>}
+              sx={{ mr: 0 }}
+            />
+          )}
           {onClear && (
             <IconButton size="small" onClick={onClear} aria-label="Clear all" title="Clear All" sx={{ p: 0.5 }}>
               <ClearAllIcon fontSize="small" />

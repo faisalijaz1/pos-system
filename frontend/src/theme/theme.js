@@ -33,6 +33,20 @@ const getTheme = (mode) =>
           root: { textTransform: 'none', fontWeight: 600 },
         },
       },
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            '& .MuiInputBase-input[type="date"]::-webkit-calendar-picker-indicator': {
+              opacity: 1,
+              ...(mode === 'dark' && { filter: 'invert(1)' }),
+            },
+            '& .MuiInputBase-input[type="time"]::-webkit-calendar-picker-indicator': {
+              opacity: 1,
+              ...(mode === 'dark' && { filter: 'invert(1)' }),
+            },
+          },
+        },
+      },
       MuiCard: {
         styleOverrides: {
           root: {

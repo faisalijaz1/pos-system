@@ -116,17 +116,10 @@ export default function PosBillingPage() {
   useEffect(function () { setSearchHighlightIndex(0); }, [search]);
 
   useEffect(function () {
-    if (customerInput.length < 2) {
-      setCustomerOptions([]);
-      return;
-    }
-    const t = setTimeout(function () {
-      customersApi.list(customerInput, 0, 15).then(function (res) {
-        setCustomerOptions(res.data && res.data.content ? res.data.content : []);
-      }).catch(function () { setCustomerOptions([]); });
-    }, 200);
-    return function () { clearTimeout(t); };
-  }, [customerInput]);
+    customersApi.list('', 0, 200).then(function (res) {
+      setCustomerOptions(res.data && res.data.content ? res.data.content : []);
+    }).catch(function () { setCustomerOptions([]); });
+  }, []);
 
   useEffect(function () {
     console.log('POS key listener attached');
@@ -462,6 +455,8 @@ export default function PosBillingPage() {
           onTransactionTypeChange={setTransactionTypeCode}
           onDeliveryModeChange={setDeliveryModeId}
           onClear={clearScreen}
+          isCashCustomer={isCashCustomer}
+          onCashCustomerChange={function (v) { setIsCashCustomer(v); if (v) { setSelectedCustomer(null); setCustomerInput(''); } }}
         />
         <Box sx={{ px: { xs: 1, md: 2 } }}>
           <CustomerStrip
@@ -489,7 +484,7 @@ export default function PosBillingPage() {
               onKeyDown={handleSearchKeyDown}
             />
           </Box>
-          <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+          <Box sx={{ flex: 1, minHeight: 260, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <InvoiceGrid cartItems={cart} cart={cart} focusedRowIndex={focusedRowIndex} onRowClick={setFocusedRowIndex} onQtyChange={updateQty} onQtyDirect={setQtyDirect} onRemove={removeFromCart} uomList={uomList} onUnitChange={setUnit} />
           </Box>
           <InvoiceBottomStrip
