@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, TextField } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 
 /**
@@ -74,34 +75,45 @@ export default function InvoiceBottomStrip({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 2,
+          gap: 1.5,
           marginRight: 0,
           marginLeft: 'auto',
           flexShrink: 0,
           paddingLeft: 2,
         }}
       >
-        <Typography className="net-total-label" variant="body2" color="text.secondary">
+        <Typography className="net-total-label" variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
           NET:
         </Typography>
-        <Typography
+        <Box
           className="net-total-value"
-          component="span"
           sx={{
-            fontSize: 22,
-            fontWeight: 700,
-            color: 'primary.main',
-            minWidth: 100,
-            textAlign: 'right',
-            bgcolor: 'background.paper',
-            padding: '6px 12px',
-            borderRadius: 1,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-            fontVariantNumeric: 'tabular-nums',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            minWidth: 120,
+            px: 2,
+            py: 1.25,
+            borderRadius: 2,
+            bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.2) : alpha(theme.palette.primary.main, 0.08),
+            border: '2px solid',
+            borderColor: 'primary.main',
+            boxShadow: theme.palette.mode === 'dark' ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)',
           }}
         >
-          {formatMoney(netTotal)}
-        </Typography>
+          <Typography
+            component="span"
+            sx={{
+              fontSize: 24,
+              fontWeight: 800,
+              color: 'primary.main',
+              fontVariantNumeric: 'tabular-nums',
+              letterSpacing: '0.02em',
+            }}
+          >
+            {formatMoney(netTotal)}
+          </Typography>
+        </Box>
       </Box>
     </Box>
   );

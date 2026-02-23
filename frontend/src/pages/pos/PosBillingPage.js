@@ -82,6 +82,8 @@ export default function PosBillingPage() {
   const [uomList, setUomList] = useState([]);
   const [searchHighlightIndex, setSearchHighlightIndex] = useState(0);
   const [productSearchModalOpen, setProductSearchModalOpen] = useState(false);
+  const [soldHist, setSoldHist] = useState('');
+  const [soldHistLoading, setSoldHistLoading] = useState(false);
 
   const grandTotal = cart.reduce((s, r) => s + Number(r.lineTotal || 0), 0);
   const netTotal = Math.max(0, grandTotal - Number(additionalDiscount) + Number(additionalExpenses));
@@ -120,6 +122,37 @@ export default function PosBillingPage() {
       setCustomerOptions(res.data && res.data.content ? res.data.content : []);
     }).catch(function () { setCustomerOptions([]); });
   }, []);
+
+  useEffect(function () {
+    const cid = selectedCustomer && (selectedCustomer.customerId ?? selectedCustomer.customer_id);
+    if (!cid || isCashCustomer) {
+      setSoldHist('');
+      setSoldHistLoading(false);
+      return;
+    }
+    setSoldHistLoading(true);
+    setSoldHist('');
+    invoicesApi.getLastByCustomer(cid)
+      .then(function (inv) {
+        if (!inv) { setSoldHist(''); return; }
+        const items = inv.items || inv.lineItems || [];
+        const first = items[0];
+        const invNum = inv.invoiceNumber || inv.invoice_number || '';
+        const dateStr = inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString() : (inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString() : '');
+        let line = '';
+        if (first) {
+          const qty = first.quantity ?? first.qty ?? '';
+          const uom = first.uomName || first.uom_name || first.productName || '';
+          const rate = first.unitPrice ?? first.unit_price ?? first.lineTotal ?? '';
+          line = (qty && uom ? qty + ' ' + uom + ' @ ' : '') + (rate ? '(' + formatMoney(rate) + ')' : '') + (invNum ? ' Inv # ' + invNum : '') + (dateStr ? ' Dated ' + dateStr : '');
+        } else {
+          line = (invNum ? 'Inv # ' + invNum : '') + (dateStr ? ' Dated ' + dateStr : '') + (inv.netTotal != null ? ' — ' + formatMoney(inv.netTotal) : '');
+        }
+        setSoldHist(line.trim() || '—');
+      })
+      .catch(function () { setSoldHist(''); })
+      .finally(function () { setSoldHistLoading(false); });
+  }, [selectedCustomer, isCashCustomer]);
 
   useEffect(function () {
     console.log('POS key listener attached');
@@ -471,6 +504,8 @@ export default function PosBillingPage() {
             prevBalance={prevBalance}
             withThisBill={withThisBill}
             netTotal={netTotal}
+            soldHist={soldHist}
+            soldHistLoading={soldHistLoading}
           />
         </Box>
         <Paper elevation={0} sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 420, mx: { xs: 1, md: 2 }, mb: 1, borderRadius: 2, overflow: 'visible', boxShadow: theme.palette.mode === 'dark' ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)' }}>

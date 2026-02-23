@@ -3,8 +3,8 @@ import { Box, Typography, Autocomplete, TextField } from '@mui/material';
 import { formatMoney } from './posUtils';
 
 /**
- * Customer strip: Customer label + dropdown (only database customers, no "Cash Customer" option).
- * When Cash Customer is checked in header, display "Cash Customer" in the field; otherwise show selected customer.
+ * Customer strip: Customer label + dropdown, Prev Bal, This Bill, and optional Sold Hist (last order).
+ * When Cash Customer is checked in header, display "Cash Customer"; otherwise show selected customer.
  */
 export default function CustomerStrip({
   isCashCustomer,
@@ -17,6 +17,8 @@ export default function CustomerStrip({
   prevBalance,
   withThisBill,
   netTotal,
+  soldHist,
+  soldHistLoading,
 }) {
   const getOptionLabel = (o) => {
     if (!o || typeof o === 'string') return o || '';
@@ -87,6 +89,34 @@ export default function CustomerStrip({
       <Typography variant="body2" color="text.secondary" component="span">
         This Bill: <strong>{formatMoney(thisBillDisplay)}</strong>
       </Typography>
+      {!isCashCustomer && selectedCustomer && (
+        <>
+          <Typography variant="body2" color="text.secondary" component="span" sx={{ mx: 0.5 }}>
+            |
+          </Typography>
+          <Typography variant="body2" color="text.secondary" component="span">
+            Sold Hist:
+          </Typography>
+          <Box
+            component="span"
+            sx={{
+              display: 'inline-block',
+              minWidth: 200,
+              maxWidth: 360,
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              bgcolor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
+              fontSize: '0.8125rem',
+              color: 'text.primary',
+            }}
+          >
+            {soldHistLoading ? '…' : soldHist || '—'}
+          </Box>
+        </>
+      )}
     </Box>
   );
 }
