@@ -28,13 +28,16 @@ export default function InvoiceBottomStrip({
         flexWrap: 'wrap',
         justifyContent: 'space-between',
         alignItems: 'center',
+        alignContent: 'center',
         gap: 2,
-        padding: '12px 16px',
+        padding: '14px 16px',
         background: stripBg,
         borderTop: '2px solid',
         borderColor: 'divider',
         borderRadius: 0,
-        minHeight: 56,
+        minHeight: 64,
+        flexShrink: 0,
+        paddingBottom: 2,
       }}
     >
       <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
@@ -72,9 +75,10 @@ export default function InvoiceBottomStrip({
           display: 'flex',
           alignItems: 'center',
           gap: 2,
-          marginRight: 1,
+          marginRight: 0,
           marginLeft: 'auto',
           flexShrink: 0,
+          paddingLeft: 2,
         }}
       >
         <Typography className="net-total-label" variant="body2" color="text.secondary">
@@ -84,13 +88,13 @@ export default function InvoiceBottomStrip({
           className="net-total-value"
           component="span"
           sx={{
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: 700,
             color: 'primary.main',
-            minWidth: 120,
+            minWidth: 100,
             textAlign: 'right',
             bgcolor: 'background.paper',
-            padding: '8px 16px',
+            padding: '6px 12px',
             borderRadius: 1,
             boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
             fontVariantNumeric: 'tabular-nums',

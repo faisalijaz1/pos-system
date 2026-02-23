@@ -21,8 +21,8 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { formatMoney } from './posUtils';
 
-/** Min touch target (a11y). */
-const TOUCH_MIN = 44;
+/** Min touch target for qty/actions (slightly reduced for compact rows). */
+const TOUCH_MIN = 36;
 
 /**
  * Invoice items table - PRIMARY, always visible.
@@ -72,20 +72,22 @@ export default function InvoiceGrid({
               backgroundColor: theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main,
               color: '#fff',
               fontWeight: 600,
-              py: 0.75,
+              py: 0.5,
               fontSize: '0.75rem',
               borderBottom: 'none',
               whiteSpace: 'nowrap',
               boxShadow: theme.palette.mode === 'dark' ? '0 1px 0 rgba(255,255,255,0.08)' : '0 1px 0 rgba(0,0,0,0.08)',
             },
             '& tbody': {
-              minHeight: 120,
+              minHeight: 80,
             },
             '& tbody td': {
               borderColor: 'divider',
               borderBottomWidth: 1,
               color: 'text.primary',
               bgcolor: 'background.paper',
+              paddingTop: 4,
+              paddingBottom: 4,
             },
             '& tbody tr:hover td': {
               bgcolor: 'action.hover',
@@ -98,7 +100,7 @@ export default function InvoiceGrid({
               <TableCell component="th" scope="col">Code</TableCell>
               <TableCell component="th" scope="col">Product Name</TableCell>
               <TableCell component="th" scope="col" align="right">Stock</TableCell>
-              <TableCell component="th" scope="col" align="right">Qty</TableCell>
+              <TableCell component="th" scope="col" align="center">Qty</TableCell>
               <TableCell component="th" scope="col">Unit</TableCell>
               <TableCell component="th" scope="col" align="right">Price</TableCell>
               <TableCell component="th" scope="col" align="right">Total</TableCell>
@@ -122,7 +124,7 @@ export default function InvoiceGrid({
                   selected={focusedRowIndex === idx}
                   onClick={() => onRowClick(idx)}
                   sx={{
-                    '& td': { py: 0.5, fontSize: '0.8rem' },
+                    '& td': { py: 0.25, fontSize: '0.8rem' },
                     bgcolor: focusedRowIndex === idx ? alpha(theme.palette.primary.main, 0.08) : undefined,
                   }}
                 >
@@ -138,7 +140,7 @@ export default function InvoiceGrid({
                       {r.currentStock != null ? formatMoney(r.currentStock) : (r.current_stock != null ? formatMoney(r.current_stock) : '—')}
                     </Typography>
                   </TableCell>
-                  <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                  <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
                     <IconButton
                       size="small"
                       onClick={(e) => { e.stopPropagation(); onQtyChange(rowId, -1); }}
@@ -154,7 +156,7 @@ export default function InvoiceGrid({
                       onChange={(e) => onQtyDirect(rowId, e.target.value)}
                       onBlur={(e) => onQtyDirect(rowId, e.target.value)}
                       inputProps={{ min: 0, step: 0.001, 'aria-label': 'Quantity' }}
-                      sx={{ width: 56, '& .MuiInputBase-input': { py: 0.75, textAlign: 'center' } }}
+                      sx={{ width: 48, '& .MuiInputBase-input': { py: 0.5, textAlign: 'center', fontSize: '0.875rem' } }}
                       onClick={(e) => e.stopPropagation()}
                     />
                     <IconButton
@@ -173,7 +175,7 @@ export default function InvoiceGrid({
                           value={r.uomId ?? r.uom_id ?? ''}
                           onChange={(e) => onUnitChange(rowId, e.target.value)}
                           displayEmpty
-                          sx={{ height: 28, fontSize: '0.8rem' }}
+                          sx={{ height: 26, fontSize: '0.8rem' }}
                         >
                           {uomList.map((u) => (
                             <MenuItem key={u.uomId} value={u.uomId}>{u.name || u.symbol || u.uomId}</MenuItem>

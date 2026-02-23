@@ -34,7 +34,7 @@ export default function InvoiceBottomPanel({
       elevation={0}
       sx={{
         p: 2,
-        mt: 1,
+        mt: 2,
         borderRadius: 2,
         boxShadow: theme.palette.mode === 'dark' ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)',
         border: '1px solid',
