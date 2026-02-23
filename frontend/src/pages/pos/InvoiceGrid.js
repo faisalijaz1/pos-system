@@ -67,15 +67,15 @@ export default function InvoiceGrid({
                 },
               }}
             >
-              <TableCell component="th" scope="col">Sr #</TableCell>
-              <TableCell component="th" scope="col">Code</TableCell>
+              <TableCell component="th" scope="col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>Sr #</TableCell>
+              <TableCell component="th" scope="col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>Code</TableCell>
               <TableCell component="th" scope="col">Product Name</TableCell>
-              <TableCell component="th" scope="col" align="right">Stock</TableCell>
+              <TableCell component="th" scope="col" align="right" sx={{ display: { xs: 'none', md: 'table-cell' } }}>Stock</TableCell>
               <TableCell component="th" scope="col" align="right">Qty</TableCell>
-              <TableCell component="th" scope="col">Unit</TableCell>
+              <TableCell component="th" scope="col" sx={{ display: { xs: 'none', md: 'table-cell' } }}>Unit</TableCell>
               <TableCell component="th" scope="col" align="right">Price</TableCell>
               <TableCell component="th" scope="col" align="right">Total</TableCell>
-              <TableCell component="th" scope="col" align="right" width={40} />
+              <TableCell component="th" scope="col" align="right" width={44} />
             </TableRow>
           </TableHead>
           <TableBody>
@@ -93,10 +93,10 @@ export default function InvoiceGrid({
                       : undefined,
                 }}
               >
-                <TableCell>{idx + 1}</TableCell>
-                <TableCell>{r.productCode}</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{idx + 1}</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{r.productCode}</TableCell>
                 <TableCell>{r.productName || r.productCode}</TableCell>
-                <TableCell align="right">
+                <TableCell align="right" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                   <Typography
                     component="span"
                     variant="caption"
@@ -118,10 +118,10 @@ export default function InvoiceGrid({
                       e.stopPropagation();
                       onQtyChange(r.productId, -1);
                     }}
-                    sx={{ p: 0.25 }}
+                    sx={{ minWidth: 44, minHeight: 44, p: 0.5 }}
                     aria-label="Decrease quantity"
                   >
-                    <RemoveIcon fontSize="small" />
+                    <RemoveIcon />
                   </IconButton>
                   <TextField
                     size="small"
@@ -132,13 +132,10 @@ export default function InvoiceGrid({
                     inputProps={{
                       min: 0,
                       step: 0.001,
-                      style: {
-                        width: 44,
-                        textAlign: 'center',
-                        padding: '2px 4px',
-                      },
+                      style: { width: 44, textAlign: 'center' },
+                      'aria-label': 'Quantity',
                     }}
-                    sx={{ width: 52, '& .MuiInputBase-input': { py: 0.25 } }}
+                    sx={{ width: 56, '& .MuiInputBase-input': { py: 0.75 } }}
                     onClick={(e) => e.stopPropagation()}
                   />
                   <IconButton
@@ -147,13 +144,13 @@ export default function InvoiceGrid({
                       e.stopPropagation();
                       onQtyChange(r.productId, 1);
                     }}
-                    sx={{ p: 0.25 }}
+                    sx={{ minWidth: 44, minHeight: 44, p: 0.5 }}
                     aria-label="Increase quantity"
                   >
-                    <AddIcon fontSize="small" />
+                    <AddIcon />
                   </IconButton>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                   {uomList.length && onUnitChange ? (
                     <FormControl size="small" sx={{ minWidth: 88 }} onClick={(e) => e.stopPropagation()}>
                       <Select
@@ -182,9 +179,10 @@ export default function InvoiceGrid({
                       e.stopPropagation();
                       onRemove(r.productId);
                     }}
+                    sx={{ minWidth: 44, minHeight: 44 }}
                     aria-label="Remove line"
                   >
-                    <DeleteIcon fontSize="small" />
+                    <DeleteIcon />
                   </IconButton>
                 </TableCell>
               </TableRow>

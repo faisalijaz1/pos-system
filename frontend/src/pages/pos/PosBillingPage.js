@@ -12,29 +12,23 @@ import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
-import Collapse from '@mui/material/Collapse';
-import Divider from '@mui/material/Divider';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
 import { alpha } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
-import PaymentIcon from '@mui/icons-material/Payment';
 import HistoryIcon from '@mui/icons-material/History';
 import PinIcon from '@mui/icons-material/Pin';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { invoicesApi } from '../../api/invoices';
 import { customersApi } from '../../api/customers';
 import { productsApi } from '../../api/products';
 import { uomApi } from '../../api/uom';
 import { formatMoney, formatTime, generateInvoiceNumber } from './posUtils';
-import InvoiceHeaderBar from './InvoiceHeaderBar';
+import InvoiceTopBar from './InvoiceTopBar';
+import CustomerCardSection from './CustomerCardSection';
+import FinancialSummaryStrip from './FinancialSummaryStrip';
+import BillingDetailsPanel from './BillingDetailsPanel';
 import { DATE_INPUT_SX } from './posUtils';
 import ProductSearchBar from './ProductSearchBar';
 import InvoiceGrid from './InvoiceGrid';
-import CustomerPanel from './CustomerPanel';
-import TotalsPanel from './TotalsPanel';
 import PaymentModal from './PaymentModal';
 import InvoiceDetailModal from './InvoiceDetailModal';
 import ProductSearchModal from './ProductSearchModal';
@@ -88,6 +82,7 @@ export default function PosBillingPage() {
   const [uomList, setUomList] = useState([]);
   const [searchHighlightIndex, setSearchHighlightIndex] = useState(0);
   const [productSearchModalOpen, setProductSearchModalOpen] = useState(false);
+  const customerCardRef = useRef(null);
 
   const grandTotal = cart.reduce((s, r) => s + Number(r.lineTotal || 0), 0);
   const netTotal = Math.max(0, grandTotal - Number(additionalDiscount) + Number(additionalExpenses));
@@ -447,54 +442,25 @@ export default function PosBillingPage() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 88px)', minHeight: 480 }}>
-      <InvoiceHeaderBar
-        invoiceNumber={invoiceNumber}
-        invoiceDate={invoiceDate}
-        invoiceTime={invoiceTime}
-        transactionTypeCode={transactionTypeCode}
-        deliveryModeId={deliveryModeId}
-        successMsg={successMsg}
-        onDateChange={setInvoiceDate}
-        onTimeChange={setInvoiceTime}
-        onTransactionTypeChange={setTransactionTypeCode}
-        onDeliveryModeChange={setDeliveryModeId}
-        onSaveDraft={handleSaveDraft}
-        onCancel={clearScreen}
-        onClear={clearScreen}
-        saveDraftDisabled={cart.length === 0}
-        loading={loading}
-      />
-      <Tabs value={tab} onChange={function (_, v) { setTab(v); }} sx={{ minHeight: 40, mb: 1 }}>
+      <Tabs value={tab} onChange={function (_, v) { setTab(v); }} sx={{ minHeight: 40, borderBottom: 1, borderColor: 'divider' }}>
         <Tab label="Billing" id="pos-tab-0" />
         <Tab label="Sales History" icon={<HistoryIcon />} iconPosition="start" id="pos-tab-1" />
         <Tab label="By Invoice No" icon={<PinIcon />} iconPosition="start" id="pos-tab-2" />
       </Tabs>
-      <Box role="region" id="pos-panel-0" hidden={tab !== 0} sx={{ flex: 1, display: tab === 0 ? 'flex' : 'none', flexDirection: { xs: 'column', md: 'row' }, gap: 1, minHeight: 0, overflow: 'hidden' }}>
-        <Paper elevation={2} sx={{ flex: tab === 0 ? '1 1 70%' : '1 1 100%', display: 'flex', flexDirection: 'column', minWidth: 0, borderRadius: 1, overflow: 'hidden' }}>
-          <Box ref={searchRef} sx={{ display: 'contents' }}>
-            <ProductSearchBar
-              search={search}
-              onSearchChange={setSearch}
-              searchResults={searchProducts}
-              highlightedIndex={safeHighlightIndex}
-              onSelectProduct={function (p) { addToCart(p, 1); setSearch(''); setSearchHighlightIndex(0); setFocusedRowIndex(cart.length); }}
-              onCloseDropdown={function () { setSearch(''); setSearchHighlightIndex(0); }}
-              onKeyDown={handleSearchKeyDown}
-            />
-          </Box>
-          <InvoiceGrid cart={cart} focusedRowIndex={focusedRowIndex} onRowClick={setFocusedRowIndex} onQtyChange={updateQty} onQtyDirect={setQtyDirect} onRemove={removeFromCart} uomList={uomList} onUnitChange={setUnit} />
-          <Box sx={{ px: 1, pb: 1, pt: 0.5 }}>
-            <SoldHistoryPanel
-            productId={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productId : null}
-            productCode={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productCode : null}
-            productName={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productName : null}
-            customerId={selectedCustomer && selectedCustomer.customerId}
-            productsApiGetLastSale={function (pid, cid) { return productsApi.getLastSale(pid, cid); }}
-            />
-          </Box>
-        </Paper>
-        <Paper elevation={2} sx={{ flex: '0 0 30%', minWidth: 280, maxWidth: 380, p: 1.5, display: 'flex', flexDirection: 'column', gap: 1, borderRadius: 1, overflow: 'auto' }}>
-          <CustomerPanel
+      <Box role="region" id="pos-panel-0" hidden={tab !== 0} sx={{ flex: 1, display: tab === 0 ? 'flex' : 'none', flexDirection: 'column', minHeight: 0, overflow: 'auto' }}>
+        <InvoiceTopBar
+          invoiceNumber={invoiceNumber}
+          invoiceDate={invoiceDate}
+          invoiceTime={invoiceTime}
+          transactionTypeCode={transactionTypeCode}
+          deliveryModeId={deliveryModeId}
+          onDateChange={setInvoiceDate}
+          onTimeChange={setInvoiceTime}
+          onTransactionTypeChange={setTransactionTypeCode}
+          onDeliveryModeChange={setDeliveryModeId}
+        />
+        <Box ref={customerCardRef} sx={{ px: { xs: 1, md: 2 }, pt: 1 }}>
+          <CustomerCardSection
             isCashCustomer={isCashCustomer}
             onCashCustomerChange={function (v) { setIsCashCustomer(v); if (v) { setSelectedCustomer(null); setCustomerInput(''); } }}
             selectedCustomer={selectedCustomer}
@@ -505,28 +471,74 @@ export default function PosBillingPage() {
             prevBalance={prevBalance}
             withThisBill={withThisBill}
             netTotal={netTotal}
+            onChangeClick={function () { customerCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }}
           />
-          <TotalsPanel noOfTitles={noOfTitles} totalQuantity={totalQuantity} grandTotal={grandTotal} additionalDiscount={additionalDiscount} additionalExpenses={additionalExpenses} netTotal={netTotal} onDiscountChange={setAdditionalDiscount} onExpensesChange={setAdditionalExpenses} />
-          <TextField size="small" fullWidth label="Remarks" value={remarks} onChange={function (e) { setRemarks(e.target.value); }} multiline minRows={1} placeholder="Optional" />
-          <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 1.5, mt: 0.5 }}>
-            <Button fullWidth variant="contained" color="primary" size="large" startIcon={<PaymentIcon />} onClick={function () { setPaymentOpen(true); }} disabled={cart.length === 0 || loading} sx={{ py: 1.25, fontWeight: 700 }}>Complete Sale (F4)</Button>
+        </Box>
+        <Paper elevation={0} sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, mx: { xs: 1, md: 2 }, mb: 1, borderRadius: 2, overflow: 'hidden', boxShadow: theme.palette.mode === 'dark' ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)' }}>
+          <Box ref={searchRef}>
+            <ProductSearchBar
+              search={search}
+              onSearchChange={setSearch}
+              searchResults={searchProducts}
+              highlightedIndex={safeHighlightIndex}
+              onSelectProduct={function (p) { addToCart(p, 1); setSearch(''); setSearchHighlightIndex(0); setFocusedRowIndex(cart.length); }}
+              onCloseDropdown={function () { setSearch(''); setSearchHighlightIndex(0); }}
+              onKeyDown={handleSearchKeyDown}
+            />
           </Box>
-          <Box>
-            <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ mb: 0.5 }}>Billing Details</Typography>
-            <Divider sx={{ mb: 1 }} />
-            <Button size="small" startIcon={billingDetailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />} onClick={function () { setBillingDetailsOpen(!billingDetailsOpen); }} fullWidth sx={{ justifyContent: 'flex-start', mb: 0.5 }}>Show billing fields</Button>
-            <Collapse in={billingDetailsOpen}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 0.5 }}>
-                <TextField size="small" label="Billing No." value={billingNo} onChange={function (e) { setBillingNo(e.target.value); }} fullWidth />
-                <TextField size="small" type="date" label="Billing Date" value={billingDate} onChange={function (e) { setBillingDate(e.target.value); }} InputLabelProps={{ shrink: true }} sx={DATE_INPUT_SX} fullWidth />
-                <TextField size="small" label="Packing" value={billingPacking} onChange={function (e) { setBillingPacking(e.target.value); }} fullWidth />
-                <TextField size="small" label="Adda" value={billingAdda} onChange={function (e) { setBillingAdda(e.target.value); }} fullWidth />
-                <FormControlLabel control={<Checkbox size="small" checked={printWithoutBalance} onChange={function (e) { setPrintWithoutBalance(e.target.checked); }} />} label="Print without balance" />
-                <FormControlLabel control={<Checkbox size="small" checked={printWithoutHeader} onChange={function (e) { setPrintWithoutHeader(e.target.checked); }} />} label="Print without header" />
-              </Box>
-            </Collapse>
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+            <InvoiceGrid cart={cart} focusedRowIndex={focusedRowIndex} onRowClick={setFocusedRowIndex} onQtyChange={updateQty} onQtyDirect={setQtyDirect} onRemove={removeFromCart} uomList={uomList} onUnitChange={setUnit} />
+          </Box>
+          <Box sx={{ px: 1, pb: 1 }}>
+            <SoldHistoryPanel
+              productId={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productId : null}
+              productCode={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productCode : null}
+              productName={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productName : null}
+              customerId={selectedCustomer && selectedCustomer.customerId}
+              productsApiGetLastSale={function (pid, cid) { return productsApi.getLastSale(pid, cid); }}
+            />
           </Box>
         </Paper>
+        <Box sx={{ px: { xs: 1, md: 2 } }}>
+          <FinancialSummaryStrip
+            noOfTitles={noOfTitles}
+            totalQuantity={totalQuantity}
+            grandTotal={grandTotal}
+            additionalDiscount={additionalDiscount}
+            additionalExpenses={additionalExpenses}
+            netTotal={netTotal}
+            onDiscountChange={setAdditionalDiscount}
+            onExpensesChange={setAdditionalExpenses}
+          />
+        </Box>
+        <Box sx={{ px: { xs: 1, md: 2 }, pb: 2 }}>
+          <BillingDetailsPanel
+            billingNo={billingNo}
+            billingDate={billingDate}
+            billingPacking={billingPacking}
+            billingAdda={billingAdda}
+            remarks={remarks}
+            printWithoutBalance={printWithoutBalance}
+            printWithoutHeader={printWithoutHeader}
+            onBillingNoChange={setBillingNo}
+            onBillingDateChange={setBillingDate}
+            onBillingPackingChange={setBillingPacking}
+            onBillingAddaChange={setBillingAdda}
+            onRemarksChange={setRemarks}
+            onPrintWithoutBalanceChange={setPrintWithoutBalance}
+            onPrintWithoutHeaderChange={setPrintWithoutHeader}
+            onCompleteSale={function () { setPaymentOpen(true); }}
+            completeDisabled={cart.length === 0}
+            loading={loading}
+          />
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1, px: { xs: 1, md: 2 }, pb: 2 }}>
+          {successMsg && <Typography variant="caption" color="success.main" fontWeight={600}>{successMsg}</Typography>}
+          {loading && <Typography variant="caption" color="text.secondary">Saving…</Typography>}
+          <Button variant="contained" size="medium" onClick={handleSaveDraft} disabled={cart.length === 0 || loading} sx={{ minHeight: 44, minWidth: 64 }} aria-label="Save draft">Save</Button>
+          <Button variant="outlined" color="inherit" size="medium" onClick={clearScreen} disabled={loading} sx={{ minHeight: 44, minWidth: 64 }} aria-label="Cancel">Cancel</Button>
+          <Button variant="outlined" size="medium" onClick={clearScreen} disabled={loading} sx={{ minHeight: 44, minWidth: 64 }} aria-label="Clear screen">Clear</Button>
+        </Box>
       </Box>
       <Box role="region" id="pos-panel-1" hidden={tab !== 1} sx={{ flex: 1, display: tab === 1 ? 'flex' : 'none', flexDirection: 'column', minHeight: 0 }}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>

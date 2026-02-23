@@ -27,6 +27,7 @@ export default function CustomerPanel({
   prevBalance,
   withThisBill,
   netTotal,
+  hideTitle,
 }) {
   const theme = useTheme();
 
@@ -45,10 +46,14 @@ export default function CustomerPanel({
 
   return (
     <Box sx={{ mb: 0 }}>
-      <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ mb: 0.75 }}>
-        Customer Details
-      </Typography>
-      <Divider sx={{ mb: 1 }} />
+      {!hideTitle && (
+        <>
+          <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ mb: 0.75 }}>
+            Customer Details
+          </Typography>
+          <Divider sx={{ mb: 1 }} />
+        </>
+      )}
       <FormControlLabel
         control={
           <Checkbox
