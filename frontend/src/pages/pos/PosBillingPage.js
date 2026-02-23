@@ -545,7 +545,7 @@ export default function PosBillingPage() {
             />
           </Box>
         </Paper>
-        <Box sx={{ px: { xs: 1, md: 2 }, pb: 2, pt: 1, mt: 1 }}>
+        <Box sx={{ px: { xs: 1, md: 2 }, pb: 2, pt: '22px', mt: 1 }}>
           <InvoiceBottomPanel
             billingNo={billingNo}
             billingDate={billingDate}

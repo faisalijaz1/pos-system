@@ -32,7 +32,7 @@ export default function BillingDetailsPanel({
   return (
     <Paper
       elevation={0}
-      style={{paddingTop:'23px'}}
+      
       sx={{
         p: 2,
         mt: 1.5,
