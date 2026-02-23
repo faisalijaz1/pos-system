@@ -53,9 +53,13 @@ export default function InvoiceGrid({
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        bgcolor: 'background.paper',
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 1,
       }}
     >
-      <TableContainer sx={{ flex: 1, overflow: 'auto' }}>
+      <TableContainer sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
         <Table
           size="small"
           stickyHeader
@@ -101,9 +105,11 @@ export default function InvoiceGrid({
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((r, idx) => (
+              items.map((r, idx) => {
+                const rowId = r.productId ?? r.product_id ?? idx;
+                return (
                 <TableRow
-                  key={r.productId}
+                  key={rowId}
                   hover
                   selected={focusedRowIndex === idx}
                   onClick={() => onRowClick(idx)}
@@ -113,21 +119,21 @@ export default function InvoiceGrid({
                   }}
                 >
                   <TableCell>{idx + 1}</TableCell>
-                  <TableCell sx={{ fontFamily: 'monospace' }}>{r.productCode}</TableCell>
-                  <TableCell>{r.productName || r.productCode}</TableCell>
+                  <TableCell sx={{ fontFamily: 'monospace' }}>{r.productCode ?? r.code}</TableCell>
+                  <TableCell>{r.productName ?? r.product_name ?? r.productCode ?? r.code}</TableCell>
                   <TableCell align="right">
                     <Typography
                       component="span"
                       variant="caption"
-                      color={r.currentStock != null && Number(r.currentStock) < 0 ? 'error' : 'text.secondary'}
+                      color={(r.currentStock != null ? Number(r.currentStock) : (r.current_stock != null ? Number(r.current_stock) : null)) < 0 ? 'error' : 'text.secondary'}
                     >
-                      {r.currentStock != null ? formatMoney(r.currentStock) : '—'}
+                      {r.currentStock != null ? formatMoney(r.currentStock) : (r.current_stock != null ? formatMoney(r.current_stock) : '—')}
                     </Typography>
                   </TableCell>
                   <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                     <IconButton
                       size="small"
-                      onClick={(e) => { e.stopPropagation(); onQtyChange(r.productId, -1); }}
+                      onClick={(e) => { e.stopPropagation(); onQtyChange(rowId, -1); }}
                       sx={{ minWidth: TOUCH_MIN, minHeight: TOUCH_MIN, p: 0.5 }}
                       aria-label="Decrease quantity"
                     >
@@ -137,15 +143,15 @@ export default function InvoiceGrid({
                       size="small"
                       type="number"
                       value={r.quantity}
-                      onChange={(e) => onQtyDirect(r.productId, e.target.value)}
-                      onBlur={(e) => onQtyDirect(r.productId, e.target.value)}
+                      onChange={(e) => onQtyDirect(rowId, e.target.value)}
+                      onBlur={(e) => onQtyDirect(rowId, e.target.value)}
                       inputProps={{ min: 0, step: 0.001, 'aria-label': 'Quantity' }}
                       sx={{ width: 56, '& .MuiInputBase-input': { py: 0.75, textAlign: 'center' } }}
                       onClick={(e) => e.stopPropagation()}
                     />
                     <IconButton
                       size="small"
-                      onClick={(e) => { e.stopPropagation(); onQtyChange(r.productId, 1); }}
+                      onClick={(e) => { e.stopPropagation(); onQtyChange(rowId, 1); }}
                       sx={{ minWidth: TOUCH_MIN, minHeight: TOUCH_MIN, p: 0.5 }}
                       aria-label="Increase quantity"
                     >
@@ -157,7 +163,7 @@ export default function InvoiceGrid({
                       <FormControl size="small" sx={{ minWidth: 88 }} onClick={(e) => e.stopPropagation()}>
                         <Select
                           value={r.uomId ?? ''}
-                          onChange={(e) => onUnitChange(r.productId, e.target.value)}
+                          onChange={(e) => onUnitChange(rowId, e.target.value)}
                           displayEmpty
                           sx={{ height: 28, fontSize: '0.8rem' }}
                         >
@@ -167,15 +173,15 @@ export default function InvoiceGrid({
                         </Select>
                       </FormControl>
                     ) : (
-                      <Typography variant="caption">{r.uomName || '—'}</Typography>
+                      <Typography variant="caption">{r.uomName ?? r.uom_name ?? '—'}</Typography>
                     )}
                   </TableCell>
-                  <TableCell align="right">{formatMoney(r.unitPrice)}</TableCell>
-                  <TableCell align="right">{formatMoney(r.lineTotal)}</TableCell>
+                  <TableCell align="right">{formatMoney(r.unitPrice ?? r.unit_price)}</TableCell>
+                  <TableCell align="right">{formatMoney(r.lineTotal ?? r.line_total ?? (Number(r.quantity) * Number(r.unitPrice ?? r.unit_price)))}</TableCell>
                   <TableCell align="right">
                     <IconButton
                       size="small"
-                      onClick={(e) => { e.stopPropagation(); onRemove(r.productId); }}
+                      onClick={(e) => { e.stopPropagation(); onRemove(rowId); }}
                       sx={{ minWidth: TOUCH_MIN, minHeight: TOUCH_MIN }}
                       aria-label="Remove line"
                     >
@@ -183,7 +189,8 @@ export default function InvoiceGrid({
                     </IconButton>
                   </TableCell>
                 </TableRow>
-              ))
+              );
+              })
             )}
           </TableBody>
         </Table>

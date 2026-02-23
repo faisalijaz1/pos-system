@@ -187,24 +187,24 @@ export default function PosBillingPage() {
 
   function addToCart(product, qty) {
     qty = qty || 1;
-    console.log('Adding product:', product);
-    const existing = cart.find(function (c) { return c.productId === product.productId; });
+    const pid = product.productId ?? product.product_id;
+    const existing = cart.find(function (c) { return (c.productId ?? c.product_id) === pid; });
     const price = Number(product.sellingPrice) || Number(product.selling_price) || 0;
-    const stock = product.currentStock != null ? Number(product.currentStock) : null;
+    const stock = product.currentStock != null ? Number(product.currentStock) : (product.current_stock != null ? Number(product.current_stock) : null);
     let nextCart;
     if (existing) {
       nextCart = cart.map(function (c) {
-        if (c.productId !== product.productId) return c;
+        if ((c.productId ?? c.product_id) !== pid) return c;
         const newQty = Number(c.quantity) + qty;
-        return { ...c, quantity: newQty, lineTotal: newQty * (Number(c.unitPrice) || price), currentStock: c.currentStock != null ? c.currentStock : stock };
+        return { ...c, productId: c.productId ?? pid, quantity: newQty, lineTotal: newQty * (Number(c.unitPrice) || price), currentStock: c.currentStock != null ? c.currentStock : stock };
       });
     } else {
-      const uomId = product.uomId != null ? product.uomId : (uomList[0] && uomList[0].uomId);
-      const uomName = product.uomName || (uomList.find(function (u) { return u.uomId === uomId; }) && uomList.find(function (u) { return u.uomId === uomId; }).name) || '—';
-      nextCart = [...cart, { productId: product.productId, productCode: product.code, productName: product.nameEn || product.name_en, quantity: qty, unitPrice: price, lineTotal: qty * price, currentStock: stock, uomId: uomId, uomName: uomName }];
+      const uomId = product.uomId ?? product.uom_id ?? (uomList[0] && uomList[0].uomId);
+      const uom = uomList.find(function (u) { return (u.uomId ?? u.uom_id) === uomId; });
+      const uomName = product.uomName ?? product.uom_name ?? (uom && (u.name || u.symbol)) || '—';
+      nextCart = [...cart, { productId: pid, productCode: product.code || product.productCode, productName: product.nameEn || product.name_en || product.name, quantity: qty, unitPrice: price, lineTotal: qty * price, currentStock: stock, uomId: uomId, uomName: uomName }];
     }
     setCart(nextCart);
-    console.log('Updated cart:', nextCart);
     setFocusedRowIndex(nextCart.length - 1);
   }
 
@@ -443,7 +443,7 @@ export default function PosBillingPage() {
         <Tab label="Sales History" icon={<HistoryIcon />} iconPosition="start" id="pos-tab-1" />
         <Tab label="By Invoice No" icon={<PinIcon />} iconPosition="start" id="pos-tab-2" />
       </Tabs>
-      <Box role="region" id="pos-panel-0" hidden={tab !== 0} sx={{ flex: 1, display: tab === 0 ? 'flex' : 'none', flexDirection: 'column', minHeight: 0, overflow: 'auto' }}>
+      <Box role="region" id="pos-panel-0" hidden={tab !== 0} sx={{ flex: 1, display: tab === 0 ? 'flex' : 'none', flexDirection: 'column', minHeight: 400, overflow: 'auto' }}>
         <InvoiceTopBar
           invoiceNumber={invoiceNumber}
           invoiceDate={invoiceDate}
@@ -472,7 +472,7 @@ export default function PosBillingPage() {
             netTotal={netTotal}
           />
         </Box>
-        <Paper elevation={0} sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, mx: { xs: 1, md: 2 }, mb: 1, borderRadius: 2, overflow: 'hidden', boxShadow: theme.palette.mode === 'dark' ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)' }}>
+        <Paper elevation={0} sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 420, mx: { xs: 1, md: 2 }, mb: 1, borderRadius: 2, overflow: 'visible', boxShadow: theme.palette.mode === 'dark' ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)' }}>
           <Box ref={searchRef}>
             <ProductSearchBar
               search={search}
