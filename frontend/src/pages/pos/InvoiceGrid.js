@@ -6,6 +6,7 @@ import {
   TableCell,
   TableRow,
   TableHead,
+  TableContainer,
   IconButton,
   TextField,
   Typography,
@@ -29,7 +30,8 @@ const TOUCH_MIN = 44;
  * Desktop: full width. Mobile: horizontal scroll, never hide columns.
  */
 export default function InvoiceGrid({
-  cart,
+  cartItems: cartItemsProp,
+  cart: cartProp,
   focusedRowIndex,
   onRowClick,
   onQtyChange,
@@ -40,6 +42,11 @@ export default function InvoiceGrid({
   emptyMessage = 'Scan barcode or type code/name — F2 Search, Enter to add',
 }) {
   const theme = useTheme();
+  const cartItems = cartItemsProp ?? cartProp ?? [];
+  const items = Array.isArray(cartItems) ? cartItems : [];
+
+  // DEBUG: Log cart items to verify data flow
+  console.log('Cart items in InvoiceGrid:', cartItems, 'length:', items.length);
 
   return (
     <Box
@@ -52,7 +59,8 @@ export default function InvoiceGrid({
       }}
     >
       <Box sx={{ flex: 1, minHeight: 200, overflow: 'auto', overflowX: 'auto' }}>
-        <Table
+        <TableContainer>
+          <Table
           size="small"
           stickyHeader
           sx={{
@@ -90,14 +98,14 @@ export default function InvoiceGrid({
             </TableRow>
           </TableHead>
           <TableBody>
-            {cart.length === 0 ? (
+            {items.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} align="center" sx={{ py: 4, color: 'text.secondary', fontSize: '0.875rem' }}>
                   {emptyMessage}
                 </TableCell>
               </TableRow>
             ) : (
-              cart.map((r, idx) => (
+              items.map((r, idx) => (
                 <TableRow
                   key={r.productId}
                   hover
@@ -183,6 +191,7 @@ export default function InvoiceGrid({
             )}
           </TableBody>
         </Table>
+        </TableContainer>
       </Box>
     </Box>
   );

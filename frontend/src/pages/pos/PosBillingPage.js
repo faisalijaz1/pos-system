@@ -24,6 +24,7 @@ import { uomApi } from '../../api/uom';
 import { formatMoney, formatTime, generateInvoiceNumber } from './posUtils';
 import InvoiceTopBar from './InvoiceTopBar';
 import CustomerStrip from './CustomerStrip';
+import InvoiceBottomStrip from './InvoiceBottomStrip';
 import InvoiceBottomPanel from './InvoiceBottomPanel';
 import { DATE_INPUT_SX } from './posUtils';
 import ProductSearchBar from './ProductSearchBar';
@@ -193,21 +194,25 @@ export default function PosBillingPage() {
 
   function addToCart(product, qty) {
     qty = qty || 1;
+    console.log('Adding product:', product);
     const existing = cart.find(function (c) { return c.productId === product.productId; });
     const price = Number(product.sellingPrice) || Number(product.selling_price) || 0;
     const stock = product.currentStock != null ? Number(product.currentStock) : null;
+    let nextCart;
     if (existing) {
-      setCart(cart.map(function (c) {
+      nextCart = cart.map(function (c) {
         if (c.productId !== product.productId) return c;
         const newQty = Number(c.quantity) + qty;
         return { ...c, quantity: newQty, lineTotal: newQty * (Number(c.unitPrice) || price), currentStock: c.currentStock != null ? c.currentStock : stock };
-      }));
+      });
     } else {
       const uomId = product.uomId != null ? product.uomId : (uomList[0] && uomList[0].uomId);
       const uomName = product.uomName || (uomList.find(function (u) { return u.uomId === uomId; }) && uomList.find(function (u) { return u.uomId === uomId; }).name) || '—';
-      setCart([...cart, { productId: product.productId, productCode: product.code, productName: product.nameEn || product.name_en, quantity: qty, unitPrice: price, lineTotal: qty * price, currentStock: stock, uomId: uomId, uomName: uomName }]);
+      nextCart = [...cart, { productId: product.productId, productCode: product.code, productName: product.nameEn || product.name_en, quantity: qty, unitPrice: price, lineTotal: qty * price, currentStock: stock, uomId: uomId, uomName: uomName }];
     }
-    setFocusedRowIndex(cart.length);
+    setCart(nextCart);
+    console.log('Updated cart:', nextCart);
+    setFocusedRowIndex(nextCart.length - 1);
   }
 
   function updateQty(productId, delta) {
@@ -456,6 +461,7 @@ export default function PosBillingPage() {
           onTimeChange={setInvoiceTime}
           onTransactionTypeChange={setTransactionTypeCode}
           onDeliveryModeChange={setDeliveryModeId}
+          onClear={clearScreen}
         />
         <Box sx={{ px: { xs: 1, md: 2 } }}>
           <CustomerStrip
@@ -484,8 +490,18 @@ export default function PosBillingPage() {
             />
           </Box>
           <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-            <InvoiceGrid cart={cart} focusedRowIndex={focusedRowIndex} onRowClick={setFocusedRowIndex} onQtyChange={updateQty} onQtyDirect={setQtyDirect} onRemove={removeFromCart} uomList={uomList} onUnitChange={setUnit} />
+            <InvoiceGrid cartItems={cart} cart={cart} focusedRowIndex={focusedRowIndex} onRowClick={setFocusedRowIndex} onQtyChange={updateQty} onQtyDirect={setQtyDirect} onRemove={removeFromCart} uomList={uomList} onUnitChange={setUnit} />
           </Box>
+          <InvoiceBottomStrip
+            noOfTitles={noOfTitles}
+            totalQuantity={totalQuantity}
+            grandTotal={grandTotal}
+            additionalDiscount={additionalDiscount}
+            additionalExpenses={additionalExpenses}
+            netTotal={netTotal}
+            onDiscountChange={setAdditionalDiscount}
+            onExpensesChange={setAdditionalExpenses}
+          />
           <Box sx={{ px: 1, pb: 1 }}>
             <SoldHistoryPanel
               productId={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productId : null}
@@ -498,14 +514,6 @@ export default function PosBillingPage() {
         </Paper>
         <Box sx={{ px: { xs: 1, md: 2 }, pb: 2 }}>
           <InvoiceBottomPanel
-            noOfTitles={noOfTitles}
-            totalQuantity={totalQuantity}
-            grandTotal={grandTotal}
-            additionalDiscount={additionalDiscount}
-            additionalExpenses={additionalExpenses}
-            netTotal={netTotal}
-            onDiscountChange={setAdditionalDiscount}
-            onExpensesChange={setAdditionalExpenses}
             billingNo={billingNo}
             billingDate={billingDate}
             billingPacking={billingPacking}
@@ -521,11 +529,8 @@ export default function PosBillingPage() {
             onPrintWithoutBalanceChange={setPrintWithoutBalance}
             onPrintWithoutHeaderChange={setPrintWithoutHeader}
             onCompleteSale={function () { setPaymentOpen(true); }}
-            onSave={handleSaveDraft}
-            onCancel={clearScreen}
             completeDisabled={cart.length === 0}
             loading={loading}
-            saveDisabled={cart.length === 0}
           />
           {successMsg && <Typography variant="caption" color="success.main" fontWeight={600} sx={{ display: 'block', mt: 1 }}>{successMsg}</Typography>}
         </Box>

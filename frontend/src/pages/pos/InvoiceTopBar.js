@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Typography, FormControl, Select, MenuItem, TextField } from '@mui/material';
+import { Box, Typography, FormControl, Select, MenuItem, TextField, IconButton } from '@mui/material';
+import ClearAllIcon from '@mui/icons-material/ClearAll';
 import { DELIVERY_MODES, TRANSACTION_TYPES, KEYBOARD_HINTS } from './posUtils';
 
 export default function InvoiceTopBar({
@@ -12,6 +13,7 @@ export default function InvoiceTopBar({
   onTimeChange,
   onTransactionTypeChange,
   onDeliveryModeChange,
+  onClear,
 }) {
   return (
     <Box
@@ -31,9 +33,16 @@ export default function InvoiceTopBar({
           gap: 1.5,
         }}
       >
-        <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace', fontWeight: 500 }}>
-          Invoice # {invoiceNumber}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace', fontWeight: 500 }}>
+            Invoice # {invoiceNumber}
+          </Typography>
+          {onClear && (
+            <IconButton size="small" onClick={onClear} aria-label="Clear all" title="Clear All" sx={{ p: 0.5 }}>
+              <ClearAllIcon fontSize="small" />
+            </IconButton>
+          )}
+        </Box>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Typography variant="caption" color="text.secondary">Type:</Typography>
