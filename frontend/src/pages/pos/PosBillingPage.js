@@ -202,7 +202,7 @@ export default function PosBillingPage() {
     } else {
       const uomId = product.uomId ?? product.uom_id ?? (uomList[0] && uomList[0].uomId);
       const uom = uomList.find(function (u) { return (u.uomId ?? u.uom_id) === uomId; });
-      const uomName = product.uomName ?? product.uom_name ?? (uom && (u.name || u.symbol)) || '—';
+        const uomName = (product.uomName ?? product.uom_name ?? (uom && (u.name || u.symbol))) || '—';
       nextCart = [...cart, { productId: pid, productCode: product.code || product.productCode, productName: product.nameEn || product.name_en || product.name, quantity: qty, unitPrice: price, lineTotal: qty * price, currentStock: stock, uomId: uomId, uomName: uomName }];
     }
     setCart(nextCart);
