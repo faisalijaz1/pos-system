@@ -23,9 +23,8 @@ import { productsApi } from '../../api/products';
 import { uomApi } from '../../api/uom';
 import { formatMoney, formatTime, generateInvoiceNumber } from './posUtils';
 import InvoiceTopBar from './InvoiceTopBar';
-import CustomerCardSection from './CustomerCardSection';
-import FinancialSummaryStrip from './FinancialSummaryStrip';
-import BillingDetailsPanel from './BillingDetailsPanel';
+import CustomerStrip from './CustomerStrip';
+import InvoiceBottomPanel from './InvoiceBottomPanel';
 import { DATE_INPUT_SX } from './posUtils';
 import ProductSearchBar from './ProductSearchBar';
 import InvoiceGrid from './InvoiceGrid';
@@ -82,7 +81,6 @@ export default function PosBillingPage() {
   const [uomList, setUomList] = useState([]);
   const [searchHighlightIndex, setSearchHighlightIndex] = useState(0);
   const [productSearchModalOpen, setProductSearchModalOpen] = useState(false);
-  const customerCardRef = useRef(null);
 
   const grandTotal = cart.reduce((s, r) => s + Number(r.lineTotal || 0), 0);
   const netTotal = Math.max(0, grandTotal - Number(additionalDiscount) + Number(additionalExpenses));
@@ -459,8 +457,8 @@ export default function PosBillingPage() {
           onTransactionTypeChange={setTransactionTypeCode}
           onDeliveryModeChange={setDeliveryModeId}
         />
-        <Box ref={customerCardRef} sx={{ px: { xs: 1, md: 2 }, pt: 1 }}>
-          <CustomerCardSection
+        <Box sx={{ px: { xs: 1, md: 2 } }}>
+          <CustomerStrip
             isCashCustomer={isCashCustomer}
             onCashCustomerChange={function (v) { setIsCashCustomer(v); if (v) { setSelectedCustomer(null); setCustomerInput(''); } }}
             selectedCustomer={selectedCustomer}
@@ -471,7 +469,6 @@ export default function PosBillingPage() {
             prevBalance={prevBalance}
             withThisBill={withThisBill}
             netTotal={netTotal}
-            onChangeClick={function () { customerCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }}
           />
         </Box>
         <Paper elevation={0} sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, mx: { xs: 1, md: 2 }, mb: 1, borderRadius: 2, overflow: 'hidden', boxShadow: theme.palette.mode === 'dark' ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)' }}>
@@ -499,8 +496,8 @@ export default function PosBillingPage() {
             />
           </Box>
         </Paper>
-        <Box sx={{ px: { xs: 1, md: 2 } }}>
-          <FinancialSummaryStrip
+        <Box sx={{ px: { xs: 1, md: 2 }, pb: 2 }}>
+          <InvoiceBottomPanel
             noOfTitles={noOfTitles}
             totalQuantity={totalQuantity}
             grandTotal={grandTotal}
@@ -509,10 +506,6 @@ export default function PosBillingPage() {
             netTotal={netTotal}
             onDiscountChange={setAdditionalDiscount}
             onExpensesChange={setAdditionalExpenses}
-          />
-        </Box>
-        <Box sx={{ px: { xs: 1, md: 2 }, pb: 2 }}>
-          <BillingDetailsPanel
             billingNo={billingNo}
             billingDate={billingDate}
             billingPacking={billingPacking}
@@ -528,16 +521,13 @@ export default function PosBillingPage() {
             onPrintWithoutBalanceChange={setPrintWithoutBalance}
             onPrintWithoutHeaderChange={setPrintWithoutHeader}
             onCompleteSale={function () { setPaymentOpen(true); }}
+            onSave={handleSaveDraft}
+            onCancel={clearScreen}
             completeDisabled={cart.length === 0}
             loading={loading}
+            saveDisabled={cart.length === 0}
           />
-        </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1, px: { xs: 1, md: 2 }, pb: 2 }}>
-          {successMsg && <Typography variant="caption" color="success.main" fontWeight={600}>{successMsg}</Typography>}
-          {loading && <Typography variant="caption" color="text.secondary">Saving…</Typography>}
-          <Button variant="contained" size="medium" onClick={handleSaveDraft} disabled={cart.length === 0 || loading} sx={{ minHeight: 44, minWidth: 64 }} aria-label="Save draft">Save</Button>
-          <Button variant="outlined" color="inherit" size="medium" onClick={clearScreen} disabled={loading} sx={{ minHeight: 44, minWidth: 64 }} aria-label="Cancel">Cancel</Button>
-          <Button variant="outlined" size="medium" onClick={clearScreen} disabled={loading} sx={{ minHeight: 44, minWidth: 64 }} aria-label="Clear screen">Clear</Button>
+          {successMsg && <Typography variant="caption" color="success.main" fontWeight={600} sx={{ display: 'block', mt: 1 }}>{successMsg}</Typography>}
         </Box>
       </Box>
       <Box role="region" id="pos-panel-1" hidden={tab !== 1} sx={{ flex: 1, display: tab === 1 ? 'flex' : 'none', flexDirection: 'column', minHeight: 0 }}>
