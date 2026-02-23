@@ -45,22 +45,18 @@ export default function InvoiceGrid({
   const cartItems = cartItemsProp ?? cartProp ?? [];
   const items = Array.isArray(cartItems) ? cartItems : [];
 
-  // DEBUG: Log cart items to verify data flow
-  console.log('Cart items in InvoiceGrid:', cartItems, 'length:', items.length);
-
   return (
     <Box
       sx={{
-        flex: 1,
-        minHeight: 280,
+        height: 320,
+        minHeight: 320,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
       }}
     >
-      <Box sx={{ flex: 1, minHeight: 200, overflow: 'auto', overflowX: 'auto' }}>
-        <TableContainer>
-          <Table
+      <TableContainer sx={{ flex: 1, overflow: 'auto' }}>
+        <Table
           size="small"
           stickyHeader
           sx={{
@@ -191,8 +187,7 @@ export default function InvoiceGrid({
             )}
           </TableBody>
         </Table>
-        </TableContainer>
-      </Box>
+      </TableContainer>
     </Box>
   );
 }

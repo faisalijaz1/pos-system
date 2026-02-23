@@ -484,10 +484,11 @@ export default function PosBillingPage() {
               onKeyDown={handleSearchKeyDown}
             />
           </Box>
-          <Box sx={{ flex: 1, minHeight: 260, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <Box sx={{ flexShrink: 0, height: 320, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <InvoiceGrid cartItems={cart} cart={cart} focusedRowIndex={focusedRowIndex} onRowClick={setFocusedRowIndex} onQtyChange={updateQty} onQtyDirect={setQtyDirect} onRemove={removeFromCart} uomList={uomList} onUnitChange={setUnit} />
           </Box>
-          <InvoiceBottomStrip
+          <Box sx={{ flexShrink: 0 }}>
+            <InvoiceBottomStrip
             noOfTitles={noOfTitles}
             totalQuantity={totalQuantity}
             grandTotal={grandTotal}
@@ -496,8 +497,9 @@ export default function PosBillingPage() {
             netTotal={netTotal}
             onDiscountChange={setAdditionalDiscount}
             onExpensesChange={setAdditionalExpenses}
-          />
-          <Box sx={{ px: 1, pb: 1 }}>
+            />
+          </Box>
+          <Box sx={{ px: 1, pb: 1, flexShrink: 0 }}>
             <SoldHistoryPanel
               productId={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productId : null}
               productCode={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productCode : null}
