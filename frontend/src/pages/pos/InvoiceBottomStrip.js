@@ -31,14 +31,15 @@ export default function InvoiceBottomStrip({
         alignItems: 'center',
         alignContent: 'center',
         gap: 2,
-        padding: '14px 24px 14px 16px',
+        padding: '14px 24px 18px 16px',
         background: stripBg,
         borderTop: '2px solid',
+        borderBottom: '1px solid',
         borderColor: 'divider',
         borderRadius: 0,
         minHeight: 64,
         flexShrink: 0,
-        paddingBottom: 2,
+        marginBottom: 2,
       }}
     >
       <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
@@ -83,7 +84,7 @@ export default function InvoiceBottomStrip({
         }}
       >
         <Typography className="net-total-label" variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-          NET:
+          Net Total
         </Typography>
         <Box
           className="net-total-value"
