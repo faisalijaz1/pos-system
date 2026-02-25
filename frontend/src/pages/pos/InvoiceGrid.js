@@ -39,11 +39,16 @@ export default function InvoiceGrid({
   onRemove,
   uomList = [],
   onUnitChange,
+  useRowIndex = false,
   emptyMessage = 'Scan barcode or type code/name — F2 Search, Enter to add',
 }) {
   const theme = useTheme();
   const cartItems = cartItemsProp ?? cartProp ?? [];
   const items = Array.isArray(cartItems) ? cartItems : [];
+
+  const getRowId = (r, idx) => r.salesInvoiceItemId ?? r.sales_invoice_item_id ?? r.productId ?? r.product_id ?? idx;
+  const getKey = (r, idx) => (useRowIndex ? `row-${idx}` : getRowId(r, idx));
+  const getIdForCallback = (r, idx) => (useRowIndex ? idx : getRowId(r, idx));
 
   return (
     <Box
@@ -116,10 +121,11 @@ export default function InvoiceGrid({
               </TableRow>
             ) : (
               items.map((r, idx) => {
-                const rowId = r.salesInvoiceItemId ?? r.sales_invoice_item_id ?? r.productId ?? r.product_id ?? idx;
+                const rowKey = getKey(r, idx);
+                const callbackId = getIdForCallback(r, idx);
                 return (
                 <TableRow
-                  key={rowId}
+                  key={rowKey}
                   hover
                   selected={focusedRowIndex === idx}
                   onClick={() => onRowClick(idx)}
@@ -143,7 +149,7 @@ export default function InvoiceGrid({
                   <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
                     <IconButton
                       size="small"
-                      onClick={(e) => { e.stopPropagation(); onQtyChange(rowId, -1); }}
+                      onClick={(e) => { e.stopPropagation(); onQtyChange(callbackId, -1); }}
                       sx={{ minWidth: TOUCH_MIN, minHeight: TOUCH_MIN, p: 0.5 }}
                       aria-label="Decrease quantity"
                     >
@@ -153,15 +159,16 @@ export default function InvoiceGrid({
                       size="small"
                       type="number"
                       value={r.quantity}
-                      onChange={(e) => onQtyDirect(rowId, e.target.value)}
-                      onBlur={(e) => onQtyDirect(rowId, e.target.value)}
+                      onChange={(e) => onQtyDirect(callbackId, e.target.value)}
+                      onBlur={(e) => onQtyDirect(callbackId, e.target.value)}
                       inputProps={{ min: 0, step: 0.001, 'aria-label': 'Quantity' }}
                       sx={{
-                        width: 48,
+                        width: 52,
+                        '& .MuiInputBase-root': { minHeight: 32 },
                         '& .MuiInputBase-input': {
-                          py: 0.75,
-                          minHeight: 22,
-                          lineHeight: 1.4,
+                          py: 0.85,
+                          minHeight: 20,
+                          lineHeight: 1.5,
                           textAlign: 'center',
                           fontSize: '0.875rem',
                           boxSizing: 'border-box',
@@ -171,7 +178,7 @@ export default function InvoiceGrid({
                     />
                     <IconButton
                       size="small"
-                      onClick={(e) => { e.stopPropagation(); onQtyChange(rowId, 1); }}
+                      onClick={(e) => { e.stopPropagation(); onQtyChange(callbackId, 1); }}
                       sx={{ minWidth: TOUCH_MIN, minHeight: TOUCH_MIN, p: 0.5 }}
                       aria-label="Increase quantity"
                     >
@@ -183,7 +190,7 @@ export default function InvoiceGrid({
                       <FormControl size="small" sx={{ minWidth: 88 }} onClick={(e) => e.stopPropagation()}>
                         <Select
                           value={r.uomId ?? r.uom_id ?? ''}
-                          onChange={(e) => onUnitChange(rowId, e.target.value)}
+                          onChange={(e) => onUnitChange(callbackId, e.target.value)}
                           displayEmpty
                           sx={{ height: 26, fontSize: '0.8rem' }}
                         >
@@ -201,7 +208,7 @@ export default function InvoiceGrid({
                   <TableCell align="right">
                     <IconButton
                       size="small"
-                      onClick={(e) => { e.stopPropagation(); onRemove(rowId); }}
+                      onClick={(e) => { e.stopPropagation(); onRemove(callbackId); }}
                       sx={{ minWidth: TOUCH_MIN, minHeight: TOUCH_MIN }}
                       aria-label="Remove line"
                     >

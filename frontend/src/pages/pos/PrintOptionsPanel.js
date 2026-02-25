@@ -1,6 +1,6 @@
 /**
- * Print Options Panel — Bottom-right in Sales History.
- * No. of Titles, Total Qty, Remarks, print checkboxes. No Save/Cancel (those live in header).
+ * Print Options Panel — Under Customer Details in Sales History.
+ * Remarks and print checkboxes. No Save/Cancel (those live in header).
  */
 import React from 'react';
 import Box from '@mui/material/Box';
@@ -11,8 +11,6 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
 export default function PrintOptionsPanel({
-  noOfTitles,
-  totalQuantity,
   remarks,
   printWithoutHeader,
   printWithoutBalance,
@@ -33,23 +31,9 @@ export default function PrintOptionsPanel({
       }}
     >
       <Typography variant="subtitle2" fontWeight={700} color="text.secondary" sx={{ mb: 1.5 }}>
-        Print Options & Totals
+        Print Options
       </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            No. of Titles:
-          </Typography>
-          <Typography variant="body2" fontWeight={600}>
-            {noOfTitles ?? 0}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-            Total Quantity:
-          </Typography>
-          <Typography variant="body2" fontWeight={600}>
-            {totalQuantity ?? 0}
-          </Typography>
-        </Box>
         <TextField
           size="small"
           label="Remarks"

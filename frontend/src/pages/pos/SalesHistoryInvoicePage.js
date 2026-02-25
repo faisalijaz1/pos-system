@@ -553,8 +553,6 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
                   withThisBill={netTotal}
                 />
                 <PrintOptionsPanel
-                  noOfTitles={noOfTitles}
-                  totalQuantity={totalQuantity}
                   remarks={currentInvoice.remarks}
                   printWithoutHeader={currentInvoice.printWithoutHeader}
                   printWithoutBalance={currentInvoice.printWithoutBalance}
@@ -625,6 +623,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
                   onRemove={editMode ? handleRemoveItem : () => {}}
                   uomList={editMode ? uomList : []}
                   onUnitChange={editMode ? handleUnitChange : undefined}
+                  useRowIndex={true}
                   emptyMessage={currentInvoice ? 'No line items.' : '—'}
                 />
                 <InvoiceBottomStrip
