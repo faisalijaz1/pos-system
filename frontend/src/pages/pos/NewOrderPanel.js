@@ -1,5 +1,5 @@
 /**
- * New Order Panel — 3rd column. Editable draft: customer, items with +/- qty, quick actions, stock warnings.
+ * New Order Panel — Editable draft: Cash checkbox, Customer dropdown (separate), items with +/- qty, quick actions.
  */
 import React from 'react';
 import Box from '@mui/material/Box';
@@ -14,6 +14,12 @@ import TableContainer from '@mui/material/TableContainer';
 import IconButton from '@mui/material/IconButton';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Button from '@mui/material/Button';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Add';
@@ -21,10 +27,19 @@ import { formatMoney } from './posUtils';
 
 const TOUCH_TARGET = 44;
 
+function getCustomerLabel(c) {
+  if (!c) return '';
+  return c.name || c.nameEnglish || c.customerCode || `#${c.customerId}`;
+}
+
 export default function NewOrderPanel({
   invoiceNumber,
+  isCashCustomer = false,
+  onCashCustomerChange,
+  selectedCustomerId,
+  onCustomerSelect,
+  customersList = [],
   customerName,
-  onCustomerChange,
   items = [],
   onUpdateQuantity,
   onRemoveItem,
@@ -34,6 +49,7 @@ export default function NewOrderPanel({
   onClearAll,
 }) {
   const newTotal = items.reduce((sum, it) => sum + (Number(it.lineTotal) || 0), 0);
+  const selectedCustomer = customersList.find((c) => c.customerId === selectedCustomerId);
 
   return (
     <Paper
@@ -51,23 +67,53 @@ export default function NewOrderPanel({
         New Order (Draft)
       </Typography>
       <Box sx={{ mb: 1 }}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
           New Invoice: <strong>{invoiceNumber}</strong>
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Customer: {customerName || '—'}
-          {onCustomerChange && (
-            <Typography
-              component="span"
-              variant="body2"
-              color="primary"
-              sx={{ ml: 1, cursor: 'pointer', textDecoration: 'underline' }}
-              onClick={onCustomerChange}
-            >
-              [Change]
-            </Typography>
-          )}
-        </Typography>
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              checked={!!isCashCustomer}
+              onChange={(e) => onCashCustomerChange && onCashCustomerChange(e.target.checked)}
+            />
+          }
+          label="Cash customer"
+        />
+        <FormControl size="small" fullWidth sx={{ mt: 0.5, minWidth: 200 }}>
+          <InputLabel id="by-invoice-customer-label">Customer</InputLabel>
+          <Select
+            labelId="by-invoice-customer-label"
+            label="Customer"
+            value={isCashCustomer ? '' : (selectedCustomerId ?? '')}
+            disabled={!!isCashCustomer}
+            onChange={(e) => {
+              const id = e.target.value;
+              if (!id) {
+                onCustomerSelect && onCustomerSelect(null);
+                return;
+              }
+              const c = customersList.find((x) => x.customerId === id);
+              onCustomerSelect && onCustomerSelect(c);
+            }}
+            displayEmpty
+            renderValue={(v) => {
+              if (isCashCustomer) return '—';
+              if (v && selectedCustomer) return getCustomerLabel(selectedCustomer);
+              if (customerName) return customerName;
+              return 'Select customer';
+            }}
+          >
+            <MenuItem value="">
+              <em>—</em>
+            </MenuItem>
+            {customersList.map((c) => (
+              <MenuItem key={c.customerId} value={c.customerId}>
+                {getCustomerLabel(c)}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </Box>
       <TableContainer sx={{ maxHeight: 200, border: 1, borderColor: 'divider', borderRadius: 1 }}>
         <Table size="small" stickyHeader>

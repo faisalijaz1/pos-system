@@ -19,6 +19,8 @@ export default function HistoricalOrderPanel({
   invoice,
   displayItems,
   prevBalance = 0,
+  soldHistory = [],
+  currentInvoiceNumber,
   deliveryModeOptions = DELIVERY_MODES,
   transactionTypes = TRANSACTION_TYPES,
 }) {
@@ -139,6 +141,40 @@ export default function HistoricalOrderPanel({
           Hist Total: {formatMoney(total)}
         </Typography>
       </Box>
+      {soldHistory && soldHistory.length > 0 && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+            Sold History (recent orders)
+          </Typography>
+          <Box
+            component="ul"
+            sx={{
+              m: 0,
+              pl: 2,
+              py: 0.5,
+              maxHeight: 120,
+              overflow: 'auto',
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1,
+              bgcolor: 'background.default',
+            }}
+          >
+            {soldHistory
+              .filter((inv) => inv.invoiceNumber !== currentInvoiceNumber)
+              .slice(0, 10)
+              .map((inv) => (
+                <Box component="li" key={inv.salesInvoiceId || inv.invoiceNumber} sx={{ py: 0.25 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {inv.invoiceNumber}
+                    {inv.invoiceDate && ` · ${new Date(inv.invoiceDate).toISOString().slice(0, 10)}`}
+                    {inv.netTotal != null && ` · ${formatMoney(inv.netTotal)}`}
+                  </Typography>
+                </Box>
+              ))}
+          </Box>
+        </Box>
+      )}
     </Paper>
   );
 }

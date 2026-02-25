@@ -1,15 +1,15 @@
 /**
- * Price Impact Calculator — Historical total, new total, difference and %.
+ * Price Impact Calculator — Compares item subtotals (old vs new prices) so same prices => 0 difference.
  */
 import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { formatMoney } from './posUtils';
 
-export default function PriceImpactCalculator({ historicalTotal = 0, newTotal = 0 }) {
-  const diff = Number(newTotal) - Number(historicalTotal);
+export default function PriceImpactCalculator({ historicalSubtotal = 0, newTotal = 0 }) {
+  const diff = Number(newTotal) - Number(historicalSubtotal);
   const percent =
-    historicalTotal !== 0 ? (((diff / Number(historicalTotal)) * 100).toFixed(1) + '%') : '—';
+    historicalSubtotal !== 0 ? (((diff / Number(historicalSubtotal)) * 100).toFixed(1) + '%') : '—';
 
   return (
     <Box
@@ -22,10 +22,10 @@ export default function PriceImpactCalculator({ historicalTotal = 0, newTotal = 
       }}
     >
       <Typography variant="body2" color="text.secondary">
-        Historical Total: <strong>{formatMoney(historicalTotal)}</strong>
+        Historical Subtotal (items): <strong>{formatMoney(historicalSubtotal)}</strong>
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        New Total: <strong>{formatMoney(newTotal)}</strong>
+        New Total (items): <strong>{formatMoney(newTotal)}</strong>
       </Typography>
       <Typography
         variant="body2"

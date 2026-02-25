@@ -67,6 +67,9 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerPrevBalance, setCustomerPrevBalance] = useState(0);
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
+  const [soldHistory, setSoldHistory] = useState([]);
+  const [customersList, setCustomersList] = useState([]);
+  const [isCashCustomer, setIsCashCustomer] = useState(false);
 
   const [billingNo, setBillingNo] = useState('');
   const [billingDate, setBillingDate] = useState(today);
@@ -80,14 +83,17 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
   const [remarks, setRemarks] = useState('');
 
   const historicalTotal = historicalInvoice?.netTotal != null ? Number(historicalInvoice.netTotal) : 0;
+  const historicalSubtotal = replicationItems.reduce(
+    (sum, it) => sum + (Number(it.quantity) || 0) * (Number(it.oldPrice) || 0),
+    0
+  );
   const newTotal = replicationItems.reduce((sum, it) => sum + (Number(it.lineTotal) || 0), 0);
   const grandTotal = newTotal;
   const netTotal = grandTotal - Number(additionalDiscount) + Number(additionalExpenses);
   const allUseNew = replicationItems.length > 0 && replicationItems.every((it) => it.useNewPrice);
 
-  const displayCustomer = selectedCustomer || (historicalInvoice ? { customerId: historicalInvoice.customerId, name: historicalInvoice.customerName || 'Cash' } : null);
-  const customerIdForCreate = displayCustomer?.customerId ?? historicalInvoice?.customerId ?? null;
-  const isCashCustomer = !customerIdForCreate;
+  const displayCustomer = selectedCustomer || (historicalInvoice?.customerId != null ? { customerId: historicalInvoice.customerId, name: historicalInvoice.customerName || 'Cash' } : null);
+  const customerIdForCreate = isCashCustomer ? null : (selectedCustomer?.customerId ?? historicalInvoice?.customerId ?? null);
 
   const historicalDisplayItems =
     replicationItems.length > 0
@@ -110,6 +116,35 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
       .catch(() => setCustomerPrevBalance(0));
   }, [historicalInvoice?.customerId, selectedCustomer?.customerId]);
 
+  useEffect(() => {
+    const customerId = historicalInvoice?.customerId;
+    if (!customerId) {
+      setSoldHistory([]);
+      return;
+    }
+    const to = new Date();
+    const from = new Date(to.getFullYear() - 1, to.getMonth(), 1);
+    const fromStr = from.toISOString().slice(0, 10);
+    const toStr = to.toISOString().slice(0, 10);
+    invoicesApi
+      .list(fromStr, toStr, customerId, 0, 15)
+      .then((res) => {
+        const content = res.data?.content ?? res.data ?? [];
+        setSoldHistory(Array.isArray(content) ? content : []);
+      })
+      .catch(() => setSoldHistory([]));
+  }, [historicalInvoice?.customerId]);
+
+  useEffect(() => {
+    customersApi
+      .list('', 0, 300)
+      .then((res) => {
+        const content = res.data?.content ?? res.data ?? [];
+        setCustomersList(Array.isArray(content) ? content : []);
+      })
+      .catch(() => setCustomersList([]));
+  }, []);
+
   const handleSearch = useCallback(() => {
     const num = (invoiceNoInput || '').trim();
     if (!num) {
@@ -127,6 +162,12 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
         const inv = res.data;
         setHistoricalInvoice(inv);
         setNewInvoiceNumber(generateInvoiceNumber());
+        setIsCashCustomer(!inv.customerId);
+        if (inv.customerId) {
+          setSelectedCustomer({ customerId: inv.customerId, name: inv.customerName || 'Cash' });
+        } else {
+          setSelectedCustomer(null);
+        }
         setBillingNo('');
         setBillingDate(today);
         setPacking(inv.billingPacking ?? '');
@@ -167,6 +208,8 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
     setHistoricalInvoice(null);
     setReplicationItems([]);
     setSelectedCustomer(null);
+    setIsCashCustomer(false);
+    setSoldHistory([]);
     setNewInvoiceNumber(generateInvoiceNumber());
     setSuccessMsg(null);
     setBillingNo('');
@@ -377,11 +420,15 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
         loading={loading}
         error={error}
       />
-      <Box sx={{ flex: 1, overflow: 'auto', px: 2, py: 2 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', overflowX: 'hidden', px: 2, py: 2 }}>
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: '1fr 1fr 1fr 1fr' },
+            gridTemplateColumns: {
+              xs: '1fr',
+              md: 'repeat(2, minmax(280px, 1fr))',
+              xl: 'repeat(4, minmax(260px, 1fr))',
+            },
             gap: 2,
             mb: 2,
           }}
@@ -390,6 +437,8 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
             invoice={historicalInvoice}
             displayItems={historicalDisplayItems}
             prevBalance={customerPrevBalance}
+            soldHistory={soldHistory}
+            currentInvoiceNumber={historicalInvoice?.invoiceNumber}
           />
           <PriceComparisonPanel
             items={replicationItems}
@@ -403,7 +452,11 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
           <NewOrderPanel
             invoiceNumber={newInvoiceNumber}
             customerName={displayCustomer?.name || 'Cash'}
-            onCustomerChange={() => setCustomerSearchOpen(true)}
+            isCashCustomer={isCashCustomer}
+            onCashCustomerChange={setIsCashCustomer}
+            selectedCustomerId={displayCustomer?.customerId ?? null}
+            onCustomerSelect={(c) => setSelectedCustomer(c ? { customerId: c.customerId, name: c.name || c.nameEnglish || c.customerCode || `#${c.customerId}` } : null)}
+            customersList={customersList}
             items={replicationItems}
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={handleRemoveItem}
@@ -439,7 +492,7 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
         </Box>
         {replicationItems.length > 0 && (
           <Box sx={{ mb: 2 }}>
-            <PriceImpactCalculator historicalTotal={historicalTotal} newTotal={newTotal} />
+            <PriceImpactCalculator historicalSubtotal={historicalSubtotal} newTotal={newTotal} />
           </Box>
         )}
         {replicationItems.length > 0 && (
