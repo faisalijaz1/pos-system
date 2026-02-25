@@ -99,8 +99,13 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
   const netTotal = grandTotal - Number(additionalDiscount) + Number(additionalExpenses);
   const allUseNew = replicationItems.length > 0 && replicationItems.every((it) => it.useNewPrice);
 
-  const displayCustomer = selectedCustomer || (historicalInvoice?.customerId != null ? { customerId: historicalInvoice.customerId, name: historicalInvoice.customerName || 'Cash' } : null);
-  const customerIdForCreate = isCashCustomer ? null : (selectedCustomer?.customerId ?? historicalInvoice?.customerId ?? null);
+  const displayCustomer = selectedCustomer || (historicalInvoice?.customerId != null ? { customerId: historicalInvoice.customerId, name: historicalInvoice.customerName || 'Cash' } : (historicalInvoice?.customer_id != null ? { customerId: historicalInvoice.customer_id, customer_id: historicalInvoice.customer_id, name: historicalInvoice.customerName || 'Cash' } : null));
+  function getEffectiveCustomerId(c) {
+    if (!c) return null;
+    return c.customerId != null ? c.customerId : (c.customer_id != null ? c.customer_id : null);
+  }
+  const customerIdForCreate = isCashCustomer ? null : (getEffectiveCustomerId(selectedCustomer) ?? getEffectiveCustomerId(historicalInvoice) ?? null);
+  const byInvoiceNoCustomerMissing = !isCashCustomer && (customerIdForCreate == null || customerIdForCreate === '') && replicationItems.length > 0;
 
   const historicalDisplayItems =
     replicationItems.length > 0
@@ -360,6 +365,12 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
       else setSuccessMsg(msg);
       return;
     }
+    if (byInvoiceNoCustomerMissing) {
+      const msg = 'Please select a customer. Ledger is maintained against customer accounts.';
+      if (onNotify) onNotify(msg, 'warning');
+      else setSuccessMsg(msg);
+      return;
+    }
     if (onOpenPaymentBeforeCreate) {
       const received = Number(amountReceived) || 0;
       const changeVal = Math.max(0, received - netTotal);
@@ -414,7 +425,7 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
         else setSuccessMsg(msg);
       })
       .finally(() => setCreateLoading(false));
-  }, [replicationItems.length, replicationItems, buildCreateBody, newInvoiceNumber, onCreated, onNotify, onOpenPaymentBeforeCreate, netTotal, grandTotal, additionalDiscount, additionalExpenses, customerPrevBalance, isCashCustomer, amountReceived, printWithoutHeader, printWithoutBalance]);
+  }, [replicationItems.length, replicationItems, buildCreateBody, newInvoiceNumber, onCreated, onNotify, onOpenPaymentBeforeCreate, netTotal, grandTotal, additionalDiscount, additionalExpenses, customerPrevBalance, isCashCustomer, amountReceived, printWithoutHeader, printWithoutBalance, byInvoiceNoCustomerMissing]);
 
   const handleSaveDraft = useCallback(() => {
     if (replicationItems.length === 0) {
@@ -643,7 +654,7 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
               color="primary"
               size="large"
               onClick={handleCreateOrder}
-              disabled={createLoading}
+              disabled={createLoading || byInvoiceNoCustomerMissing}
             >
               {createLoading ? '…' : 'Create Order from Selection'}
             </Button>

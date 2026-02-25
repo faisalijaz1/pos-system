@@ -98,6 +98,15 @@ export default function PosBillingPage() {
     setSnackbar({ open: true, message: String(message), severity: severity || 'info' });
   }, []);
 
+  function getEffectiveCustomerId(c) {
+    if (!c) return null;
+    return c.customerId != null ? c.customerId : (c.customer_id != null ? c.customer_id : null);
+  }
+
+  const effectiveCustomerId = getEffectiveCustomerId(selectedCustomer);
+  const billingRequiresCustomer = !isCashCustomer && cart.length > 0;
+  const billingCustomerMissing = billingRequiresCustomer && (effectiveCustomerId == null || effectiveCustomerId === '');
+
   const grandTotal = cart.reduce((s, r) => s + Number(r.lineTotal || 0), 0);
   const netTotal = Math.max(0, grandTotal - Number(additionalDiscount) + Number(additionalExpenses));
   const amtReceived = Number(amountReceived) || 0;
@@ -197,6 +206,10 @@ export default function PosBillingPage() {
       }
       if (e.key === 'F4' && cart.length > 0) {
         e.preventDefault();
+        if (billingCustomerMissing) {
+          showNotification('Please select a customer before completing the sale.', 'warning');
+          return;
+        }
         setPaymentOpen(true);
         return;
       }
@@ -229,7 +242,7 @@ export default function PosBillingPage() {
       document.removeEventListener('keydown', onKey, useCapture);
       window.removeEventListener('keydown', onKey, useCapture);
     };
-  }, [tab, cart.length, focusedRowIndex, searchProducts, safeHighlightIndex, search.trim(), detailOpen, detailInvoice, productSearchModalOpen]);
+  }, [tab, cart.length, focusedRowIndex, searchProducts, safeHighlightIndex, search.trim(), detailOpen, detailInvoice, productSearchModalOpen, billingCustomerMissing]);
 
   function addToCart(product, qty) {
     qty = qty || 1;
@@ -338,10 +351,14 @@ export default function PosBillingPage() {
 
   function handleSaveDraft() {
     if (cart.length === 0) return;
+    if (billingCustomerMissing) {
+      showNotification('Please select a customer. Ledger is maintained against customer accounts.', 'warning');
+      return;
+    }
     setLoading(true);
     const body = {
       invoiceNumber,
-      customerId: isCashCustomer ? null : (selectedCustomer && selectedCustomer.customerId) || null,
+      customerId: isCashCustomer ? null : (effectiveCustomerId != null ? Number(effectiveCustomerId) : null),
       invoiceDate,
       invoiceTime: invoiceTime ? (invoiceTime.length === 5 ? invoiceTime + ':00' : invoiceTime) : null,
       transactionTypeCode: transactionTypeCode || 'SALE',
@@ -372,10 +389,14 @@ export default function PosBillingPage() {
 
   function handleCompleteSale() {
     if (cart.length === 0) return;
+    if (billingCustomerMissing) {
+      showNotification('Please select a customer. Ledger is maintained against customer accounts.', 'warning');
+      return;
+    }
     setLoading(true);
     const body = {
       invoiceNumber,
-      customerId: isCashCustomer ? null : (selectedCustomer && selectedCustomer.customerId) || null,
+      customerId: isCashCustomer ? null : (effectiveCustomerId != null ? Number(effectiveCustomerId) : null),
       invoiceDate,
       invoiceTime: invoiceTime ? (invoiceTime.length === 5 ? invoiceTime + ':00' : invoiceTime) : null,
       transactionTypeCode: transactionTypeCode || 'SALE',
@@ -640,7 +661,7 @@ export default function PosBillingPage() {
               productId={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productId : null}
               productCode={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productCode : null}
               productName={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productName : null}
-              customerId={selectedCustomer && selectedCustomer.customerId}
+              customerId={effectiveCustomerId}
               productsApiGetLastSale={function (pid, cid) { return productsApi.getLastSale(pid, cid); }}
             />
           </Box>
@@ -661,8 +682,14 @@ export default function PosBillingPage() {
             onRemarksChange={setRemarks}
             onPrintWithoutBalanceChange={setPrintWithoutBalance}
             onPrintWithoutHeaderChange={setPrintWithoutHeader}
-            onCompleteSale={function () { setPaymentOpen(true); }}
-            completeDisabled={cart.length === 0}
+            onCompleteSale={function () {
+              if (billingCustomerMissing) {
+                showNotification('Please select a customer before completing the sale.', 'warning');
+                return;
+              }
+              setPaymentOpen(true);
+            }}
+            completeDisabled={cart.length === 0 || billingCustomerMissing}
             loading={loading}
           />
         </Box>
