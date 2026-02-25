@@ -8,11 +8,16 @@ PostgreSQL schema and seed data for the web-based POS system.
 2. **02_seed_data.sql** — Inserts roles, payment methods, delivery modes, transaction types, business info, default admin user, and units of measure.
 3. **03_seed_products.sql** — Optional. Inserts UOMs, brands, categories, and sample products (safe to run on existing DB; use when `/api/v1/products` returns empty).
 4. **04_migration_pos_upgrades.sql** — Run once on existing DB to add invoice columns: `change_returned`, `print_without_header`, `print_without_balance`, `invoice_status`, and transaction type `EXCHANGE`. Idempotent (safe to run multiple times on PostgreSQL 9.6+).
+5. **05_seed_customers.sql** — Optional. Sample customers and customer accounts for testing.
+6. **06_seed_demo_users.sql** — Optional. Adds **manager** and **cashier** users (password: `change_me`) for role-based demo. Run after 02_seed_data.sql. Idempotent (ON CONFLICT DO NOTHING).
 
-## Default admin
+## Default users
 
-- **Username:** `admin`
-- **Password:** `change_me` (BCrypt hash in seed; **must** be changed after first login in production)
+- **admin** / `change_me` — From 02_seed_data.sql. **Change password in production.**
+- **manager** / `change_me` — From 06_seed_demo_users.sql (run after 02).
+- **cashier** / `change_me` — From 06_seed_demo_users.sql (run after 02).
+
+See **docs/LOGIN_CREDENTIALS.md** for full list and role access.
 
 ## Running with Docker
 

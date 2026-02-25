@@ -14,7 +14,7 @@ export default function LedgerFooter({ totalDr, totalCr, balance, balanceType })
         border: '1px solid',
         borderColor: 'divider',
         borderRadius: 2,
-        bgcolor: 'grey.50',
+        bgcolor: 'background.paper',
         display: 'flex',
         flexWrap: 'wrap',
         gap: 3,

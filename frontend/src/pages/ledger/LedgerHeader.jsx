@@ -19,7 +19,7 @@ export default function LedgerHeader({ account }) {
   const balanceStr = `${formatMoney(account.currentBalance)} ${account.balanceType || 'Dr'}`;
 
   return (
-    <Card variant="outlined" sx={{ mb: 2, bgcolor: 'grey.50' }}>
+    <Card variant="outlined" sx={{ mb: 2, bgcolor: 'background.paper' }}>
       <CardContent>
         <Typography variant="overline" color="text.secondary">Account</Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'baseline', mt: 0.5 }}>
