@@ -371,6 +371,7 @@ public class SalesInvoiceService {
                     .unitPrice(it.getUnitPrice())
                     .lineTotal(it.getLineTotal())
                     .uomName(it.getUom() != null ? it.getUom().getName() : null)
+                    .brandName(p.getBrand() != null ? p.getBrand().getName() : null)
                     .sortOrder(it.getSortOrder())
                     .build());
         }

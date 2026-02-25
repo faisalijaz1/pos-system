@@ -1,6 +1,7 @@
 package com.pos.controller;
 
 import com.pos.dto.LastSaleDto;
+import com.pos.dto.PriceHistoryEntryDto;
 import com.pos.dto.ProductSummaryDto;
 import com.pos.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -51,5 +52,14 @@ public class ProductController {
     ) {
         Optional<LastSaleDto> lastSale = productService.getLastSale(id, customerId);
         return lastSale.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    @GetMapping("/{id}/price-history")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    public ResponseEntity<List<PriceHistoryEntryDto>> getPriceHistory(
+            @PathVariable Integer id,
+            @RequestParam(defaultValue = "20") int limit
+    ) {
+        return ResponseEntity.ok(productService.getPriceHistory(id, limit));
     }
 }

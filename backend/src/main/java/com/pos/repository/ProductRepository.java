@@ -17,16 +17,16 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
 
-    @EntityGraph(attributePaths = "uom")
+    @EntityGraph(attributePaths = {"uom", "brand"})
     Optional<Product> findByProductIdAndDeletedAtIsNull(Integer productId);
 
-    @EntityGraph(attributePaths = "uom")
+    @EntityGraph(attributePaths = {"uom", "brand"})
     List<Product> findByProductIdInAndDeletedAtIsNull(List<Integer> productIds);
 
-    @EntityGraph(attributePaths = "uom")
+    @EntityGraph(attributePaths = {"uom", "brand"})
     Page<Product> findByDeletedAtIsNull(Pageable pageable);
 
-    @EntityGraph(attributePaths = "uom")
+    @EntityGraph(attributePaths = {"uom", "brand"})
     Page<Product> findByDeletedAtIsNullAndNameEnContainingIgnoreCase(String nameEn, Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

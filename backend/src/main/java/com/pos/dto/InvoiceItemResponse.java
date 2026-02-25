@@ -21,5 +21,6 @@ public class InvoiceItemResponse {
     private BigDecimal unitPrice;
     private BigDecimal lineTotal;
     private String uomName;
+    private String brandName;
     private Integer sortOrder;
 }

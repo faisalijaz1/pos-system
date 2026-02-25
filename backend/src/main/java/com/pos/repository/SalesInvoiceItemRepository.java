@@ -23,4 +23,12 @@ public interface SalesInvoiceItemRepository extends JpaRepository<SalesInvoiceIt
             @Param("customerId") Integer customerId,
             Pageable pageable
     );
+
+    /** Price history: past unit prices for this product from sales (for By Invoice No price comparison). */
+    @Query("SELECT i FROM SalesInvoiceItem i " +
+           "JOIN FETCH i.salesInvoice inv " +
+           "LEFT JOIN FETCH i.uom " +
+           "WHERE i.product.productId = :productId " +
+           "ORDER BY inv.invoiceDate DESC, inv.invoiceTime DESC NULLS LAST, i.salesInvoiceItemId DESC")
+    List<SalesInvoiceItem> findPriceHistoryByProduct(@Param("productId") Integer productId, Pageable pageable);
 }

@@ -19,6 +19,7 @@ public class ProductSummaryDto {
     private String nameUr;
     private Integer uomId;
     private String uomName;
+    private String brandName;
     private BigDecimal currentStock;
     private BigDecimal sellingPrice;
     private BigDecimal costPrice;

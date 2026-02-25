@@ -17,6 +17,8 @@ import PriceImpactCalculator from './PriceImpactCalculator';
 import NewOrderPanel from './NewOrderPanel';
 import BillingPaymentPanel from './BillingPaymentPanel';
 import CustomerSearchModal from './CustomerSearchModal';
+import PriceHistoryModal from './PriceHistoryModal';
+import PreviewOrderDialog from './PreviewOrderDialog';
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -70,6 +72,9 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
   const [soldHistory, setSoldHistory] = useState([]);
   const [customersList, setCustomersList] = useState([]);
   const [isCashCustomer, setIsCashCustomer] = useState(false);
+  const [priceHistoryOpen, setPriceHistoryOpen] = useState(false);
+  const [priceHistoryProduct, setPriceHistoryProduct] = useState(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const [billingNo, setBillingNo] = useState('');
   const [billingDate, setBillingDate] = useState(today);
@@ -447,6 +452,10 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
             onSelectAllOld={handleSelectAllOld}
             onOnlyIncreased={handleOnlyIncreased}
             onOnlyDecreased={handleOnlyDecreased}
+            onPriceHistoryClick={(row) => {
+              setPriceHistoryProduct({ productId: row.productId, productCode: row.productCode, productName: row.productName });
+              setPriceHistoryOpen(true);
+            }}
             allUseNew={allUseNew}
           />
           <NewOrderPanel
@@ -508,6 +517,13 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
             }}
           >
             <Button
+              variant="outlined"
+              onClick={() => setPreviewOpen(true)}
+              disabled={createLoading}
+            >
+              Preview Order
+            </Button>
+            <Button
               variant="contained"
               color="primary"
               size="large"
@@ -538,6 +554,31 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
         open={customerSearchOpen}
         onClose={() => setCustomerSearchOpen(false)}
         onSelectCustomer={handleSelectCustomer}
+      />
+      <PriceHistoryModal
+        open={priceHistoryOpen}
+        onClose={() => setPriceHistoryOpen(false)}
+        productId={priceHistoryProduct?.productId}
+        productCode={priceHistoryProduct?.productCode}
+        productName={priceHistoryProduct?.productName}
+      />
+      <PreviewOrderDialog
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        invoiceNumber={newInvoiceNumber}
+        customerName={displayCustomer?.name}
+        isCashCustomer={isCashCustomer}
+        items={replicationItems}
+        grandTotal={grandTotal}
+        additionalDiscount={additionalDiscount}
+        additionalExpenses={additionalExpenses}
+        netTotal={netTotal}
+        amountReceived={amountReceived}
+        billingNo={billingNo}
+        billingDate={billingDate}
+        packing={packing}
+        adda={adda}
+        remarks={remarks}
       />
     </Box>
   );

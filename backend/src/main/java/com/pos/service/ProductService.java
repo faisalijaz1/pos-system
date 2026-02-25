@@ -3,6 +3,7 @@ package com.pos.service;
 import com.pos.domain.SalesInvoiceItem;
 import com.pos.domain.Product;
 import com.pos.dto.LastSaleDto;
+import com.pos.dto.PriceHistoryEntryDto;
 import com.pos.dto.ProductSummaryDto;
 import com.pos.exception.ResourceNotFoundException;
 import com.pos.repository.ProductRepository;
@@ -63,8 +64,28 @@ public class ProductService {
                 .build());
     }
 
+    @Transactional(readOnly = true)
+    public List<PriceHistoryEntryDto> getPriceHistory(Integer productId, int limit) {
+        if (productId == null) return List.of();
+        var list = salesInvoiceItemRepository.findPriceHistoryByProduct(productId, PageRequest.of(0, Math.min(limit, 50)));
+        return list.stream()
+                .map(item -> {
+                    var inv = item.getSalesInvoice();
+                    return PriceHistoryEntryDto.builder()
+                            .invoiceDate(inv.getInvoiceDate())
+                            .invoiceTime(inv.getInvoiceTime())
+                            .invoiceNumber(inv.getInvoiceNumber())
+                            .unitPrice(item.getUnitPrice())
+                            .quantity(item.getQuantity())
+                            .uomName(item.getUom() != null ? item.getUom().getName() : null)
+                            .build();
+                })
+                .toList();
+    }
+
     private ProductSummaryDto toSummaryDto(Product p) {
         var uom = p.getUom();
+        var brand = p.getBrand();
         return ProductSummaryDto.builder()
                 .productId(p.getProductId())
                 .code(p.getCode())
@@ -72,6 +93,7 @@ public class ProductService {
                 .nameUr(p.getNameUr())
                 .uomId(uom != null ? uom.getUomId() : null)
                 .uomName(uom != null ? uom.getName() : null)
+                .brandName(brand != null ? brand.getName() : null)
                 .currentStock(p.getCurrentStock())
                 .sellingPrice(p.getSellingPrice())
                 .costPrice(p.getCostPrice())

@@ -25,6 +25,7 @@ export default function PriceComparisonPanel({
   onSelectAllOld,
   onOnlyIncreased,
   onOnlyDecreased,
+  onPriceHistoryClick,
   allUseNew,
 }) {
   if (items.length === 0) {
@@ -103,7 +104,14 @@ export default function PriceComparisonPanel({
                   {Number(row.oldPrice ?? row.unitPrice).toLocaleString('en-PK', { maximumFractionDigits: 0 })}
                 </TableCell>
                 <TableCell align="right">
-                  <PriceCell oldPrice={row.oldPrice ?? row.unitPrice} newPrice={row.newPrice} />
+                  <Box
+                    component="span"
+                    onClick={() => onPriceHistoryClick && onPriceHistoryClick(row)}
+                    sx={{ cursor: onPriceHistoryClick ? 'pointer' : 'default', display: 'inline-block' }}
+                    title={onPriceHistoryClick ? 'View price history' : undefined}
+                  >
+                    <PriceCell oldPrice={row.oldPrice ?? row.unitPrice} newPrice={row.newPrice} />
+                  </Box>
                 </TableCell>
                 <TableCell align="center">
                   <Checkbox

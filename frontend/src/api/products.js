@@ -13,4 +13,6 @@ export const productsApi = {
   },
   getLastSale: (productId, customerId) =>
     axiosInstance.get(`/v1/products/${productId}/last-sale`, { params: customerId != null ? { customerId } : {} }),
+  getPriceHistory: (productId, limit = 20) =>
+    axiosInstance.get(`/v1/products/${productId}/price-history`, { params: { limit } }),
 };

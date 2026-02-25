@@ -33,6 +33,10 @@ public class Product {
     @JoinColumn(name = "uom_id", nullable = false)
     private UnitOfMeasure uom;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "brand_id")
+    private Brand brand;
+
     @Column(name = "current_stock", nullable = false, precision = 18, scale = 4)
     private BigDecimal currentStock = BigDecimal.ZERO;
 

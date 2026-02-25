@@ -14,10 +14,10 @@ import java.util.Optional;
 @Repository
 public interface SalesInvoiceRepository extends JpaRepository<SalesInvoice, Integer> {
 
-    @Query("SELECT i FROM SalesInvoice i LEFT JOIN FETCH i.items it LEFT JOIN FETCH it.product LEFT JOIN FETCH it.uom WHERE i.salesInvoiceId = :id")
+    @Query("SELECT DISTINCT i FROM SalesInvoice i LEFT JOIN FETCH i.items it LEFT JOIN FETCH it.product p LEFT JOIN FETCH p.brand LEFT JOIN FETCH it.uom WHERE i.salesInvoiceId = :id")
     Optional<SalesInvoice> findByIdWithItems(@Param("id") Integer id);
 
-    @Query("SELECT i FROM SalesInvoice i LEFT JOIN FETCH i.items it LEFT JOIN FETCH it.product LEFT JOIN FETCH it.uom WHERE i.invoiceNumber = :invoiceNumber")
+    @Query("SELECT DISTINCT i FROM SalesInvoice i LEFT JOIN FETCH i.items it LEFT JOIN FETCH it.product p LEFT JOIN FETCH p.brand LEFT JOIN FETCH it.uom WHERE i.invoiceNumber = :invoiceNumber")
     Optional<SalesInvoice> findByInvoiceNumberWithItems(@Param("invoiceNumber") String invoiceNumber);
 
     Optional<SalesInvoice> findByInvoiceNumber(String invoiceNumber);
