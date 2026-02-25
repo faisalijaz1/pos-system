@@ -282,7 +282,6 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
       return;
     }
     const q = productSearch.trim().toLowerCase();
-    const q = productSearch.trim().toLowerCase();
     productsApi
       .list({ search: q }, 0, 20)
       .then((res) => {
