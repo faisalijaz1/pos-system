@@ -24,7 +24,7 @@ import LedgerHeader from './ledger/LedgerHeader';
 import LedgerFilter from './ledger/LedgerFilter';
 import LedgerTable from './ledger/LedgerTable';
 import LedgerFooter from './ledger/LedgerFooter';
-import { buildLedgerPrintHtml, openLedgerPrintPreview } from './ledger/LedgerPrintTemplate';
+import { buildLedgerPrintHtml, openLedgerPrintPreview, openLedgerPrintWindow } from './ledger/LedgerPrintTemplate';
 import { toApiDate } from './ledger/ledgerUtils';
 
 const today = new Date();
@@ -103,6 +103,8 @@ export default function Ledger() {
 
   const handleReport = useCallback(() => {
     if (!selectedAccount?.accountId) return;
+    // Open window immediately (user gesture) so popup blockers don't block it
+    const win = openLedgerPrintWindow();
     setLoading(true);
     ledgerApi
       .reportPrint(selectedAccount.accountId, fromDate, toDate)
@@ -119,9 +121,17 @@ export default function Ledger() {
           closingBalanceType: data.closingBalanceType,
           showToolbar: true,
         });
-        openLedgerPrintPreview(html);
+        if (win && !win.closed) {
+          win.document.open();
+          win.document.write(html);
+          win.document.close();
+        } else {
+          openLedgerPrintPreview(html);
+        }
       })
-      .catch(() => {})
+      .catch(() => {
+        if (win && !win.closed) win.close();
+      })
       .finally(() => setLoading(false));
   }, [selectedAccount?.accountId, fromDate, toDate]);
 

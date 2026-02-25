@@ -120,9 +120,22 @@ export function buildLedgerPrintHtml(opts) {
 }
 
 export function openLedgerPrintPreview(html) {
-  if (!html) return;
+  if (!html) return null;
   const win = window.open('', '_blank');
-  if (!win) return;
+  if (!win) return null;
   win.document.write(html);
   win.document.close();
+  return win;
+}
+
+/** Open a blank window for ledger report, then write content when ready (avoids popup blocker). */
+export function openLedgerPrintWindow() {
+  const win = window.open('', '_blank');
+  if (!win) return null;
+  win.document.write(`
+    <!DOCTYPE html><html><head><meta charset="utf-8"><title>Ledger Report</title></head>
+    <body style="font-family:system-ui;padding:20px;">Loading ledger report…</body></html>
+  `);
+  win.document.close();
+  return win;
 }
