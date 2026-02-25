@@ -16,6 +16,7 @@ const PRINT_STYLES = `
   @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .no-print { display: none !important; }
+    #print-content-wrapper { transform: none !important; }
   }
   body {
     font-family: 'Segoe UI', system-ui, Arial, sans-serif;
@@ -74,10 +75,10 @@ export function buildPrintHtml(opts) {
   const {
     invoice = {},
     items = [],
-    printWithoutHeader = false,
-    printWithoutBalance = false,
     business = {},
   } = opts;
+  const printWithoutHeader = Boolean(opts && opts.printWithoutHeader);
+  const printWithoutBalance = Boolean(opts && opts.printWithoutBalance);
 
   const biz = { ...DEFAULT_BUSINESS, ...business };
   const inv = invoice;
@@ -157,6 +158,18 @@ export function buildPrintHtml(opts) {
       <div class="row"><span>Balance / Due:</span><strong>${formatMoney(balance)}</strong></div>
     </div>`;
 
+  const zoomToolbarHtml = `
+    <div id="print-preview-toolbar" class="no-print" style="position:sticky;top:0;left:0;right:0;background:#f5f5f5;padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #ccc;z-index:9999;flex-wrap:wrap;">
+      <button type="button" id="zoom-out" style="padding:6px 12px;cursor:pointer;">Zoom Out</button>
+      <button type="button" id="zoom-in" style="padding:6px 12px;cursor:pointer;">Zoom In</button>
+      <span id="zoom-level" style="min-width:48px;font-size:13px;">100%</span>
+      <button type="button" id="do-print" style="padding:6px 12px;cursor:pointer;background:#1976d2;color:#fff;border:none;border-radius:4px;">Print</button>
+      <button type="button" id="close-preview" style="padding:6px 12px;cursor:pointer;">Close</button>
+    </div>`;
+
+  const contentWrapperStart = '<div id="print-content-wrapper" style="transform-origin: top left;">';
+  const contentWrapperEnd = '</div>';
+
   const remarksHtml = inv.remarks ? `<p style="margin-top:10px;font-size:12px;"><strong>Remarks:</strong> ${escapeHtml(inv.remarks)}</p>` : '';
 
   const footerHtml = `
@@ -169,9 +182,12 @@ export function buildPrintHtml(opts) {
 <head>
   <meta charset="utf-8">
   <title>Invoice ${escapeHtml(inv.invoiceNumber || '')}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>${PRINT_STYLES}</style>
 </head>
 <body>
+  ${zoomToolbarHtml}
+  ${contentWrapperStart}
   ${headerHtml}
   ${customerBlockHtml}
   ${remarksHtml}
@@ -179,8 +195,26 @@ export function buildPrintHtml(opts) {
   ${totalsHtml}
   ${balanceHtml}
   ${footerHtml}
+  ${contentWrapperEnd}
   <script>
-    window.onload = function() { window.print(); };
+    (function() {
+      var scale = 1;
+      var minScale = 0.5;
+      var maxScale = 2;
+      var step = 0.1;
+      var wrapper = document.getElementById('print-content-wrapper');
+      var levelEl = document.getElementById('zoom-level');
+      function updateZoom() {
+        scale = Math.max(minScale, Math.min(maxScale, scale));
+        if (wrapper) wrapper.style.transform = 'scale(' + scale + ')';
+        if (levelEl) levelEl.textContent = Math.round(scale * 100) + '%';
+      }
+      document.getElementById('zoom-out').onclick = function() { scale -= step; updateZoom(); };
+      document.getElementById('zoom-in').onclick = function() { scale += step; updateZoom(); };
+      document.getElementById('do-print').onclick = function() { window.print(); };
+      document.getElementById('close-preview').onclick = function() { window.close(); };
+      updateZoom();
+    })();
   </script>
 </body>
 </html>`;
@@ -233,15 +267,7 @@ export function openPrintPreview(html) {
   }
   win.document.write(html);
   win.document.close();
-  try {
-    win.print();
-  } catch (e) {
-    console.warn('Print failed', e);
-  }
-  win.onafterprint = () => win.close();
-  try {
-    win.addEventListener('afterprint', () => win.close());
-  } catch (_) {}
+  // No auto-print: user can zoom in/out in the toolbar then click Print
 }
 
 /**
