@@ -131,8 +131,8 @@ public class LedgerService {
             Integer accountId = row[0] instanceof Number ? ((Number) row[0]).intValue() : (Integer) row[0];
             String accountCode = (String) row[1];
             String accountName = (String) row[2];
-            BigDecimal debit = row[3] != null ? (BigDecimal) row[3] : BigDecimal.ZERO;
-            BigDecimal credit = row[4] != null ? (BigDecimal) row[4] : BigDecimal.ZERO;
+            BigDecimal debit = toBigDecimal(row[3]);
+            BigDecimal credit = toBigDecimal(row[4]);
             totalDebit = totalDebit.add(debit);
             totalCredit = totalCredit.add(credit);
             list.add(TrialBalanceDto.TrialBalanceRowDto.builder()
@@ -163,13 +163,13 @@ public class LedgerService {
         if (size <= 0) size = 20;
         if (page < 0) page = 0;
 
-        BigDecimal opening = ledgerEntryRepository.openingBalanceBefore(accountId, fromDate);
+        BigDecimal opening = toBigDecimal(ledgerEntryRepository.openingBalanceBefore(accountId, fromDate));
         String openingType = opening.compareTo(BigDecimal.ZERO) >= 0 ? "Dr" : "Cr";
         if (opening.compareTo(BigDecimal.ZERO) < 0) opening = opening.negate();
 
         Object[] totals = ledgerEntryRepository.periodTotals(accountId, fromDate, toDate);
-        BigDecimal totalDr = totals != null && totals[0] != null ? (BigDecimal) totals[0] : BigDecimal.ZERO;
-        BigDecimal totalCr = totals != null && totals[1] != null ? (BigDecimal) totals[1] : BigDecimal.ZERO;
+        BigDecimal totalDr = toBigDecimal(totals != null && totals.length > 0 ? totals[0] : null);
+        BigDecimal totalCr = toBigDecimal(totals != null && totals.length > 1 ? totals[1] : null);
 
         List<LedgerEntry> allEntries = ledgerEntryRepository.findAllByAccountAndDateRangeOrderByDate(accountId, fromDate, toDate);
         BigDecimal runBal = openingType.equals("Cr") ? opening.negate() : opening;
@@ -241,5 +241,17 @@ public class LedgerService {
                 .createdBy(e.getCreatedBy() != null ? e.getCreatedBy().getUserId() : null)
                 .createdAt(e.getCreatedAt())
                 .build();
+    }
+
+    /** Safely convert repository result to BigDecimal (handles Number, BigDecimal, null, or nested Object[] from some drivers). */
+    private static BigDecimal toBigDecimal(Object o) {
+        if (o == null) return BigDecimal.ZERO;
+        if (o instanceof BigDecimal) return (BigDecimal) o;
+        if (o instanceof Number) return BigDecimal.valueOf(((Number) o).doubleValue());
+        if (o instanceof Object[]) {
+            Object[] arr = (Object[]) o;
+            return toBigDecimal(arr.length > 0 ? arr[0] : null);
+        }
+        return BigDecimal.ZERO;
     }
 }
