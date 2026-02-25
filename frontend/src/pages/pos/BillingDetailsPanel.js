@@ -9,6 +9,15 @@ import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import { DATE_INPUT_SX } from './posUtils';
 
+const editableFieldSx = {
+  bgcolor: 'rgba(25, 118, 210, 0.04)',
+  borderRadius: 1,
+  '& .MuiOutlinedInput-root': {
+    bgcolor: 'rgba(25, 118, 210, 0.04)',
+    '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.08)' },
+  },
+};
+
 export default function BillingDetailsPanel({
   billingNo,
   billingDate,
@@ -31,6 +40,7 @@ export default function BillingDetailsPanel({
         border: '1px solid',
         borderColor: 'divider',
         height: '100%',
+        ...(editable ? { borderLeft: '3px solid', borderLeftColor: 'primary.main', pl: 2.5 } : {}),
       }}
     >
       <Typography variant="subtitle2" fontWeight={700} color="text.secondary" sx={{ mb: 1.5 }}>
@@ -44,6 +54,7 @@ export default function BillingDetailsPanel({
           onChange={editable && onBillingNoChange ? (e) => onBillingNoChange(e.target.value) : undefined}
           readOnly={!editable}
           fullWidth
+          sx={editable ? editableFieldSx : {}}
         />
         <TextField
           size="small"
@@ -52,7 +63,7 @@ export default function BillingDetailsPanel({
           value={dateStr ?? ''}
           onChange={editable && onBillingDateChange ? (e) => onBillingDateChange(e.target.value) : undefined}
           InputLabelProps={{ shrink: true }}
-          sx={DATE_INPUT_SX}
+          sx={editable ? { ...DATE_INPUT_SX, ...editableFieldSx } : DATE_INPUT_SX}
           readOnly={!editable}
           fullWidth
         />
@@ -63,6 +74,7 @@ export default function BillingDetailsPanel({
           onChange={editable && onBillingPackingChange ? (e) => onBillingPackingChange(e.target.value) : undefined}
           readOnly={!editable}
           fullWidth
+          sx={editable ? editableFieldSx : {}}
         />
         <TextField
           size="small"
@@ -71,6 +83,7 @@ export default function BillingDetailsPanel({
           onChange={editable && onBillingAddaChange ? (e) => onBillingAddaChange(e.target.value) : undefined}
           readOnly={!editable}
           fullWidth
+          sx={editable ? editableFieldSx : {}}
         />
       </Box>
     </Paper>

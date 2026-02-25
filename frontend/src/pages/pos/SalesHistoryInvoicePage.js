@@ -48,7 +48,8 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
   const [currentInvoice, setCurrentInvoice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [navLoading, setNavLoading] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [originalInvoice, setOriginalInvoice] = useState(null);
   const [invoiceNoSearch, setInvoiceNoSearch] = useState('');
   const [prevBalance, setPrevBalance] = useState(0);
   const [soldHist, setSoldHist] = useState('');
@@ -74,6 +75,8 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
   const loadInvoiceById = useCallback((id) => {
     if (!id) return;
     setLoading(true);
+    setEditMode(false);
+    setOriginalInvoice(null);
     invoicesApi
       .getById(id)
       .then((res) => setCurrentInvoice(res.data))
@@ -170,7 +173,21 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
       .finally(() => setSoldHistLoading(false));
   }, [currentInvoice?.customerId, currentInvoice?.salesInvoiceId, currentInvoice?.isCashCustomer]);
 
-  const handleSave = useCallback(() => {
+  const handleEnterEdit = useCallback(() => {
+    if (!currentInvoice) return;
+    setOriginalInvoice(JSON.parse(JSON.stringify(currentInvoice)));
+    setEditMode(true);
+  }, [currentInvoice]);
+
+  const handleCancelEdit = useCallback(() => {
+    if (originalInvoice) setCurrentInvoice(originalInvoice);
+    setEditMode(false);
+    setOriginalInvoice(null);
+    setSuccessMsg('Changes discarded.');
+    setTimeout(() => setSuccessMsg(''), 3000);
+  }, [originalInvoice]);
+
+  const handleSaveChanges = useCallback(() => {
     if (!invoiceId) return;
     setSaveLoading(true);
     setSuccessMsg('');
@@ -192,17 +209,44 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
       .update(invoiceId, payload)
       .then((res) => {
         setCurrentInvoice(res.data);
-        setIsEditMode(false);
+        setEditMode(false);
+        setOriginalInvoice(null);
         setSuccessMsg('Saved.');
+        setTimeout(() => setSuccessMsg(''), 3000);
       })
-      .catch(() => setSuccessMsg('Save failed.'))
+      .catch(() => {
+        setSuccessMsg('Save failed.');
+        setTimeout(() => setSuccessMsg(''), 4000);
+      })
       .finally(() => setSaveLoading(false));
   }, [invoiceId, currentInvoice]);
 
-  const handleCancelEdit = useCallback(() => {
-    if (invoiceId) loadInvoiceById(invoiceId);
-    setIsEditMode(false);
-  }, [invoiceId, loadInvoiceById]);
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (editMode) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Leave anyway?';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [editMode]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!editMode) return;
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        handleSaveChanges();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleCancelEdit();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editMode, handleSaveChanges, handleCancelEdit]);
 
   const updateLocalInvoice = useCallback((next) => {
     setCurrentInvoice((prev) => (prev ? { ...prev, ...next } : null));
@@ -277,7 +321,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
   );
 
   useEffect(() => {
-    if (!isEditMode || productSearch.trim().length < 1) {
+    if (!editMode || productSearch.trim().length < 1) {
       setProductSearchResults([]);
       return;
     }
@@ -290,7 +334,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
         setProductSearchHighlight(0);
       })
       .catch(() => setProductSearchResults([]));
-  }, [productSearch, isEditMode]);
+  }, [productSearch, editMode]);
 
   const safeHighlightIndex = Math.min(productSearchHighlight, Math.max(0, productSearchResults.length - 1));
 
@@ -382,8 +426,11 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
                 additionalDiscount={additionalDiscount}
                 additionalExpenses={additionalExpenses}
                 netTotal={netTotal}
-                isEditMode={isEditMode}
-                onEditToggle={() => setIsEditMode((v) => !v)}
+                editMode={editMode}
+                onEnterEdit={handleEnterEdit}
+                onSaveChanges={handleSaveChanges}
+                onCancelEdit={handleCancelEdit}
+                saveLoading={saveLoading}
                 onPrint={handlePrint}
                 onExit={onExit}
                 onInvoiceDateChange={(v) => updateLocalInvoice({ invoiceDate: v })}
@@ -394,7 +441,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
               />
             </Box>
 
-            {isEditMode && (
+            {editMode && (
               <Box sx={{ mb: 1 }}>
                 <ProductSearchBar
                   search={productSearch}
@@ -425,9 +472,9 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
                   cartItems={items}
                   focusedRowIndex={focusedRowIndex}
                   onRowClick={setFocusedRowIndex}
-                  onQtyChange={isEditMode ? handleQtyChange : () => {}}
-                  onQtyDirect={isEditMode ? handleQtyDirect : () => {}}
-                  onRemove={isEditMode ? handleRemoveItem : () => {}}
+                  onQtyChange={editMode ? handleQtyChange : () => {}}
+                  onQtyDirect={editMode ? handleQtyDirect : () => {}}
+                  onRemove={editMode ? handleRemoveItem : () => {}}
                   emptyMessage={currentInvoice ? 'No line items.' : '—'}
                 />
                 <InvoiceBottomStrip
@@ -437,8 +484,8 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
                   additionalDiscount={additionalDiscount}
                   additionalExpenses={additionalExpenses}
                   netTotal={netTotal}
-                  onDiscountChange={isEditMode ? (v) => updateLocalInvoice({ additionalDiscount: v }) : () => {}}
-                  onExpensesChange={isEditMode ? (v) => updateLocalInvoice({ additionalExpenses: v }) : () => {}}
+                  onDiscountChange={editMode ? (v) => updateLocalInvoice({ additionalDiscount: v }) : () => {}}
+                  onExpensesChange={editMode ? (v) => updateLocalInvoice({ additionalExpenses: v }) : () => {}}
                 />
               </Box>
             </Paper>
@@ -457,7 +504,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
                 billingDate={currentInvoice.billingDate}
                 billingPacking={currentInvoice.billingPacking}
                 billingAdda={currentInvoice.billingAdda}
-                editable={isEditMode}
+                editable={editMode}
                 onBillingNoChange={(v) => updateLocalInvoice({ billingNo: v })}
                 onBillingDateChange={(v) => updateLocalInvoice({ billingDate: v })}
                 onBillingPackingChange={(v) => updateLocalInvoice({ billingPacking: v })}
@@ -469,13 +516,10 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
                 remarks={currentInvoice.remarks}
                 printWithoutHeader={currentInvoice.printWithoutHeader}
                 printWithoutBalance={currentInvoice.printWithoutBalance}
-                editable={isEditMode}
+                editable={editMode}
                 onRemarksChange={(v) => updateLocalInvoice({ remarks: v })}
                 onPrintWithoutHeaderChange={(v) => updateLocalInvoice({ printWithoutHeader: v })}
                 onPrintWithoutBalanceChange={(v) => updateLocalInvoice({ printWithoutBalance: v })}
-                onSave={handleSave}
-                onCancel={handleCancelEdit}
-                saveLoading={saveLoading}
               />
             </Box>
             {successMsg && (

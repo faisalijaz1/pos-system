@@ -1,7 +1,6 @@
 /**
  * Print Options Panel — Bottom-right in Sales History.
- * No. of Titles, Total Qty, Remarks, checkboxes (Without Header, With Header, Without Balance).
- * Save Changes and Cancel visible in edit mode.
+ * No. of Titles, Total Qty, Remarks, print checkboxes. No Save/Cancel (those live in header).
  */
 import React from 'react';
 import Box from '@mui/material/Box';
@@ -10,9 +9,6 @@ import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
-import Button from '@mui/material/Button';
-import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Cancel';
 
 export default function PrintOptionsPanel({
   noOfTitles,
@@ -24,9 +20,6 @@ export default function PrintOptionsPanel({
   onRemarksChange,
   onPrintWithoutHeaderChange,
   onPrintWithoutBalanceChange,
-  onSave,
-  onCancel,
-  saveLoading = false,
 }) {
   return (
     <Paper
@@ -66,6 +59,7 @@ export default function PrintOptionsPanel({
           multiline
           minRows={1}
           fullWidth
+          sx={editable ? { bgcolor: 'rgba(25, 118, 210, 0.04)', borderRadius: 1, '& .MuiOutlinedInput-root': { bgcolor: 'rgba(25, 118, 210, 0.04)' } } : {}}
         />
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
           <FormControlLabel
@@ -102,23 +96,6 @@ export default function PrintOptionsPanel({
             label="Without Balance"
           />
         </Box>
-        {editable && (onSave || onCancel) && (
-          <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-            <Button
-              size="small"
-              variant="contained"
-              color="success"
-              startIcon={<SaveIcon />}
-              onClick={onSave}
-              disabled={saveLoading}
-            >
-              {saveLoading ? '…' : 'Save Changes'}
-            </Button>
-            <Button size="small" variant="outlined" color="inherit" startIcon={<CancelIcon />} onClick={onCancel}>
-              Cancel
-            </Button>
-          </Box>
-        )}
       </Box>
     </Paper>
   );
