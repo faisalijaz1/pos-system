@@ -17,8 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -198,8 +200,9 @@ public class SalesInvoiceService {
         if (!saveAsDraft && customer != null && netTotal.compareTo(BigDecimal.ZERO) > 0) {
             Account revenueAccount = accountRepository.findFirstByAccountTypeAndIsActiveTrue(ACCOUNT_TYPE_REVENUE)
                     .orElseThrow(() -> new BadRequestException("Sales Revenue account not found. Add an account with type 'Revenue' (e.g. code REV001)."));
+            String voucherNo = "VOU-" + request.getInvoiceNumber().replaceFirst("^INV-", "");
             ledgerService.post(
-                    "INV-" + request.getInvoiceNumber(),
+                    voucherNo,
                     request.getInvoiceDate(),
                     "Sale, Invoice # " + request.getInvoiceNumber(),
                     customer.getAccount().getAccountId(),
@@ -221,10 +224,38 @@ public class SalesInvoiceService {
         return toResponse(invoice);
     }
 
+    /** Returns next sequential invoice number for the given date: INV-YYYYMMDD-NNNN. */
+    @Transactional(readOnly = true)
+    public String getNextInvoiceNumber(LocalDate date) {
+        LocalDate d = date != null ? date : LocalDate.now();
+        String dateStr = d.format(DateTimeFormatter.BASIC_ISO_DATE);
+        String prefix = "INV-" + dateStr + "-";
+        int nextSeq = 1;
+        Optional<SalesInvoice> last = salesInvoiceRepository.findTop1ByInvoiceNumberStartingWithOrderByInvoiceNumberDesc(prefix);
+        if (last.isPresent()) {
+            String num = last.get().getInvoiceNumber();
+            if (num != null && num.length() >= 4) {
+                try {
+                    nextSeq = Integer.parseInt(num.substring(num.length() - 4), 10) + 1;
+                } catch (NumberFormatException ignored) { }
+            }
+        }
+        return prefix + String.format("%04d", Math.min(9999, Math.max(1, nextSeq)));
+    }
+
     @Transactional(readOnly = true)
     public InvoiceResponse getByInvoiceNumber(String invoiceNumber) {
-        SalesInvoice invoice = salesInvoiceRepository.findByInvoiceNumberWithItems(invoiceNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Invoice", invoiceNumber));
+        String input = invoiceNumber != null ? invoiceNumber.trim() : "";
+        if (input.length() == 4 && input.matches("\\d{4}")) {
+            Page<SalesInvoice> page = salesInvoiceRepository.findByInvoiceNumberEndingWith(input, PageRequest.of(0, 1));
+            SalesInvoice invoice = page.getContent().isEmpty() ? null : page.getContent().get(0);
+            if (invoice == null) {
+                throw new ResourceNotFoundException("Invoice", "suffix " + input);
+            }
+            return toResponse(salesInvoiceRepository.findByIdWithItems(invoice.getSalesInvoiceId()).orElse(invoice));
+        }
+        SalesInvoice invoice = salesInvoiceRepository.findByInvoiceNumberWithItems(input)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice", input));
         return toResponse(invoice);
     }
 

@@ -48,4 +48,11 @@ public interface SalesInvoiceRepository extends JpaRepository<SalesInvoice, Inte
     /** Next invoice: same date with larger id, or later date. For "Next". */
     @Query("SELECT i FROM SalesInvoice i WHERE (i.invoiceDate > :date) OR (i.invoiceDate = :date AND i.salesInvoiceId > :currentId) ORDER BY i.invoiceDate ASC, i.salesInvoiceId ASC")
     Page<SalesInvoice> findNextInvoice(@Param("date") LocalDate date, @Param("currentId") Integer currentId, Pageable pageable);
+
+    /** For sequential next-number: highest invoice number for the day (prefix INV-YYYYMMDD-). */
+    Optional<SalesInvoice> findTop1ByInvoiceNumberStartingWithOrderByInvoiceNumberDesc(String prefix);
+
+    /** Find invoice by last-4-digit suffix (e.g. "0058" matches INV-*-0058). One result, most recent by id. */
+    @Query("SELECT i FROM SalesInvoice i WHERE i.invoiceNumber LIKE CONCAT('%', :suffix) ORDER BY i.salesInvoiceId DESC")
+    Page<SalesInvoice> findByInvoiceNumberEndingWith(@Param("suffix") String suffix, Pageable pageable);
 }

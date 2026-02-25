@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -23,4 +24,6 @@ public class ProductSummaryDto {
     private BigDecimal currentStock;
     private BigDecimal sellingPrice;
     private BigDecimal costPrice;
+    /** Price per UOM for this product. Used when changing unit in POS to show correct price. */
+    private List<ProductUomPriceDto> uomPrices;
 }

@@ -91,6 +91,14 @@ public class SalesInvoiceController {
         return ResponseEntity.ok(salesInvoiceService.deleteItem(id, itemId));
     }
 
+    @GetMapping("/next-number")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    public ResponseEntity<String> getNextInvoiceNumber(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return ResponseEntity.ok(salesInvoiceService.getNextInvoiceNumber(date));
+    }
+
     @GetMapping("/number/{invoiceNumber}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     public ResponseEntity<InvoiceResponse> getByInvoiceNumber(@PathVariable String invoiceNumber) {

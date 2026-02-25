@@ -23,7 +23,7 @@ import { invoicesApi } from '../../api/invoices';
 import { customersApi } from '../../api/customers';
 import { productsApi } from '../../api/products';
 import { uomApi } from '../../api/uom';
-import { formatMoney, formatTime, generateInvoiceNumber } from './posUtils';
+import { formatMoney, formatTime } from './posUtils';
 import { printInvoice } from './printTemplate';
 import InvoiceTopBar from './InvoiceTopBar';
 import CustomerStrip from './CustomerStrip';
@@ -44,7 +44,7 @@ const today = new Date().toISOString().slice(0, 10);
 export default function PosBillingPage() {
   const theme = useTheme();
   const [tab, setTab] = useState(0);
-  const [invoiceNumber, setInvoiceNumber] = useState(generateInvoiceNumber);
+  const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(today);
   const [invoiceTime, setInvoiceTime] = useState(formatTime(new Date()));
   const [transactionTypeCode, setTransactionTypeCode] = useState('SALE');
@@ -96,6 +96,19 @@ export default function PosBillingPage() {
 
   const showNotification = useCallback((message, severity = 'info') => {
     setSnackbar({ open: true, message: String(message), severity: severity || 'info' });
+  }, []);
+
+  const fetchNextInvoiceNumber = useCallback(function () {
+    const date = invoiceDate || today;
+    invoicesApi.getNextNumber(date).then(function (next) {
+      setInvoiceNumber(next);
+    }).catch(function () {
+      setInvoiceNumber('INV-' + date.replace(/-/g, '') + '-' + String(Date.now()).slice(-4));
+    });
+  }, [invoiceDate]);
+
+  useEffect(function () {
+    fetchNextInvoiceNumber();
   }, []);
 
   function getEffectiveCustomerId(c) {
@@ -249,20 +262,27 @@ export default function PosBillingPage() {
     const pid = product.productId ?? product.product_id ?? product.id;
     if (pid == null) return;
     const existing = cart.find(function (c) { return (c.productId ?? c.product_id) === pid; });
-    const price = Number(product.sellingPrice) || Number(product.selling_price) || 0;
+    const pricesByUom = {};
+    (product.uomPrices || []).forEach(function (entry) {
+      pricesByUom[entry.uomId] = Number(entry.price) || 0;
+    });
+    const defaultUomId = product.uomId ?? product.uom_id ?? (uomList[0] && uomList[0].uomId);
+    const price = pricesByUom[defaultUomId] != null ? pricesByUom[defaultUomId] : (Number(product.sellingPrice) || Number(product.selling_price) || 0);
     const stock = product.currentStock != null ? Number(product.currentStock) : (product.current_stock != null ? Number(product.current_stock) : null);
     let nextCart;
     if (existing) {
       nextCart = cart.map(function (c) {
         if ((c.productId ?? c.product_id) !== pid) return c;
         const newQty = Number(c.quantity) + qty;
-        return { ...c, productId: c.productId ?? pid, quantity: newQty, lineTotal: newQty * (Number(c.unitPrice) || price), currentStock: c.currentStock != null ? c.currentStock : stock };
+        const existingPrices = c.pricesByUom || {};
+        const usePrice = existingPrices[defaultUomId] != null ? existingPrices[defaultUomId] : (Number(c.unitPrice) || price);
+        return { ...c, productId: c.productId ?? pid, quantity: newQty, unitPrice: usePrice, lineTotal: newQty * usePrice, currentStock: c.currentStock != null ? c.currentStock : stock, pricesByUom: { ...existingPrices, ...pricesByUom } };
       });
     } else {
-      const uomId = product.uomId ?? product.uom_id ?? (uomList[0] && uomList[0].uomId);
+      const uomId = defaultUomId;
       const uom = uomList.find(function (u) { return (u.uomId ?? u.uom_id) === uomId; });
-        const uomName = (product.uomName ?? product.uom_name ?? (uom && (u.name || u.symbol))) || '—';
-      nextCart = [...cart, { productId: pid, productCode: product.code || product.productCode, productName: product.nameEn || product.name_en || product.name, quantity: qty, unitPrice: price, lineTotal: qty * price, currentStock: stock, uomId: uomId, uomName: uomName }];
+      const uomName = (product.uomName ?? product.uom_name ?? (uom && (u.name || u.symbol))) || '—';
+      nextCart = [...cart, { productId: pid, productCode: product.code || product.productCode, productName: product.nameEn || product.name_en || product.name, quantity: qty, unitPrice: price, lineTotal: qty * price, currentStock: stock, uomId: uomId, uomName: uomName, pricesByUom }];
     }
     setCart(nextCart);
     setFocusedRowIndex(nextCart.length - 1);
@@ -294,7 +314,10 @@ export default function PosBillingPage() {
     if (!uom) return;
     setCart(cart.map(function (c) {
       if (c.productId !== productId) return c;
-      return { ...c, uomId: uom.uomId, uomName: uom.name };
+      const pricesByUom = c.pricesByUom || {};
+      const newPrice = pricesByUom[uomId] != null ? pricesByUom[uomId] : Number(c.unitPrice) || 0;
+      const qty = Number(c.quantity) || 1;
+      return { ...c, uomId: uom.uomId, uomName: uom.name, unitPrice: newPrice, lineTotal: qty * newPrice };
     }));
   }
 
@@ -342,7 +365,7 @@ export default function PosBillingPage() {
     setRemarks('');
     setPaymentOpen(false);
     setFocusedRowIndex(-1);
-    setInvoiceNumber(generateInvoiceNumber());
+    fetchNextInvoiceNumber();
     setBillingNo('');
     setBillingDate('');
     setBillingPacking('');
@@ -424,7 +447,7 @@ export default function PosBillingPage() {
       setRemarks('');
       setPaymentOpen(false);
       setFocusedRowIndex(-1);
-      setInvoiceNumber(generateInvoiceNumber());
+      fetchNextInvoiceNumber();
       showNotification('Invoice saved.', 'success');
       if (tab === 1) loadHistory();
       if (printReceiptAfterSave && res && res.data) {

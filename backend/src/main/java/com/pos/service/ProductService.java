@@ -2,12 +2,17 @@ package com.pos.service;
 
 import com.pos.domain.SalesInvoiceItem;
 import com.pos.domain.Product;
+import com.pos.domain.ProductUomPrice;
+import com.pos.domain.UnitOfMeasure;
 import com.pos.dto.LastSaleDto;
 import com.pos.dto.PriceHistoryEntryDto;
 import com.pos.dto.ProductSummaryDto;
+import com.pos.dto.ProductUomPriceDto;
 import com.pos.exception.ResourceNotFoundException;
 import com.pos.repository.ProductRepository;
+import com.pos.repository.ProductUomPriceRepository;
 import com.pos.repository.SalesInvoiceItemRepository;
+import com.pos.repository.UnitOfMeasureRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,14 +20,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductUomPriceRepository productUomPriceRepository;
+    private final UnitOfMeasureRepository unitOfMeasureRepository;
     private final SalesInvoiceItemRepository salesInvoiceItemRepository;
 
     @Transactional(readOnly = true)
@@ -86,6 +96,7 @@ public class ProductService {
     private ProductSummaryDto toSummaryDto(Product p) {
         var uom = p.getUom();
         var brand = p.getBrand();
+        List<ProductUomPriceDto> uomPrices = buildUomPrices(p);
         return ProductSummaryDto.builder()
                 .productId(p.getProductId())
                 .code(p.getCode())
@@ -97,6 +108,27 @@ public class ProductService {
                 .currentStock(p.getCurrentStock())
                 .sellingPrice(p.getSellingPrice())
                 .costPrice(p.getCostPrice())
+                .uomPrices(uomPrices)
                 .build();
+    }
+
+    private List<ProductUomPriceDto> buildUomPrices(Product p) {
+        List<UnitOfMeasure> allUoms = unitOfMeasureRepository.findAll();
+        List<ProductUomPrice> productPrices = productUomPriceRepository.findByProductIdOrderByUomId(p.getProductId());
+        Map<Integer, BigDecimal> priceByUomId = productPrices.stream()
+                .collect(Collectors.toMap(ProductUomPrice::getUomId, ProductUomPrice::getPrice, (a, b) -> a));
+        BigDecimal defaultPrice = p.getSellingPrice() != null ? p.getSellingPrice() : BigDecimal.ZERO;
+        return allUoms.stream()
+                .map(u -> {
+                    BigDecimal price = priceByUomId.containsKey(u.getUomId())
+                            ? priceByUomId.get(u.getUomId())
+                            : defaultPrice;
+                    return ProductUomPriceDto.builder()
+                            .uomId(u.getUomId())
+                            .uomName(u.getName())
+                            .price(price)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }

@@ -270,13 +270,16 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
   const handleAddItem = useCallback(
     (product, qty = 1) => {
       if (!invoiceId) return;
+      const uomId = product.uomId ?? product.uom_id;
+      const uomEntry = (product.uomPrices || []).find((e) => e.uomId === uomId);
+      const unitPrice = uomEntry != null ? uomEntry.price : (product.sellingPrice ?? product.selling_price);
       setLoading(true);
       invoicesApi
         .addItem(invoiceId, {
           productId: product.productId,
           quantity: qty,
-          unitPrice: product.sellingPrice ?? product.selling_price,
-          uomId: product.uomId ?? product.uom_id,
+          unitPrice,
+          uomId: uomId ?? product.uomId ?? product.uom_id,
         })
         .then((res) => setCurrentInvoice(res.data))
         .finally(() => setLoading(false));

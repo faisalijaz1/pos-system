@@ -20,7 +20,9 @@ export const invoicesApi = {
       .catch(() => null);
   },
   getById: (id) => axiosInstance.get(`/v1/invoices/${id}`),
-  getByNumber: (number) => axiosInstance.get(`/v1/invoices/number/${number}`),
+  getNextNumber: (date) =>
+    axiosInstance.get('/v1/invoices/next-number', { params: date ? { date } : {} }).then((r) => r.data),
+  getByNumber: (number) => axiosInstance.get(`/v1/invoices/number/${encodeURIComponent(number)}`),
   create: (body) => axiosInstance.post('/v1/invoices', body),
   update: (id, body) => axiosInstance.patch(`/v1/invoices/${id}`, body),
   addItem: (id, body) => axiosInstance.post(`/v1/invoices/${id}/items`, body),

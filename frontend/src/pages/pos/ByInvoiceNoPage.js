@@ -10,7 +10,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import { invoicesApi } from '../../api/invoices';
 import { productsApi } from '../../api/products';
 import { customersApi } from '../../api/customers';
-import { formatMoney, generateInvoiceNumber } from './posUtils';
+import { formatMoney } from './posUtils';
 import { printInvoice } from './printTemplate';
 import InvoiceSearchHeader from './InvoiceSearchHeader';
 import HistoricalOrderPanel from './HistoricalOrderPanel';
@@ -30,7 +30,10 @@ function buildReplicationItems(invoice, currentPricesMap) {
     const productId = it.productId;
     const oldPrice = Number(it.unitPrice) || 0;
     const product = currentPricesMap[productId];
-    const newPrice = product != null && product.sellingPrice != null ? Number(product.sellingPrice) : oldPrice;
+    const uomId = it.uomId || product?.uomId;
+    const uomEntry = (product?.uomPrices || []).find((e) => e.uomId === uomId);
+    const newPrice =
+      uomEntry != null ? Number(uomEntry.price) : (product != null && product.sellingPrice != null ? Number(product.sellingPrice) : oldPrice);
     const qty = Number(it.quantity) || 0;
     return {
       ...it,
@@ -43,7 +46,7 @@ function buildReplicationItems(invoice, currentPricesMap) {
       useNewPrice: true,
       unitPrice: newPrice,
       lineTotal: qty * newPrice,
-      uomId: it.uomId || product?.uomId,
+      uomId: uomId || product?.uomId,
       uomName: product?.uomName ?? it.uomName ?? '—',
       currentStock: product?.currentStock != null ? Number(product.currentStock) : null,
       brandName: product?.brandName ?? it.brandName ?? null,
@@ -65,7 +68,7 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [replicationItems, setReplicationItems] = useState([]);
-  const [newInvoiceNumber, setNewInvoiceNumber] = useState(generateInvoiceNumber);
+  const [newInvoiceNumber, setNewInvoiceNumber] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -157,6 +160,17 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
       .catch(() => setCustomersList([]));
   }, []);
 
+  const fetchNextNewInvoiceNumber = useCallback(() => {
+    invoicesApi.getNextNumber(billingDate || today).then((next) => setNewInvoiceNumber(next)).catch(() => {
+      const d = (billingDate || today).replace(/-/g, '');
+      setNewInvoiceNumber('INV-' + d + '-' + String(Date.now()).slice(-4));
+    });
+  }, [billingDate]);
+
+  useEffect(() => {
+    fetchNextNewInvoiceNumber();
+  }, []);
+
   const handleSearch = useCallback(() => {
     const num = (invoiceNoInput || '').trim();
     if (!num) {
@@ -173,7 +187,7 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
       .then((res) => {
         const inv = res.data;
         setHistoricalInvoice(inv);
-        setNewInvoiceNumber(generateInvoiceNumber());
+        fetchNextNewInvoiceNumber();
         setIsCashCustomer(!inv.customerId);
         if (inv.customerId) {
           setSelectedCustomer({ customerId: inv.customerId, name: inv.customerName || 'Cash' });
@@ -222,7 +236,7 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
     setSelectedCustomer(null);
     setIsCashCustomer(false);
     setSoldHistory([]);
-    setNewInvoiceNumber(generateInvoiceNumber());
+    fetchNextNewInvoiceNumber();
     setSuccessMsg(null);
     setBillingNo('');
     setBillingDate(today);
@@ -394,7 +408,7 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
               if (onNotify) onNotify(msg, 'success');
               else setSuccessMsg(msg);
               if (onCreated) onCreated(res.data);
-              setNewInvoiceNumber(generateInvoiceNumber());
+              fetchNextNewInvoiceNumber();
               return res.data;
             })
             .catch((err) => {
@@ -417,7 +431,7 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
         if (onNotify) onNotify(msg, 'success');
         else setSuccessMsg(msg);
         if (onCreated) onCreated(res.data);
-        setNewInvoiceNumber(generateInvoiceNumber());
+        fetchNextNewInvoiceNumber();
       })
       .catch((err) => {
         const msg = err.response?.data?.message || 'Create failed.';
@@ -443,7 +457,7 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
         if (onNotify) onNotify(msg, 'success');
         else setSuccessMsg(msg);
         if (onCreated) onCreated(res.data);
-        setNewInvoiceNumber(generateInvoiceNumber());
+        fetchNextNewInvoiceNumber();
       })
       .catch((err) => {
         const msg = err.response?.data?.message || 'Save draft failed.';
