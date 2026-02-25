@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import jakarta.persistence.LockModeType;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,6 +19,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     @EntityGraph(attributePaths = "uom")
     Optional<Product> findByProductIdAndDeletedAtIsNull(Integer productId);
+
+    @EntityGraph(attributePaths = "uom")
+    List<Product> findByProductIdInAndDeletedAtIsNull(List<Integer> productIds);
 
     @EntityGraph(attributePaths = "uom")
     Page<Product> findByDeletedAtIsNull(Pageable pageable);

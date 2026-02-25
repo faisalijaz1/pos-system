@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -36,6 +37,13 @@ public class ProductService {
         Product p = productRepository.findByProductIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
         return toSummaryDto(p);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductSummaryDto> findByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) return List.of();
+        List<Product> products = productRepository.findByProductIdInAndDeletedAtIsNull(ids);
+        return products.stream().map(this::toSummaryDto).toList();
     }
 
     @Transactional(readOnly = true)

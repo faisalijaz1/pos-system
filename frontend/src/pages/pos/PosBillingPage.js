@@ -34,6 +34,7 @@ import InvoiceDetailModal from './InvoiceDetailModal';
 import ProductSearchModal from './ProductSearchModal';
 import SoldHistoryPanel from './SoldHistoryPanel';
 import SalesHistoryInvoicePage from './SalesHistoryInvoicePage';
+import ByInvoiceNoPage from './ByInvoiceNoPage';
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -578,11 +579,8 @@ export default function PosBillingPage() {
           onPrint={handlePrint}
         />
       </Box>
-      <Box role="region" id="pos-panel-2" hidden={tab !== 2} sx={{ flex: 1, display: tab === 2 ? 'flex' : 'none', flexDirection: 'column', alignItems: 'flex-start', pt: 2 }}>
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', width: '100%', maxWidth: 400 }}>
-          <TextField fullWidth size="small" label="Invoice number" value={invoiceNoSearch} onChange={function (e) { setInvoiceNoSearch(e.target.value); }} onKeyDown={function (e) { if (e.key === 'Enter') handleFindByNumber(); }} placeholder="e.g. INV-123 or 34714" />
-          <Button variant="contained" onClick={handleFindByNumber} disabled={invoiceNoLoading || !invoiceNoSearch.trim()}>Find</Button>
-        </Box>
+      <Box role="region" id="pos-panel-2" hidden={tab !== 2} sx={{ flex: 1, display: tab === 2 ? 'flex' : 'none', flexDirection: 'column', minHeight: 0 }}>
+        <ByInvoiceNoPage />
       </Box>
       <PaymentModal open={paymentOpen} onClose={function () { if (!loading) setPaymentOpen(false); }} netTotal={netTotal} amountReceived={amountReceived} onAmountChange={setAmountReceived} change={change} receiptPreviewLines={receiptPreviewLines} printReceiptAfterSave={printReceiptAfterSave} onPrintReceiptChange={setPrintReceiptAfterSave} onConfirm={handleCompleteSale} loading={loading} cartLength={cart.length} />
       <InvoiceDetailModal open={detailOpen} onClose={function () { setDetailOpen(false); }} invoice={detailInvoice} onPrint={handlePrint} />

@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -28,6 +29,12 @@ public class ProductController {
     ) {
         Page<ProductSummaryDto> page = productService.findAll(name, pageable);
         return ResponseEntity.ok(page);
+    }
+
+    @GetMapping("/bulk")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    public ResponseEntity<List<ProductSummaryDto>> getBulk(@RequestParam List<Integer> ids) {
+        return ResponseEntity.ok(productService.findByIds(ids));
     }
 
     @GetMapping("/{id}")
