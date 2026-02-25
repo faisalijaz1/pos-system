@@ -77,7 +77,6 @@ export default function CustomerPanel({
         onInputChange={(_, v) => onCustomerInputChange(v)}
         onChange={(_, v) => {
           onCustomerChange(v);
-          if (v != null) onCashCustomerChange(false);
         }}
         renderInput={(params) => (
           <TextField {...params} placeholder="Search name or code (min 2 chars)" />

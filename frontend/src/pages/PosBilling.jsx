@@ -48,6 +48,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { invoicesApi } from '../api/invoices';
 import { customersApi } from '../api/customers';
 import { productsApi } from '../api/products';
+import { printInvoice } from './pos/printTemplate';
 
 function formatMoney(n) {
   if (n == null) return '0';
@@ -414,32 +415,26 @@ export default function PosBilling() {
 
   const handlePrint = () => {
     if (!detailInvoice) return;
-    const rows = (detailInvoice.items || [])
-      .map(
-        (it) =>
-          `<tr><td>${it.productCode} — ${it.productName}</td><td class="right">${formatMoney(it.quantity)}</td><td class="right">${formatMoney(it.unitPrice)}</td><td class="right">${formatMoney(it.lineTotal)}</td></tr>`
-      )
-      .join('');
-    const header = printWithoutHeader ? '' : `<div class="header"><strong>INVOICE</strong><br/>${detailInvoice.invoiceNumber}</div>`;
-    const balance = printWithoutBalance ? '' : `<p>Amount Received: ${formatMoney(detailInvoice.amountReceived)}</p>`;
-    const html = `
-      <!DOCTYPE html><html><head><title>Invoice ${detailInvoice.invoiceNumber}</title>
-      <style>body{font-family:system-ui,sans-serif;padding:16px;max-width:560px;margin:0 auto;font-size:13px}
-      table{width:100%;border-collapse:collapse} th,td{border:1px solid #ddd;padding:6px;text-align:left}
-      th{background:#f0f0f0} .right{text-align:right} .header{text-align:center;margin-bottom:12px}
-      </style></head><body>
-      ${header}
-      <p><strong>Date</strong> ${detailInvoice.invoiceDate} ${detailInvoice.invoiceTime ? detailInvoice.invoiceTime : ''} &nbsp; <strong>Customer</strong> ${detailInvoice.customerName || 'Cash'}</p>
-      ${detailInvoice.remarks ? `<p><strong>Remarks:</strong> ${detailInvoice.remarks}</p>` : ''}
-      <table><thead><tr><th>Product</th><th class="right">Qty</th><th class="right">Price</th><th class="right">Total</th></tr></thead><tbody>${rows}</tbody></table>
-      <p style="text-align:right;margin-top:12px">Net Total: <strong>${formatMoney(detailInvoice.netTotal)}</strong></p>
-      ${balance}
-      </body></html>`;
-    const win = window.open('', '_blank');
-    win.document.write(html);
-    win.document.close();
-    win.print();
-    win.close();
+    printInvoice({
+      invoice: {
+        invoiceNumber: detailInvoice.invoiceNumber,
+        invoiceDate: detailInvoice.invoiceDate,
+        invoiceTime: detailInvoice.invoiceTime,
+        customerName: detailInvoice.customerName || 'Cash Bill',
+        remarks: detailInvoice.remarks,
+        grandTotal: detailInvoice.grandTotal,
+        additionalDiscount: detailInvoice.additionalDiscount,
+        additionalExpenses: detailInvoice.additionalExpenses,
+        netTotal: detailInvoice.netTotal,
+        amountReceived: detailInvoice.amountReceived,
+        billingNo: detailInvoice.billingNo,
+        billingDate: detailInvoice.billingDate,
+        userName: detailInvoice.userName,
+      },
+      items: detailInvoice.items || [],
+      printWithoutHeader: !!printWithoutHeader,
+      printWithoutBalance: !!printWithoutBalance,
+    });
   };
 
   const receiptPreviewLines = cart.map((r) => `${r.productName || r.productCode} x${r.quantity} = ${formatMoney(r.lineTotal)}`).join('\n');
@@ -641,39 +636,35 @@ export default function PosBilling() {
               <Checkbox
                 size="small"
                 checked={isCashCustomer}
-                onChange={(e) => {
-                  setIsCashCustomer(e.target.checked);
-                  if (e.target.checked) {
-                    setSelectedCustomer(null);
-                    setCustomerInput('');
-                  }
-                }}
+                onChange={(e) => setIsCashCustomer(e.target.checked)}
               />
             }
             label={<Typography variant="body2">Cash Customer</Typography>}
           />
-          {!isCashCustomer && (
-            <>
-              <Autocomplete
-                size="small"
-                options={customerOptions}
-                getOptionLabel={(o) => `${o.name || o.nameEnglish || ''} ${o.customerCode ? `(${o.customerCode})` : ''}`.trim() || 'Select'}
-                value={selectedCustomer}
-                inputValue={customerInput}
-                onInputChange={(_, v) => setCustomerInput(v)}
-                onChange={(_, v) => setSelectedCustomer(v)}
-                renderInput={(params) => <TextField {...params} placeholder="Customer name/code" />}
-              />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
-                <span>Prev. Balance</span>
-                <strong>{formatMoney(prevBalance)}</strong>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
-                <span>With this Bill</span>
-                <strong>{formatMoney(withThisBill)}</strong>
-              </Box>
-            </>
-          )}
+          <Box sx={{ mt: 0.5 }}>
+            <Autocomplete
+              size="small"
+              options={customerOptions}
+              getOptionLabel={(o) => `${o.name || o.nameEnglish || ''} ${o.customerCode ? `(${o.customerCode})` : ''}`.trim() || 'Select'}
+              value={selectedCustomer}
+              inputValue={customerInput}
+              onInputChange={(_, v) => setCustomerInput(v)}
+              onChange={(_, v) => setSelectedCustomer(v)}
+              renderInput={(params) => <TextField {...params} placeholder="Customer name/code" />}
+            />
+            {selectedCustomer && !isCashCustomer && (
+              <>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', mt: 0.5 }}>
+                  <span>Prev. Balance</span>
+                  <strong>{formatMoney(prevBalance)}</strong>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+                  <span>With this Bill</span>
+                  <strong>{formatMoney(withThisBill)}</strong>
+                </Box>
+              </>
+            )}
+          </Box>
 
           <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 1, mt: 0.5 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>

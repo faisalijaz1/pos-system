@@ -85,8 +85,7 @@ export default function NewOrderPanel({
           <Select
             labelId="by-invoice-customer-label"
             label="Customer"
-            value={isCashCustomer ? '' : (selectedCustomerId ?? '')}
-            disabled={!!isCashCustomer}
+            value={selectedCustomerId ?? ''}
             onChange={(e) => {
               const id = e.target.value;
               if (!id) {
@@ -98,7 +97,6 @@ export default function NewOrderPanel({
             }}
             displayEmpty
             renderValue={(v) => {
-              if (isCashCustomer) return '—';
               if (v && selectedCustomer) return getCustomerLabel(selectedCustomer);
               if (customerName) return customerName;
               return 'Select customer';

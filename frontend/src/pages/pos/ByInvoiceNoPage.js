@@ -6,10 +6,12 @@ import React, { useState, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import PrintIcon from '@mui/icons-material/Print';
 import { invoicesApi } from '../../api/invoices';
 import { productsApi } from '../../api/products';
 import { customersApi } from '../../api/customers';
 import { formatMoney, generateInvoiceNumber } from './posUtils';
+import { printInvoice } from './printTemplate';
 import InvoiceSearchHeader from './InvoiceSearchHeader';
 import HistoricalOrderPanel from './HistoricalOrderPanel';
 import PriceComparisonPanel from './PriceComparisonPanel';
@@ -394,6 +396,53 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
     setCustomerSearchOpen(false);
   }, []);
 
+  const handlePrint = useCallback(() => {
+    if (replicationItems.length === 0) return;
+    const draftInvoice = {
+      invoiceNumber: newInvoiceNumber,
+      invoiceDate: today,
+      invoiceTime: new Date().toTimeString().slice(0, 8),
+      customerName: isCashCustomer ? 'Cash Bill' : (displayCustomer?.name || 'Cash'),
+      remarks: remarks || undefined,
+      grandTotal,
+      additionalDiscount: Number(additionalDiscount) || 0,
+      additionalExpenses: Number(additionalExpenses) || 0,
+      netTotal,
+      amountReceived: Number(amountReceived) || 0,
+      billingNo: billingNo || undefined,
+      billingDate: billingDate || undefined,
+    };
+    const printItems = replicationItems.map((it) => ({
+      productCode: it.productCode,
+      productName: it.productName,
+      quantity: it.quantity,
+      unitPrice: it.unitPrice,
+      lineTotal: it.lineTotal,
+      uomName: it.uomName || undefined,
+    }));
+    printInvoice({
+      invoice: draftInvoice,
+      items: printItems,
+      printWithoutHeader: !!printWithoutHeader,
+      printWithoutBalance: !!printWithoutBalance,
+    });
+  }, [
+    replicationItems,
+    newInvoiceNumber,
+    isCashCustomer,
+    displayCustomer?.name,
+    remarks,
+    grandTotal,
+    additionalDiscount,
+    additionalExpenses,
+    netTotal,
+    amountReceived,
+    billingNo,
+    billingDate,
+    printWithoutHeader,
+    printWithoutBalance,
+  ]);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -522,6 +571,14 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
               disabled={createLoading}
             >
               Preview Order
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<PrintIcon />}
+              onClick={handlePrint}
+              disabled={createLoading || replicationItems.length === 0}
+            >
+              Print
             </Button>
             <Button
               variant="contained"

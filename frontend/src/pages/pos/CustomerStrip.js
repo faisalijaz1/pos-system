@@ -28,7 +28,7 @@ export default function CustomerStrip({
   };
 
   const value = selectedCustomer || null;
-  const inputValue = isCashCustomer ? 'Cash Customer' : (selectedCustomer ? getOptionLabel(selectedCustomer) : customerInput);
+  const inputValue = selectedCustomer ? getOptionLabel(selectedCustomer) : customerInput;
 
   const filterOptions = (opts, { inputValue: q }) => {
     const query = (q || '').trim().toLowerCase();
@@ -63,13 +63,11 @@ export default function CustomerStrip({
         value={value}
         inputValue={inputValue}
         onInputChange={(_, v) => {
-          if (isCashCustomer) onCashCustomerChange(false);
           onCustomerInputChange(v);
         }}
         filterOptions={filterOptions}
         onChange={(_, v) => {
           onCustomerChange(v || null);
-          if (v) onCashCustomerChange(false);
         }}
         isOptionEqualToValue={(opt, val) => opt && val && opt.customerId === val.customerId}
         renderInput={(params) => (

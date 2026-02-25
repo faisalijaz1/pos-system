@@ -22,6 +22,7 @@ import { customersApi } from '../../api/customers';
 import { productsApi } from '../../api/products';
 import { uomApi } from '../../api/uom';
 import { formatMoney, formatTime, generateInvoiceNumber } from './posUtils';
+import { printInvoice } from './printTemplate';
 import InvoiceTopBar from './InvoiceTopBar';
 import CustomerStrip from './CustomerStrip';
 import InvoiceBottomStrip from './InvoiceBottomStrip';
@@ -455,20 +456,28 @@ export default function PosBillingPage() {
   function handlePrint(invoiceFromHistory) {
     const inv = invoiceFromHistory || detailInvoice;
     if (!inv) return;
-    const items = inv.items || [];
-    const rows = items.map(function (it) {
-      return '<tr><td>' + (it.productCode || '') + ' - ' + (it.productName || '') + '</td><td class="right">' + formatMoney(it.quantity) + '</td><td class="right">' + formatMoney(it.unitPrice) + '</td><td class="right">' + formatMoney(it.lineTotal) + '</td></tr>';
-    }).join('');
     const noHeader = invoiceFromHistory ? (inv.printWithoutHeader ?? false) : printWithoutHeader;
     const noBalance = invoiceFromHistory ? (inv.printWithoutBalance ?? false) : printWithoutBalance;
-    const header = noHeader ? '' : '<div class="header"><strong>INVOICE</strong><br/>' + inv.invoiceNumber + '</div>';
-    const balance = noBalance ? '' : '<p>Amount Received: ' + formatMoney(inv.amountReceived) + '</p>';
-    const html = '<!DOCTYPE html><html><head><title>Invoice ' + inv.invoiceNumber + '</title><style>body{font-family:system-ui,sans-serif;padding:16px;max-width:560px;margin:0 auto;font-size:13px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:6px;text-align:left}th{background:#f0f0f0}.right{text-align:right}.header{text-align:center;margin-bottom:12px}</style></head><body>' + header + '<p><strong>Date</strong> ' + inv.invoiceDate + (inv.invoiceTime ? ' ' + inv.invoiceTime : '') + ' <strong>Customer</strong> ' + (inv.customerName || 'Cash') + '</p>' + (inv.remarks ? '<p><strong>Remarks:</strong> ' + inv.remarks + '</p>' : '') + '<table><thead><tr><th>Product</th><th class="right">Qty</th><th class="right">Price</th><th class="right">Total</th></tr></thead><tbody>' + rows + '</tbody></table><p style="text-align:right;margin-top:12px">Net Total: <strong>' + formatMoney(inv.netTotal) + '</strong></p>' + balance + '</body></html>';
-    const win = window.open('', '_blank');
-    win.document.write(html);
-    win.document.close();
-    win.print();
-    win.close();
+    printInvoice({
+      invoice: {
+        invoiceNumber: inv.invoiceNumber,
+        invoiceDate: inv.invoiceDate,
+        invoiceTime: inv.invoiceTime,
+        customerName: inv.customerName || 'Cash Bill',
+        remarks: inv.remarks,
+        grandTotal: inv.grandTotal,
+        additionalDiscount: inv.additionalDiscount,
+        additionalExpenses: inv.additionalExpenses,
+        netTotal: inv.netTotal,
+        amountReceived: inv.amountReceived,
+        billingNo: inv.billingNo,
+        billingDate: inv.billingDate,
+        userName: inv.userName,
+      },
+      items: inv.items || [],
+      printWithoutHeader: !!noHeader,
+      printWithoutBalance: !!noBalance,
+    });
   }
 
   const receiptPreviewLines = cart.map(function (r) {
@@ -495,12 +504,12 @@ export default function PosBillingPage() {
           onDeliveryModeChange={setDeliveryModeId}
           onClear={clearScreen}
           isCashCustomer={isCashCustomer}
-          onCashCustomerChange={function (v) { setIsCashCustomer(v); if (v) { setSelectedCustomer(null); setCustomerInput(''); } }}
+          onCashCustomerChange={setIsCashCustomer}
         />
         <Box sx={{ px: { xs: 1, md: 2 } }}>
           <CustomerStrip
             isCashCustomer={isCashCustomer}
-            onCashCustomerChange={function (v) { setIsCashCustomer(v); if (v) { setSelectedCustomer(null); setCustomerInput(''); } }}
+            onCashCustomerChange={setIsCashCustomer}
             selectedCustomer={selectedCustomer}
             customerOptions={customerOptions}
             customerInput={customerInput}
