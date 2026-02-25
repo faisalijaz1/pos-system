@@ -106,8 +106,8 @@ export default function HistoricalOrderPanel({
       <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
         Historical Items
       </Typography>
-      <TableContainer sx={{ maxHeight: 220, border: 1, borderColor: 'divider', borderRadius: 1 }}>
-        <Table size="small" stickyHeader>
+      <TableContainer sx={{ width: '100%', maxHeight: 320, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
+        <Table size="small" stickyHeader sx={{ minWidth: 720 }}>
           <TableHead>
             <TableRow sx={{ bgcolor: '#f5f5f5' }}>
               <TableCell sx={{ fontWeight: 600 }}>Code</TableCell>

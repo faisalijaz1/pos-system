@@ -113,8 +113,8 @@ export default function NewOrderPanel({
           </Select>
         </FormControl>
       </Box>
-      <TableContainer sx={{ maxHeight: 200, border: 1, borderColor: 'divider', borderRadius: 1 }}>
-        <Table size="small" stickyHeader>
+      <TableContainer sx={{ width: '100%', maxHeight: 320, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
+        <Table size="small" stickyHeader sx={{ minWidth: 560 }}>
           <TableHead>
             <TableRow sx={{ bgcolor: '#f5f5f5' }}>
               <TableCell sx={{ fontWeight: 600 }}>Code</TableCell>

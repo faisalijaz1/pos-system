@@ -1,6 +1,6 @@
 /**
  * By Invoice No tab — Order replication with price intelligence.
- * 4-column: Historical | Price Comparison | New Order Draft | Billing & Payment.
+ * VERTICAL STACK layout: full-width sections so tables display all columns properly.
  */
 import React, { useState, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
@@ -475,96 +475,103 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
         error={error}
       />
       <Box sx={{ flex: 1, overflow: 'auto', overflowX: 'hidden', px: 2, py: 2 }}>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr',
-              md: 'repeat(2, minmax(280px, 1fr))',
-              xl: 'repeat(4, minmax(260px, 1fr))',
-            },
-            gap: 2,
-            mb: 2,
-          }}
-        >
-          <HistoricalOrderPanel
-            invoice={historicalInvoice}
-            displayItems={historicalDisplayItems}
-            prevBalance={customerPrevBalance}
-            soldHistory={soldHistory}
-            currentInvoiceNumber={historicalInvoice?.invoiceNumber}
-          />
-          <PriceComparisonPanel
-            items={replicationItems}
-            onPriceSelection={handlePriceSelection}
-            onSelectAllNew={handleSelectAllNew}
-            onSelectAllOld={handleSelectAllOld}
-            onOnlyIncreased={handleOnlyIncreased}
-            onOnlyDecreased={handleOnlyDecreased}
-            onPriceHistoryClick={(row) => {
-              setPriceHistoryProduct({ productId: row.productId, productCode: row.productCode, productName: row.productName });
-              setPriceHistoryOpen(true);
-            }}
-            allUseNew={allUseNew}
-          />
-          <NewOrderPanel
-            invoiceNumber={newInvoiceNumber}
-            customerName={displayCustomer?.name || 'Cash'}
-            isCashCustomer={isCashCustomer}
-            onCashCustomerChange={setIsCashCustomer}
-            selectedCustomerId={displayCustomer?.customerId ?? null}
-            onCustomerSelect={(c) => setSelectedCustomer(c ? { customerId: c.customerId, name: c.name || c.nameEnglish || c.customerCode || `#${c.customerId}` } : null)}
-            customersList={customersList}
-            items={replicationItems}
-            onUpdateQuantity={handleUpdateQuantity}
-            onRemoveItem={handleRemoveItem}
-            onSameQty={handleSameQty}
-            onDoubleQty={handleDoubleQty}
-            onHalfQty={handleHalfQty}
-            onClearAll={handleClearAll}
-          />
-          <BillingPaymentPanel
-            billingNo={billingNo}
-            billingDate={billingDate}
-            packing={packing}
-            adda={adda}
-            grandTotal={grandTotal}
-            additionalDiscount={additionalDiscount}
-            additionalExpenses={additionalExpenses}
-            netTotal={netTotal}
-            amountReceived={amountReceived}
-            printWithoutBalance={printWithoutBalance}
-            printWithoutHeader={printWithoutHeader}
-            remarks={remarks}
-            onBillingNoChange={setBillingNo}
-            onBillingDateChange={setBillingDate}
-            onPackingChange={setPacking}
-            onAddaChange={setAdda}
-            onAdditionalDiscountChange={setAdditionalDiscount}
-            onAdditionalExpensesChange={setAdditionalExpenses}
-            onAmountReceivedChange={setAmountReceived}
-            onPrintWithoutBalanceChange={setPrintWithoutBalance}
-            onPrintWithoutHeaderChange={setPrintWithoutHeader}
-            onRemarksChange={setRemarks}
-          />
-        </Box>
-        {replicationItems.length > 0 && (
-          <Box sx={{ mb: 2 }}>
-            <PriceImpactCalculator historicalSubtotal={historicalSubtotal} newTotal={newTotal} />
+        {/* Vertical stack: each section full width */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 1400, mx: 'auto' }}>
+          {/* 1. Historical Order — full width */}
+          <Box sx={{ width: '100%' }}>
+            <HistoricalOrderPanel
+              invoice={historicalInvoice}
+              displayItems={historicalDisplayItems}
+              prevBalance={customerPrevBalance}
+              soldHistory={soldHistory}
+              currentInvoiceNumber={historicalInvoice?.invoiceNumber}
+            />
           </Box>
-        )}
-        {replicationItems.length > 0 && (
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 2,
-              alignItems: 'center',
-              py: 2,
-              borderTop: 1,
-              borderColor: 'divider',
-            }}
-          >
+
+          {/* 2. Price Comparison — full width */}
+          <Box sx={{ width: '100%' }}>
+            <PriceComparisonPanel
+              items={replicationItems}
+              onPriceSelection={handlePriceSelection}
+              onSelectAllNew={handleSelectAllNew}
+              onSelectAllOld={handleSelectAllOld}
+              onOnlyIncreased={handleOnlyIncreased}
+              onOnlyDecreased={handleOnlyDecreased}
+              onPriceHistoryClick={(row) => {
+                setPriceHistoryProduct({ productId: row.productId, productCode: row.productCode, productName: row.productName });
+                setPriceHistoryOpen(true);
+              }}
+              allUseNew={allUseNew}
+            />
+          </Box>
+
+          {/* 3. New Order (Draft) — full width */}
+          <Box sx={{ width: '100%' }}>
+            <NewOrderPanel
+              invoiceNumber={newInvoiceNumber}
+              customerName={displayCustomer?.name || 'Cash'}
+              isCashCustomer={isCashCustomer}
+              onCashCustomerChange={setIsCashCustomer}
+              selectedCustomerId={displayCustomer?.customerId ?? null}
+              onCustomerSelect={(c) => setSelectedCustomer(c ? { customerId: c.customerId, name: c.name || c.nameEnglish || c.customerCode || `#${c.customerId}` } : null)}
+              customersList={customersList}
+              items={replicationItems}
+              onUpdateQuantity={handleUpdateQuantity}
+              onRemoveItem={handleRemoveItem}
+              onSameQty={handleSameQty}
+              onDoubleQty={handleDoubleQty}
+              onHalfQty={handleHalfQty}
+              onClearAll={handleClearAll}
+            />
+          </Box>
+
+          {/* 4. Billing & Payment — full width */}
+          <Box sx={{ width: '100%' }}>
+            <BillingPaymentPanel
+              billingNo={billingNo}
+              billingDate={billingDate}
+              packing={packing}
+              adda={adda}
+              grandTotal={grandTotal}
+              additionalDiscount={additionalDiscount}
+              additionalExpenses={additionalExpenses}
+              netTotal={netTotal}
+              amountReceived={amountReceived}
+              printWithoutBalance={printWithoutBalance}
+              printWithoutHeader={printWithoutHeader}
+              remarks={remarks}
+              onBillingNoChange={setBillingNo}
+              onBillingDateChange={setBillingDate}
+              onPackingChange={setPacking}
+              onAddaChange={setAdda}
+              onAdditionalDiscountChange={setAdditionalDiscount}
+              onAdditionalExpensesChange={setAdditionalExpenses}
+              onAmountReceivedChange={setAmountReceived}
+              onPrintWithoutBalanceChange={setPrintWithoutBalance}
+              onPrintWithoutHeaderChange={setPrintWithoutHeader}
+              onRemarksChange={setRemarks}
+            />
+          </Box>
+
+          {replicationItems.length > 0 && (
+            <Box sx={{ width: '100%' }}>
+              <PriceImpactCalculator historicalSubtotal={historicalSubtotal} newTotal={newTotal} />
+            </Box>
+          )}
+
+          {replicationItems.length > 0 && (
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 2,
+                alignItems: 'center',
+                py: 2,
+                borderTop: 1,
+                borderColor: 'divider',
+                width: '100%',
+              }}
+            >
             <Button
               variant="outlined"
               onClick={() => setPreviewOpen(true)}
@@ -606,6 +613,7 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
             )}
           </Box>
         )}
+        </Box>
       </Box>
       <CustomerSearchModal
         open={customerSearchOpen}

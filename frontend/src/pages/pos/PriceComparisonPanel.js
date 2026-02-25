@@ -80,8 +80,8 @@ export default function PriceComparisonPanel({
           <Button onClick={() => onOnlyDecreased && onOnlyDecreased()}>Only ↓</Button>
         </ButtonGroup>
       </Box>
-      <TableContainer sx={{ maxHeight: 220, border: 1, borderColor: 'divider', borderRadius: 1 }}>
-        <Table size="small" stickyHeader>
+      <TableContainer sx={{ width: '100%', maxHeight: 320, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
+        <Table size="small" stickyHeader sx={{ minWidth: 640 }}>
           <TableHead>
             <TableRow sx={{ bgcolor: '#f5f5f5' }}>
               <TableCell sx={{ fontWeight: 600 }}>Code</TableCell>
