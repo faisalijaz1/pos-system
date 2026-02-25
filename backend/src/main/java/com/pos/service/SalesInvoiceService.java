@@ -336,6 +336,9 @@ public class SalesInvoiceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice item", itemId));
         if (request.getQuantity() != null) item.setQuantity(request.getQuantity());
         if (request.getUnitPrice() != null) item.setUnitPrice(request.getUnitPrice());
+        if (request.getUomId() != null) {
+            item.setUom(unitOfMeasureRepository.findById(request.getUomId()).orElse(item.getUom()));
+        }
         item.setLineTotal(item.getQuantity().multiply(item.getUnitPrice()));
         recalcNetTotal(inv);
         salesInvoiceRepository.save(inv);
@@ -407,6 +410,7 @@ public class SalesInvoiceService {
                     .quantity(it.getQuantity())
                     .unitPrice(it.getUnitPrice())
                     .lineTotal(it.getLineTotal())
+                    .uomId(it.getUom() != null ? it.getUom().getUomId() : null)
                     .uomName(it.getUom() != null ? it.getUom().getName() : null)
                     .brandName(p.getBrand() != null ? p.getBrand().getName() : null)
                     .sortOrder(it.getSortOrder())

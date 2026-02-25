@@ -116,7 +116,7 @@ export default function InvoiceGrid({
               </TableRow>
             ) : (
               items.map((r, idx) => {
-                const rowId = r.productId ?? r.product_id ?? idx;
+                const rowId = r.salesInvoiceItemId ?? r.sales_invoice_item_id ?? r.productId ?? r.product_id ?? idx;
                 return (
                 <TableRow
                   key={rowId}
@@ -156,7 +156,17 @@ export default function InvoiceGrid({
                       onChange={(e) => onQtyDirect(rowId, e.target.value)}
                       onBlur={(e) => onQtyDirect(rowId, e.target.value)}
                       inputProps={{ min: 0, step: 0.001, 'aria-label': 'Quantity' }}
-                      sx={{ width: 48, '& .MuiInputBase-input': { py: 0.5, textAlign: 'center', fontSize: '0.875rem' } }}
+                      sx={{
+                        width: 48,
+                        '& .MuiInputBase-input': {
+                          py: 0.75,
+                          minHeight: 22,
+                          lineHeight: 1.4,
+                          textAlign: 'center',
+                          fontSize: '0.875rem',
+                          boxSizing: 'border-box',
+                        },
+                      }}
                       onClick={(e) => e.stopPropagation()}
                     />
                     <IconButton

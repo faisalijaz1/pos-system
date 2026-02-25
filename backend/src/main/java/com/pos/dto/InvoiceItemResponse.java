@@ -20,6 +20,7 @@ public class InvoiceItemResponse {
     private BigDecimal quantity;
     private BigDecimal unitPrice;
     private BigDecimal lineTotal;
+    private Integer uomId;
     private String uomName;
     private String brandName;
     private Integer sortOrder;

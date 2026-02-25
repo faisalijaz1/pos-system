@@ -24,6 +24,7 @@ export default function BillingDetailsPanel({
   billingPacking,
   billingAdda,
   editable,
+  horizontal = false,
   onBillingNoChange,
   onBillingDateChange,
   onBillingPackingChange,
@@ -46,14 +47,14 @@ export default function BillingDetailsPanel({
       <Typography variant="subtitle2" fontWeight={700} color="text.secondary" sx={{ mb: 1.5 }}>
         Billing Details
       </Typography>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', flexDirection: horizontal ? 'row' : 'column', flexWrap: horizontal ? 'wrap' : 'nowrap', gap: 1.5, ...(horizontal ? { '& > *': { flex: '1 1 140px', minWidth: 140 } } : {}) }}>
         <TextField
           size="small"
           label="No."
           value={billingNo ?? ''}
           onChange={editable && onBillingNoChange ? (e) => onBillingNoChange(e.target.value) : undefined}
           readOnly={!editable}
-          fullWidth
+          fullWidth={!horizontal}
           sx={editable ? editableFieldSx : {}}
         />
         <TextField
@@ -65,7 +66,7 @@ export default function BillingDetailsPanel({
           InputLabelProps={{ shrink: true }}
           sx={editable ? { ...DATE_INPUT_SX, ...editableFieldSx } : DATE_INPUT_SX}
           readOnly={!editable}
-          fullWidth
+          fullWidth={!horizontal}
         />
         <TextField
           size="small"
@@ -73,7 +74,7 @@ export default function BillingDetailsPanel({
           value={billingPacking ?? ''}
           onChange={editable && onBillingPackingChange ? (e) => onBillingPackingChange(e.target.value) : undefined}
           readOnly={!editable}
-          fullWidth
+          fullWidth={!horizontal}
           sx={editable ? editableFieldSx : {}}
         />
         <TextField
@@ -82,7 +83,7 @@ export default function BillingDetailsPanel({
           value={billingAdda ?? ''}
           onChange={editable && onBillingAddaChange ? (e) => onBillingAddaChange(e.target.value) : undefined}
           readOnly={!editable}
-          fullWidth
+          fullWidth={!horizontal}
           sx={editable ? editableFieldSx : {}}
         />
       </Box>

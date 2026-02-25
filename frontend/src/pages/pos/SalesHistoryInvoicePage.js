@@ -12,6 +12,7 @@ import { useTheme } from '@mui/material/styles';
 import { invoicesApi } from '../../api/invoices';
 import { customersApi } from '../../api/customers';
 import { productsApi } from '../../api/products';
+import { uomApi } from '../../api/uom';
 import { formatMoney } from './posUtils';
 import SequentialNavigationBar from './SequentialNavigationBar';
 import CustomerDetailsPanel from './CustomerDetailsPanel';
@@ -67,6 +68,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
   const [focusedRowIndex, setFocusedRowIndex] = useState(-1);
   const [deleteConfirmItem, setDeleteConfirmItem] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [uomList, setUomList] = useState([]);
 
   const invoiceId = currentInvoice?.salesInvoiceId ?? null;
   const items = currentInvoice?.items ?? [];
@@ -115,6 +117,10 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
   useEffect(() => {
     loadFirstForDate();
   }, [selectedDate]);
+
+  useEffect(() => {
+    uomApi.list().then((res) => setUomList(res.data || [])).catch(() => setUomList([]));
+  }, []);
 
   const handleNavigate = useCallback(
     (direction) => {
@@ -314,6 +320,10 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
         e.preventDefault();
         handleCancelEdit();
       }
+      if (e.key === 'F2') {
+        e.preventDefault();
+        setProductSearchModalOpen(true);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -417,6 +427,37 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
     [invoiceId, items, handleRemoveItem]
   );
 
+  const handleUnitChange = useCallback(
+    (rowId, newUomId) => {
+      const item = items.find((it, i) => i === rowId || it.salesInvoiceItemId === rowId || it.productId === rowId);
+      if (!item || !item.salesInvoiceItemId || !item.productId) return;
+      const uomId = Number(newUomId);
+      if (!uomId) return;
+      setLoading(true);
+      productsApi
+        .getById(item.productId)
+        .then((res) => {
+          const product = res.data;
+          const uomPrices = product?.uomPrices || [];
+          const entry = uomPrices.find((e) => (e.uomId ?? e.uom_id) === uomId);
+          const unitPrice = entry != null ? (entry.price ?? entry.unitPrice) : (item.unitPrice ?? item.unit_price);
+          return invoicesApi.updateItem(invoiceId, item.salesInvoiceItemId, {
+            quantity: item.quantity,
+            unitPrice,
+            uomId,
+          });
+        })
+        .then((res) => setCurrentInvoice(res.data))
+        .catch(() => {
+          if (onNotify) onNotify('Failed to change unit.', 'error');
+          else setSuccessMsg('Failed to change unit.');
+          setTimeout(() => setSuccessMsg(''), 3000);
+        })
+        .finally(() => setLoading(false));
+    },
+    [invoiceId, items, onNotify]
+  );
+
   useEffect(() => {
     if (!editMode || productSearch.trim().length < 1) {
       setProductSearchResults([]);
@@ -503,13 +544,26 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
                 mb: 2,
               }}
             >
-              <CustomerDetailsPanel
-                customerId={currentInvoice.customerId}
-                customerName={currentInvoice.customerName}
-                isCashCustomer={currentInvoice.isCashCustomer}
-                prevBalance={prevBalance}
-                withThisBill={netTotal}
-              />
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <CustomerDetailsPanel
+                  customerId={currentInvoice.customerId}
+                  customerName={currentInvoice.customerName}
+                  isCashCustomer={currentInvoice.isCashCustomer}
+                  prevBalance={prevBalance}
+                  withThisBill={netTotal}
+                />
+                <PrintOptionsPanel
+                  noOfTitles={noOfTitles}
+                  totalQuantity={totalQuantity}
+                  remarks={currentInvoice.remarks}
+                  printWithoutHeader={currentInvoice.printWithoutHeader}
+                  printWithoutBalance={currentInvoice.printWithoutBalance}
+                  editable={editMode}
+                  onRemarksChange={(v) => updateLocalInvoice({ remarks: v })}
+                  onPrintWithoutHeaderChange={(v) => updateLocalInvoice({ printWithoutHeader: v })}
+                  onPrintWithoutBalanceChange={(v) => updateLocalInvoice({ printWithoutBalance: v })}
+                />
+              </Box>
               <InvoiceHeaderPanel
                 invoiceNumber={currentInvoice.invoiceNumber}
                 invoiceDate={currentInvoice.invoiceDate}
@@ -569,6 +623,8 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
                   onQtyChange={editMode ? handleQtyChange : () => {}}
                   onQtyDirect={editMode ? handleQtyDirect : () => {}}
                   onRemove={editMode ? handleRemoveItem : () => {}}
+                  uomList={editMode ? uomList : []}
+                  onUnitChange={editMode ? handleUnitChange : undefined}
                   emptyMessage={currentInvoice ? 'No line items.' : '—'}
                 />
                 <InvoiceBottomStrip
@@ -586,9 +642,8 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
 
             <Box
               sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-                gap: 2,
+                display: 'flex',
+                flexDirection: 'column',
                 mt: 2,
                 pt: '22px',
               }}
@@ -599,21 +654,11 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
                 billingPacking={currentInvoice.billingPacking}
                 billingAdda={currentInvoice.billingAdda}
                 editable={editMode}
+                horizontal
                 onBillingNoChange={(v) => updateLocalInvoice({ billingNo: v })}
                 onBillingDateChange={(v) => updateLocalInvoice({ billingDate: v })}
                 onBillingPackingChange={(v) => updateLocalInvoice({ billingPacking: v })}
                 onBillingAddaChange={(v) => updateLocalInvoice({ billingAdda: v })}
-              />
-              <PrintOptionsPanel
-                noOfTitles={noOfTitles}
-                totalQuantity={totalQuantity}
-                remarks={currentInvoice.remarks}
-                printWithoutHeader={currentInvoice.printWithoutHeader}
-                printWithoutBalance={currentInvoice.printWithoutBalance}
-                editable={editMode}
-                onRemarksChange={(v) => updateLocalInvoice({ remarks: v })}
-                onPrintWithoutHeaderChange={(v) => updateLocalInvoice({ printWithoutHeader: v })}
-                onPrintWithoutBalanceChange={(v) => updateLocalInvoice({ printWithoutBalance: v })}
               />
             </Box>
             {successMsg && (
@@ -628,7 +673,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
         open={productSearchModalOpen}
         onClose={() => setProductSearchModalOpen(false)}
         products={products}
-        uomList={[]}
+        uomList={uomList}
         onSelectProduct={(p) => {
           handleAddItem(p, 1);
           setProductSearchModalOpen(false);

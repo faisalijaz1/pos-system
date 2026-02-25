@@ -6,7 +6,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 /**
- * Request to update quantity/price of an existing invoice line item.
+ * Request to update quantity/price/UOM of an existing invoice line item.
  */
 @Data
 public class UpdateInvoiceItemRequest {
@@ -16,4 +16,6 @@ public class UpdateInvoiceItemRequest {
 
     @DecimalMin(value = "0", message = "Unit price must be non-negative")
     private BigDecimal unitPrice;
+
+    private Integer uomId;
 }
