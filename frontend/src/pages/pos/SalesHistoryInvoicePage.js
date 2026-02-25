@@ -283,9 +283,6 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
           setSuccessMsg(msg);
           setTimeout(() => setSuccessMsg(''), 3000);
         }
-        if (onOpenPayment && updated) {
-          setTimeout(() => onOpenPayment(updated, prevBalance, setCurrentInvoice), 100);
-        }
       })
       .catch(() => {
         const msg = 'Save failed.';
@@ -296,7 +293,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
         }
       })
       .finally(() => setSaveLoading(false));
-  }, [invoiceId, currentInvoice, onNotify, onOpenPayment, prevBalance]);
+  }, [invoiceId, currentInvoice, onNotify]);
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -551,6 +548,9 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
                   isCashCustomer={currentInvoice.isCashCustomer}
                   prevBalance={prevBalance}
                   withThisBill={netTotal}
+                  fetchCustomerName={(id) =>
+                    customersApi.getById(id).then((r) => r.data?.name ?? r.data?.nameEnglish ?? '—')
+                  }
                 />
                 <PrintOptionsPanel
                   remarks={currentInvoice.remarks}

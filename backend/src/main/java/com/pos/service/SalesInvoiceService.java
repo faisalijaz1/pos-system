@@ -414,6 +414,7 @@ public class SalesInvoiceService {
                     .uomName(it.getUom() != null ? it.getUom().getName() : null)
                     .brandName(p.getBrand() != null ? p.getBrand().getName() : null)
                     .sortOrder(it.getSortOrder())
+                    .currentStock(p.getCurrentStock())
                     .build());
         }
         return InvoiceResponse.builder()

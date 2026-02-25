@@ -1,8 +1,10 @@
 /**
  * Customer Details Panel — Top-left in Sales History.
- * Displays customer id, name, prev balance, with this bill. Read-only in view mode.
+ * Displays customer id, name, prev balance, with this bill.
+ * Cash customer checkbox and customer name are independent: when customerId is set, show that customer's name;
+ * only show "Cash Customer" when there is no customer (cash sale).
  */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
@@ -14,8 +16,29 @@ export default function CustomerDetailsPanel({
   isCashCustomer,
   prevBalance,
   withThisBill,
+  fetchCustomerName,
 }) {
-  const nameDisplay = isCashCustomer ? 'Cash Customer' : (customerName || '—');
+  const [resolvedName, setResolvedName] = useState(customerName);
+
+  useEffect(() => {
+    setResolvedName(customerName);
+  }, [customerName]);
+
+  useEffect(() => {
+    if (customerId == null || customerId === '' || (customerName && customerName.trim())) return;
+    if (!fetchCustomerName) return;
+    let cancelled = false;
+    fetchCustomerName(customerId)
+      .then((name) => { if (!cancelled) setResolvedName(name || '—'); })
+      .catch(() => { if (!cancelled) setResolvedName('—'); });
+    return () => { cancelled = true; };
+  }, [customerId, customerName, fetchCustomerName]);
+
+  const nameDisplay =
+    customerId != null && customerId !== ''
+      ? (resolvedName || customerName || '—')
+      : (isCashCustomer ? 'Cash Customer' : (customerName || '—'));
+
   const prevBal = prevBalance != null ? Number(prevBalance) : 0;
   const withBill = withThisBill != null ? Number(withThisBill) : 0;
 

@@ -24,4 +24,5 @@ public class InvoiceItemResponse {
     private String uomName;
     private String brandName;
     private Integer sortOrder;
+    private BigDecimal currentStock;
 }
