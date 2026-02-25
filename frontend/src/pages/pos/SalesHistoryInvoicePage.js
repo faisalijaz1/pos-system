@@ -47,6 +47,8 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
   const theme = useTheme();
   const [selectedDate, setSelectedDate] = useState(today);
   const [currentInvoice, setCurrentInvoice] = useState(null);
+  const [navAtFirst, setNavAtFirst] = useState(true);
+  const [navAtLast, setNavAtLast] = useState(true);
   const [loading, setLoading] = useState(false);
   const [navLoading, setNavLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -92,10 +94,21 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
     invoicesApi
       .navigate(selectedDate, null, 'first')
       .then((res) => {
-        if (res.data && res.data.salesInvoiceId) loadInvoiceById(res.data.salesInvoiceId);
-        else setCurrentInvoice(null);
+        if (res.data && res.data.salesInvoiceId) {
+          loadInvoiceById(res.data.salesInvoiceId);
+          setNavAtFirst(true);
+          setNavAtLast(false);
+        } else {
+          setCurrentInvoice(null);
+          setNavAtFirst(true);
+          setNavAtLast(true);
+        }
       })
-      .catch(() => setCurrentInvoice(null))
+      .catch(() => {
+        setCurrentInvoice(null);
+        setNavAtFirst(true);
+        setNavAtLast(true);
+      })
       .finally(() => setNavLoading(false));
   }, [selectedDate, loadInvoiceById]);
 
@@ -110,13 +123,52 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
       invoicesApi
         .navigate(selectedDate, currentId, direction)
         .then((res) => {
-          if (res.data && res.data.salesInvoiceId) loadInvoiceById(res.data.salesInvoiceId);
-          else setCurrentInvoice(null);
+          if (res.data && res.data.salesInvoiceId) {
+            loadInvoiceById(res.data.salesInvoiceId);
+            setNavAtFirst(direction === 'first');
+            setNavAtLast(direction === 'last');
+            if (direction === 'next' || direction === 'prev') {
+              setNavAtFirst(false);
+              setNavAtLast(false);
+            }
+          } else {
+            if (direction === 'next') {
+              setNavAtLast(true);
+              if (onNotify) onNotify('Already at last invoice.', 'info');
+              else setSuccessMsg('Already at last invoice.');
+              setTimeout(() => setSuccessMsg(''), 3000);
+            } else if (direction === 'prev') {
+              setNavAtFirst(true);
+              if (onNotify) onNotify('Already at first invoice.', 'info');
+              else setSuccessMsg('Already at first invoice.');
+              setTimeout(() => setSuccessMsg(''), 3000);
+            } else {
+              setCurrentInvoice(null);
+              setNavAtFirst(true);
+              setNavAtLast(true);
+            }
+          }
         })
-        .catch(() => setCurrentInvoice(null))
+        .catch(() => {
+          if (direction === 'next') {
+            setNavAtLast(true);
+            if (onNotify) onNotify('Already at last invoice.', 'info');
+            else setSuccessMsg('Already at last invoice.');
+            setTimeout(() => setSuccessMsg(''), 3000);
+          } else if (direction === 'prev') {
+            setNavAtFirst(true);
+            if (onNotify) onNotify('Already at first invoice.', 'info');
+            else setSuccessMsg('Already at first invoice.');
+            setTimeout(() => setSuccessMsg(''), 3000);
+          } else {
+            setCurrentInvoice(null);
+            setNavAtFirst(true);
+            setNavAtLast(true);
+          }
+        })
         .finally(() => setNavLoading(false));
     },
-    [selectedDate, currentInvoice, loadInvoiceById]
+    [selectedDate, currentInvoice, loadInvoiceById, onNotify]
   );
 
   const atFirst = !currentInvoice || navLoading;
@@ -215,7 +267,8 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
     invoicesApi
       .update(invoiceId, payload)
       .then((res) => {
-        setCurrentInvoice(res.data);
+        const updated = res.data;
+        setCurrentInvoice(updated);
         setEditMode(false);
         setOriginalInvoice(null);
         const msg = 'Saved.';
@@ -223,6 +276,9 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
         else {
           setSuccessMsg(msg);
           setTimeout(() => setSuccessMsg(''), 3000);
+        }
+        if (onOpenPayment && updated) {
+          setTimeout(() => onOpenPayment(updated, prevBalance, setCurrentInvoice), 100);
         }
       })
       .catch(() => {
@@ -234,7 +290,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
         }
       })
       .finally(() => setSaveLoading(false));
-  }, [invoiceId, currentInvoice, onNotify]);
+  }, [invoiceId, currentInvoice, onNotify, onOpenPayment, prevBalance]);
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -416,9 +472,6 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
     }
   }, [productSearchModalOpen]);
 
-  const canNavigatePrev = !!currentInvoice;
-  const canNavigateNext = !!currentInvoice;
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
       <SequentialNavigationBar
@@ -426,10 +479,10 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
         onNavigate={handleNavigate}
-        disableFirst={!currentInvoice}
-        disablePrev={!canNavigatePrev}
-        disableNext={!canNavigateNext}
-        disableLast={!currentInvoice}
+        disableFirst={!currentInvoice || navAtFirst || navLoading}
+        disablePrev={!currentInvoice || navAtFirst || navLoading}
+        disableNext={!currentInvoice || navAtLast || navLoading}
+        disableLast={!currentInvoice || navAtLast || navLoading}
         invoiceNoSearch={invoiceNoSearch}
         onInvoiceNoSearchChange={setInvoiceNoSearch}
         onInvoiceNoGo={handleInvoiceNoGo}
@@ -474,7 +527,6 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
                 saveLoading={saveLoading}
                 onPrint={handlePrint}
                 onExit={onExit}
-                onConfirmPayment={onOpenPayment ? () => onOpenPayment(currentInvoice, prevBalance, setCurrentInvoice) : undefined}
                 onInvoiceDateChange={(v) => updateLocalInvoice({ invoiceDate: v })}
                 onInvoiceTimeChange={(v) => updateLocalInvoice({ invoiceTime: v })}
                 onDeliveryModeChange={(v) => updateLocalInvoice({ deliveryModeId: v })}
