@@ -97,6 +97,14 @@ public class ProductService {
         var uom = p.getUom();
         var brand = p.getBrand();
         List<ProductUomPriceDto> uomPrices = buildUomPrices(p);
+        BigDecimal sellingPrice = p.getSellingPrice();
+        if (uom != null && uomPrices != null) {
+            sellingPrice = uomPrices.stream()
+                    .filter(u -> u.getUomId() != null && u.getUomId().equals(uom.getUomId()))
+                    .findFirst()
+                    .map(ProductUomPriceDto::getPrice)
+                    .orElse(sellingPrice);
+        }
         return ProductSummaryDto.builder()
                 .productId(p.getProductId())
                 .code(p.getCode())
@@ -106,7 +114,7 @@ public class ProductService {
                 .uomName(uom != null ? uom.getName() : null)
                 .brandName(brand != null ? brand.getName() : null)
                 .currentStock(p.getCurrentStock())
-                .sellingPrice(p.getSellingPrice())
+                .sellingPrice(sellingPrice)
                 .costPrice(p.getCostPrice())
                 .uomPrices(uomPrices)
                 .build();

@@ -125,6 +125,14 @@ export default function ProductSearchModal({
               {filtered.map(function (p, idx) {
                 const uom = uomList.find(function (u) { return u.uomId === (p.uomId || p.uom_id); });
                 const uomName = uom ? uom.name : (p.uomName || '—');
+                const price = p.sellingPrice ?? p.selling_price;
+                const uomPrices = p.uomPrices || [];
+                const otherPrices = uomPrices.filter(function (u) {
+                  return u.uomId !== (p.uomId || p.uom_id);
+                });
+                const otherPricesText = otherPrices.length > 0
+                  ? otherPrices.map(function (u) { return (u.uomName || '') + ' ' + formatMoney(u.price); }).join(' · ')
+                  : null;
                 const isSelected = idx === safeIndex;
                 return (
                   <TableRow
@@ -144,7 +152,16 @@ export default function ProductSearchModal({
                     <TableCell>{p.nameEn || p.name_en || ''}</TableCell>
                     <TableCell variant="body2" color="text.secondary">{p.brandName || ''} / {p.categoryName || ''}</TableCell>
                     <TableCell align="right">{formatMoney(p.currentStock)}</TableCell>
-                    <TableCell align="right">{formatMoney(p.sellingPrice ?? p.selling_price)}</TableCell>
+                    <TableCell align="right">
+                      <Box>
+                        <Typography variant="body2">{formatMoney(price)} <Typography component="span" variant="caption" color="text.secondary">/ {uomName}</Typography></Typography>
+                        {otherPricesText && (
+                          <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.25 }}>
+                            {otherPricesText}
+                          </Typography>
+                        )}
+                      </Box>
+                    </TableCell>
                     <TableCell>{uomName}</TableCell>
                   </TableRow>
                 );
