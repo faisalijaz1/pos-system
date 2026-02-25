@@ -113,7 +113,11 @@ public class LedgerService {
 
     @Transactional(readOnly = true)
     public Page<LedgerEntryDto> getEntries(LocalDate fromDate, LocalDate toDate, Integer accountId, Pageable pageable) {
-        Page<LedgerEntry> page = ledgerEntryRepository.findByDateRangeAndAccount(fromDate, toDate, accountId, pageable);
+        LocalDate from = fromDate != null ? fromDate : LocalDate.of(1900, 1, 1);
+        LocalDate to = toDate != null ? toDate : LocalDate.of(9999, 12, 31);
+        Page<LedgerEntry> page = accountId != null
+                ? ledgerEntryRepository.findByDateRangeAndAccount(from, to, accountId, pageable)
+                : ledgerEntryRepository.findByDateRange(from, to, pageable);
         return page.map(this::toDto);
     }
 

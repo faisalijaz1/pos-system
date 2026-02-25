@@ -16,9 +16,9 @@ import { alpha } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import HistoryIcon from '@mui/icons-material/History';
 import PinIcon from '@mui/icons-material/Pin';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import * as MuiIcons from '@mui/icons-material';
 import { invoicesApi } from '../../api/invoices';
 import { customersApi } from '../../api/customers';
 import { productsApi } from '../../api/products';
@@ -490,7 +490,7 @@ export default function PosBillingPage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 88px)', minHeight: 480 }}>
       <Tabs value={tab} onChange={function (_, v) { setTab(v); }} sx={{ minHeight: 40, borderBottom: 1, borderColor: 'divider' }}>
         <Tab label="Billing" id="pos-tab-0" />
-        <Tab label="Sales History" icon={<HistoryIcon />} iconPosition="start" id="pos-tab-1" />
+        <Tab label="Sales History" icon={<MuiIcons.History />} iconPosition="start" id="pos-tab-1" />
         <Tab label="By Invoice No" icon={<PinIcon />} iconPosition="start" id="pos-tab-2" />
       </Tabs>
       <Box role="region" id="pos-panel-0" hidden={tab !== 0} sx={{ flex: 1, display: tab === 0 ? 'flex' : 'none', flexDirection: 'column', minHeight: 400, overflow: 'auto' }}>

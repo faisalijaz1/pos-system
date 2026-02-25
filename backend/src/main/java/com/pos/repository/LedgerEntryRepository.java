@@ -14,10 +14,19 @@ import java.util.List;
 @Repository
 public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Integer> {
 
+    /** All params required; use from LedgerService with normalized dates and optional accountId. */
     @Query("SELECT e FROM LedgerEntry e JOIN FETCH e.account " +
-           "WHERE (:fromDate IS NULL OR e.transactionDate >= :fromDate) " +
-           "AND (:toDate IS NULL OR e.transactionDate <= :toDate) " +
-           "AND (:accountId IS NULL OR e.account.accountId = :accountId) " +
+           "WHERE e.transactionDate >= :fromDate AND e.transactionDate <= :toDate " +
+           "ORDER BY e.transactionDate, e.ledgerEntryId")
+    Page<LedgerEntry> findByDateRange(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            Pageable pageable
+    );
+
+    @Query("SELECT e FROM LedgerEntry e JOIN FETCH e.account " +
+           "WHERE e.transactionDate >= :fromDate AND e.transactionDate <= :toDate " +
+           "AND e.account.accountId = :accountId " +
            "ORDER BY e.transactionDate, e.ledgerEntryId")
     Page<LedgerEntry> findByDateRangeAndAccount(
             @Param("fromDate") LocalDate fromDate,
