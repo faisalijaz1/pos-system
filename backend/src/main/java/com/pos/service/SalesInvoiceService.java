@@ -9,6 +9,7 @@ import com.pos.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,7 @@ public class SalesInvoiceService {
     private final BranchRepository branchRepository;
     private final UnitOfMeasureRepository unitOfMeasureRepository;
     private final StockTransactionRepository stockTransactionRepository;
+    private final SalesInvoiceItemRepository salesInvoiceItemRepository;
     private final LedgerService ledgerService;
 
     private static final String TRANSACTION_TYPE_SALE = "SALE";
@@ -230,6 +232,126 @@ public class SalesInvoiceService {
     public Page<InvoiceSummaryDto> findAll(LocalDate fromDate, LocalDate toDate, Integer customerId, Pageable pageable) {
         Page<SalesInvoice> page = salesInvoiceRepository.findByDateRangeAndCustomer(fromDate, toDate, customerId, pageable);
         return page.map(this::toSummaryDto);
+    }
+
+    /** Update invoice header, billing, and print options (Sales History edit). */
+    @Transactional(rollbackFor = Exception.class)
+    public InvoiceResponse updateInvoice(Integer id, UpdateInvoiceRequest request) {
+        SalesInvoice inv = salesInvoiceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice", id));
+        if (request.getInvoiceDate() != null) inv.setInvoiceDate(request.getInvoiceDate());
+        if (request.getInvoiceTime() != null) inv.setInvoiceTime(request.getInvoiceTime());
+        if (request.getDeliveryModeId() != null) {
+            inv.setDeliveryMode(deliveryModeRepository.findById(request.getDeliveryModeId()).orElse(inv.getDeliveryMode()));
+        }
+        if (request.getAdditionalDiscount() != null) inv.setAdditionalDiscount(request.getAdditionalDiscount());
+        if (request.getAdditionalExpenses() != null) inv.setAdditionalExpenses(request.getAdditionalExpenses());
+        if (request.getPrintWithoutHeader() != null) inv.setPrintWithoutHeader(request.getPrintWithoutHeader());
+        if (request.getPrintWithoutBalance() != null) inv.setPrintWithoutBalance(request.getPrintWithoutBalance());
+        if (request.getRemarks() != null) inv.setRemarks(request.getRemarks());
+        if (request.getBillingNo() != null) inv.setBillingNo(request.getBillingNo());
+        if (request.getBillingDate() != null) inv.setBillingDate(request.getBillingDate());
+        if (request.getBillingPacking() != null) inv.setBillingPacking(request.getBillingPacking());
+        if (request.getBillingAdda() != null) inv.setBillingAdda(request.getBillingAdda());
+        recalcNetTotal(inv);
+        salesInvoiceRepository.save(inv);
+        return getById(id);
+    }
+
+    /** Add a line item to an existing invoice. Recalculates totals. */
+    @Transactional(rollbackFor = Exception.class)
+    public InvoiceResponse addItem(Integer invoiceId, AddInvoiceItemRequest request) {
+        SalesInvoice inv = salesInvoiceRepository.findByIdWithItems(invoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice", invoiceId));
+        Product product = productRepository.findById(request.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product", request.getProductId()));
+        if (product.getDeletedAt() != null) throw new ResourceNotFoundException("Product", request.getProductId());
+        BigDecimal qty = request.getQuantity();
+        BigDecimal unitPrice = request.getUnitPrice() != null ? request.getUnitPrice() : product.getSellingPrice();
+        BigDecimal lineTotal = qty.multiply(unitPrice);
+        UnitOfMeasure uom = request.getUomId() != null
+                ? unitOfMeasureRepository.findById(request.getUomId()).orElse(product.getUom())
+                : product.getUom();
+        int sortOrder = inv.getItems().isEmpty() ? 0 : inv.getItems().stream().mapToInt(SalesInvoiceItem::getSortOrder).max().orElse(0) + 1;
+        SalesInvoiceItem item = SalesInvoiceItem.builder()
+                .salesInvoice(inv)
+                .product(product)
+                .quantity(qty)
+                .unitPrice(unitPrice)
+                .lineTotal(lineTotal)
+                .uom(uom)
+                .sortOrder(sortOrder)
+                .build();
+        inv.getItems().add(item);
+        recalcNetTotal(inv);
+        salesInvoiceRepository.saveAndFlush(inv);
+        return getById(invoiceId);
+    }
+
+    /** Update quantity/price of an existing line item. Recalculates totals. */
+    @Transactional(rollbackFor = Exception.class)
+    public InvoiceResponse updateItem(Integer invoiceId, Integer itemId, UpdateInvoiceItemRequest request) {
+        SalesInvoice inv = salesInvoiceRepository.findByIdWithItems(invoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice", invoiceId));
+        SalesInvoiceItem item = inv.getItems().stream()
+                .filter(i -> i.getSalesInvoiceItemId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice item", itemId));
+        if (request.getQuantity() != null) item.setQuantity(request.getQuantity());
+        if (request.getUnitPrice() != null) item.setUnitPrice(request.getUnitPrice());
+        item.setLineTotal(item.getQuantity().multiply(item.getUnitPrice()));
+        recalcNetTotal(inv);
+        salesInvoiceRepository.save(inv);
+        return getById(invoiceId);
+    }
+
+    /** Remove a line item. Recalculates totals. */
+    @Transactional(rollbackFor = Exception.class)
+    public InvoiceResponse deleteItem(Integer invoiceId, Integer itemId) {
+        SalesInvoice inv = salesInvoiceRepository.findByIdWithItems(invoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice", invoiceId));
+        boolean removed = inv.getItems().removeIf(i -> i.getSalesInvoiceItemId().equals(itemId));
+        if (!removed) throw new ResourceNotFoundException("Invoice item", itemId);
+        recalcNetTotal(inv);
+        salesInvoiceRepository.save(inv);
+        return getById(invoiceId);
+    }
+
+    private void recalcNetTotal(SalesInvoice inv) {
+        BigDecimal grand = inv.getItems().stream()
+                .map(SalesInvoiceItem::getLineTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        inv.setGrandTotal(grand);
+        BigDecimal net = grand.subtract(inv.getAdditionalDiscount() != null ? inv.getAdditionalDiscount() : BigDecimal.ZERO)
+                .add(inv.getAdditionalExpenses() != null ? inv.getAdditionalExpenses() : BigDecimal.ZERO);
+        inv.setNetTotal(net);
+    }
+
+    /** Navigate to first/prev/next/last invoice by date. Returns summary for the target invoice or null if none. */
+    @Transactional(readOnly = true)
+    public InvoiceSummaryDto navigate(LocalDate date, Integer currentId, String direction) {
+        Pageable one = PageRequest.of(0, 1);
+        if (direction == null) direction = "next";
+        switch (direction.toLowerCase()) {
+            case "first":
+                return salesInvoiceRepository.findFirstByDateOrderByIdAsc(date, one)
+                        .map(this::toSummaryDto).orElse(null);
+            case "last":
+                return salesInvoiceRepository.findFirstByDateOrderByIdDesc(date, one)
+                        .map(this::toSummaryDto).orElse(null);
+            case "prev":
+                if (currentId == null) return null;
+                return salesInvoiceRepository.findPreviousInvoice(date, currentId, one)
+                        .map(this::toSummaryDto).orElse(null);
+            case "next":
+                if (currentId == null) return salesInvoiceRepository.findFirstByDateOrderByIdAsc(date, one)
+                        .map(this::toSummaryDto).orElse(null);
+                return salesInvoiceRepository.findNextInvoice(date, currentId, one)
+                        .map(this::toSummaryDto).orElse(null);
+            default:
+                return salesInvoiceRepository.findFirstByDateOrderByIdAsc(date, one)
+                        .map(this::toSummaryDto).orElse(null);
+        }
     }
 
     private InvoiceResponse toResponse(SalesInvoice inv) {

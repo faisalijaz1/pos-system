@@ -22,4 +22,12 @@ export const invoicesApi = {
   getById: (id) => axiosInstance.get(`/v1/invoices/${id}`),
   getByNumber: (number) => axiosInstance.get(`/v1/invoices/number/${number}`),
   create: (body) => axiosInstance.post('/v1/invoices', body),
+  update: (id, body) => axiosInstance.patch(`/v1/invoices/${id}`, body),
+  addItem: (id, body) => axiosInstance.post(`/v1/invoices/${id}/items`, body),
+  updateItem: (id, itemId, body) => axiosInstance.put(`/v1/invoices/${id}/items/${itemId}`, body),
+  deleteItem: (id, itemId) => axiosInstance.delete(`/v1/invoices/${id}/items/${itemId}`),
+  navigate: (date, currentId, direction) =>
+    axiosInstance.get('/v1/invoices/navigate', {
+      params: { date, currentId, direction },
+    }),
 };

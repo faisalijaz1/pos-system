@@ -1,8 +1,6 @@
 package com.pos.controller;
 
-import com.pos.dto.CreateInvoiceRequest;
-import com.pos.dto.InvoiceResponse;
-import com.pos.dto.InvoiceSummaryDto;
+import com.pos.dto.*;
 import com.pos.service.SalesInvoiceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,10 +37,58 @@ public class SalesInvoiceController {
         return ResponseEntity.ok(created);
     }
 
+    @GetMapping("/navigate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    public ResponseEntity<InvoiceSummaryDto> navigate(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Integer currentId,
+            @RequestParam(defaultValue = "next") String direction
+    ) {
+        InvoiceSummaryDto result = salesInvoiceService.navigate(date, currentId, direction);
+        return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     public ResponseEntity<InvoiceResponse> getById(@PathVariable Integer id) {
         return ResponseEntity.ok(salesInvoiceService.getById(id));
+    }
+
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    public ResponseEntity<InvoiceResponse> update(
+            @PathVariable Integer id,
+            @RequestBody UpdateInvoiceRequest request
+    ) {
+        return ResponseEntity.ok(salesInvoiceService.updateInvoice(id, request));
+    }
+
+    @PostMapping("/{id}/items")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    public ResponseEntity<InvoiceResponse> addItem(
+            @PathVariable Integer id,
+            @Valid @RequestBody AddInvoiceItemRequest request
+    ) {
+        return ResponseEntity.ok(salesInvoiceService.addItem(id, request));
+    }
+
+    @PutMapping("/{id}/items/{itemId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    public ResponseEntity<InvoiceResponse> updateItem(
+            @PathVariable Integer id,
+            @PathVariable Integer itemId,
+            @RequestBody UpdateInvoiceItemRequest request
+    ) {
+        return ResponseEntity.ok(salesInvoiceService.updateItem(id, itemId, request));
+    }
+
+    @DeleteMapping("/{id}/items/{itemId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    public ResponseEntity<InvoiceResponse> deleteItem(
+            @PathVariable Integer id,
+            @PathVariable Integer itemId
+    ) {
+        return ResponseEntity.ok(salesInvoiceService.deleteItem(id, itemId));
     }
 
     @GetMapping("/number/{invoiceNumber}")

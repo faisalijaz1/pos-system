@@ -32,4 +32,20 @@ public interface SalesInvoiceRepository extends JpaRepository<SalesInvoice, Inte
             @Param("customerId") Integer customerId,
             Pageable pageable
     );
+
+    /** First invoice (min id) on given date. For sequential navigation "First". */
+    @Query("SELECT i FROM SalesInvoice i WHERE i.invoiceDate = :date ORDER BY i.salesInvoiceId ASC")
+    Optional<SalesInvoice> findFirstByDateOrderByIdAsc(@Param("date") LocalDate date, Pageable pageable);
+
+    /** Last invoice (max id) on given date. For sequential navigation "Last". */
+    @Query("SELECT i FROM SalesInvoice i WHERE i.invoiceDate = :date ORDER BY i.salesInvoiceId DESC")
+    Optional<SalesInvoice> findFirstByDateOrderByIdDesc(@Param("date") LocalDate date, Pageable pageable);
+
+    /** Previous invoice: same date with smaller id, or earlier date. For "Previous". */
+    @Query("SELECT i FROM SalesInvoice i WHERE (i.invoiceDate < :date) OR (i.invoiceDate = :date AND i.salesInvoiceId < :currentId) ORDER BY i.invoiceDate DESC, i.salesInvoiceId DESC")
+    Optional<SalesInvoice> findPreviousInvoice(@Param("date") LocalDate date, @Param("currentId") Integer currentId, Pageable pageable);
+
+    /** Next invoice: same date with larger id, or later date. For "Next". */
+    @Query("SELECT i FROM SalesInvoice i WHERE (i.invoiceDate > :date) OR (i.invoiceDate = :date AND i.salesInvoiceId > :currentId) ORDER BY i.invoiceDate ASC, i.salesInvoiceId ASC")
+    Optional<SalesInvoice> findNextInvoice(@Param("date") LocalDate date, @Param("currentId") Integer currentId, Pageable pageable);
 }

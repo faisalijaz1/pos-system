@@ -33,6 +33,7 @@ import PaymentModal from './PaymentModal';
 import InvoiceDetailModal from './InvoiceDetailModal';
 import ProductSearchModal from './ProductSearchModal';
 import SoldHistoryPanel from './SoldHistoryPanel';
+import SalesHistoryInvoicePage from './SalesHistoryInvoicePage';
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -450,15 +451,18 @@ export default function PosBillingPage() {
     }).catch(function () { alert('Invoice not found'); }).finally(function () { setInvoiceNoLoading(false); });
   }
 
-  function handlePrint() {
-    if (!detailInvoice) return;
-    const items = detailInvoice.items || [];
+  function handlePrint(invoiceFromHistory) {
+    const inv = invoiceFromHistory || detailInvoice;
+    if (!inv) return;
+    const items = inv.items || [];
     const rows = items.map(function (it) {
-      return '<tr><td>' + it.productCode + ' - ' + it.productName + '</td><td class="right">' + formatMoney(it.quantity) + '</td><td class="right">' + formatMoney(it.unitPrice) + '</td><td class="right">' + formatMoney(it.lineTotal) + '</td></tr>';
+      return '<tr><td>' + (it.productCode || '') + ' - ' + (it.productName || '') + '</td><td class="right">' + formatMoney(it.quantity) + '</td><td class="right">' + formatMoney(it.unitPrice) + '</td><td class="right">' + formatMoney(it.lineTotal) + '</td></tr>';
     }).join('');
-    const header = printWithoutHeader ? '' : '<div class="header"><strong>INVOICE</strong><br/>' + detailInvoice.invoiceNumber + '</div>';
-    const balance = printWithoutBalance ? '' : '<p>Amount Received: ' + formatMoney(detailInvoice.amountReceived) + '</p>';
-    const html = '<!DOCTYPE html><html><head><title>Invoice ' + detailInvoice.invoiceNumber + '</title><style>body{font-family:system-ui,sans-serif;padding:16px;max-width:560px;margin:0 auto;font-size:13px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:6px;text-align:left}th{background:#f0f0f0}.right{text-align:right}.header{text-align:center;margin-bottom:12px}</style></head><body>' + header + '<p><strong>Date</strong> ' + detailInvoice.invoiceDate + (detailInvoice.invoiceTime ? ' ' + detailInvoice.invoiceTime : '') + ' <strong>Customer</strong> ' + (detailInvoice.customerName || 'Cash') + '</p>' + (detailInvoice.remarks ? '<p><strong>Remarks:</strong> ' + detailInvoice.remarks + '</p>' : '') + '<table><thead><tr><th>Product</th><th class="right">Qty</th><th class="right">Price</th><th class="right">Total</th></tr></thead><tbody>' + rows + '</tbody></table><p style="text-align:right;margin-top:12px">Net Total: <strong>' + formatMoney(detailInvoice.netTotal) + '</strong></p>' + balance + '</body></html>';
+    const noHeader = invoiceFromHistory ? (inv.printWithoutHeader ?? false) : printWithoutHeader;
+    const noBalance = invoiceFromHistory ? (inv.printWithoutBalance ?? false) : printWithoutBalance;
+    const header = noHeader ? '' : '<div class="header"><strong>INVOICE</strong><br/>' + inv.invoiceNumber + '</div>';
+    const balance = noBalance ? '' : '<p>Amount Received: ' + formatMoney(inv.amountReceived) + '</p>';
+    const html = '<!DOCTYPE html><html><head><title>Invoice ' + inv.invoiceNumber + '</title><style>body{font-family:system-ui,sans-serif;padding:16px;max-width:560px;margin:0 auto;font-size:13px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:6px;text-align:left}th{background:#f0f0f0}.right{text-align:right}.header{text-align:center;margin-bottom:12px}</style></head><body>' + header + '<p><strong>Date</strong> ' + inv.invoiceDate + (inv.invoiceTime ? ' ' + inv.invoiceTime : '') + ' <strong>Customer</strong> ' + (inv.customerName || 'Cash') + '</p>' + (inv.remarks ? '<p><strong>Remarks:</strong> ' + inv.remarks + '</p>' : '') + '<table><thead><tr><th>Product</th><th class="right">Qty</th><th class="right">Price</th><th class="right">Total</th></tr></thead><tbody>' + rows + '</tbody></table><p style="text-align:right;margin-top:12px">Net Total: <strong>' + formatMoney(inv.netTotal) + '</strong></p>' + balance + '</body></html>';
     const win = window.open('', '_blank');
     win.document.write(html);
     win.document.close();
@@ -569,42 +573,10 @@ export default function PosBillingPage() {
         </Box>
       </Box>
       <Box role="region" id="pos-panel-1" hidden={tab !== 1} sx={{ flex: 1, display: tab === 1 ? 'flex' : 'none', flexDirection: 'column', minHeight: 0 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
-          <TextField type="date" size="small" label="From" value={historyFrom} onChange={function (e) { setHistoryFrom(e.target.value); }} InputLabelProps={{ shrink: true }} sx={DATE_INPUT_SX} />
-          <TextField type="date" size="small" label="To" value={historyTo} onChange={function (e) { setHistoryTo(e.target.value); }} InputLabelProps={{ shrink: true }} sx={DATE_INPUT_SX} />
-          <Button variant="outlined" size="small" onClick={function () { loadHistory(); }} disabled={historyLoading}>Apply</Button>
-        </Box>
-        <Paper sx={{ flex: 1, overflow: 'auto' }}>
-          <Table size="small" stickyHeader>
-            <TableHead>
-              <TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
-                <TableCell sx={{ fontWeight: 600 }}>Invoice #</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Customer</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600 }}>Net Total</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600 }}>Received</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600 }}>Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {historyList.map(function (inv) {
-                return (
-                  <TableRow key={inv.salesInvoiceId} hover>
-                    <TableCell>{inv.invoiceNumber}</TableCell>
-                    <TableCell>{inv.invoiceDate}</TableCell>
-                    <TableCell>{inv.customerName || 'Cash'}</TableCell>
-                    <TableCell align="right">{formatMoney(inv.netTotal)}</TableCell>
-                    <TableCell align="right">{formatMoney(inv.amountReceived)}</TableCell>
-                    <TableCell align="right">
-                      <Button size="small" startIcon={<VisibilityIcon />} onClick={function () { invoicesApi.getById(inv.salesInvoiceId).then(function (r) { setDetailInvoice(r.data); setDetailOpen(true); }); }}>View</Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-          <TablePagination component="div" count={historyTotal} page={historyPage} onPageChange={function (_, p) { setHistoryPage(p); }} rowsPerPage={historyPageSize} rowsPerPageOptions={[historyPageSize]} />
-        </Paper>
+        <SalesHistoryInvoicePage
+          onExit={function () { setTab(0); }}
+          onPrint={handlePrint}
+        />
       </Box>
       <Box role="region" id="pos-panel-2" hidden={tab !== 2} sx={{ flex: 1, display: tab === 2 ? 'flex' : 'none', flexDirection: 'column', alignItems: 'flex-start', pt: 2 }}>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', width: '100%', maxWidth: 400 }}>
