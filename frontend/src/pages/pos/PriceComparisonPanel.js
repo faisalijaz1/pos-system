@@ -23,8 +23,6 @@ export default function PriceComparisonPanel({
   onPriceSelection,
   onSelectAllNew,
   onSelectAllOld,
-  onOnlyIncreased,
-  onOnlyDecreased,
   onPriceHistoryClick,
   allUseNew,
 }) {
@@ -37,6 +35,7 @@ export default function PriceComparisonPanel({
           borderRadius: 2,
           border: '1px dashed',
           borderColor: 'divider',
+          bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.900' : 'background.paper'),
           minHeight: 280,
         }}
       >
@@ -55,6 +54,7 @@ export default function PriceComparisonPanel({
         borderRadius: 2,
         border: '1px solid',
         borderColor: 'divider',
+        bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.900' : 'background.paper'),
         minHeight: 280,
       }}
     >
@@ -76,14 +76,12 @@ export default function PriceComparisonPanel({
         <ButtonGroup size="small" variant="outlined">
           <Button onClick={() => onSelectAllNew && onSelectAllNew(true)}>All New</Button>
           <Button onClick={() => onSelectAllOld && onSelectAllOld()}>All Old</Button>
-          <Button onClick={() => onOnlyIncreased && onOnlyIncreased()}>Only ↑</Button>
-          <Button onClick={() => onOnlyDecreased && onOnlyDecreased()}>Only ↓</Button>
         </ButtonGroup>
       </Box>
       <TableContainer sx={{ width: '100%', maxHeight: 320, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
         <Table size="small" stickyHeader sx={{ minWidth: 640 }}>
           <TableHead>
-            <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+            <TableRow sx={{ bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.800' : '#f5f5f5') }}>
               <TableCell sx={{ fontWeight: 600 }}>Code</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Product</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>Stock</TableCell>

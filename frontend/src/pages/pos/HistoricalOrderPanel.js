@@ -37,7 +37,7 @@ export default function HistoricalOrderPanel({
           borderRadius: 2,
           border: '1px dashed',
           borderColor: 'divider',
-          bgcolor: 'grey.50',
+          bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50'),
           minHeight: 320,
         }}
       >
@@ -109,7 +109,7 @@ export default function HistoricalOrderPanel({
       <TableContainer sx={{ width: '100%', maxHeight: 320, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
         <Table size="small" stickyHeader sx={{ minWidth: 720 }}>
           <TableHead>
-            <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+            <TableRow sx={{ bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.800' : '#f5f5f5') }}>
               <TableCell sx={{ fontWeight: 600 }}>Code</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Product</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Brand</TableCell>

@@ -300,7 +300,16 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
     setReplicationItems((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const handleSameQty = useCallback(() => {}, []);
+  const handleSameQty = useCallback(() => {
+    if (!historicalInvoice?.items?.length) return;
+    const qtyByProductId = {};
+    historicalInvoice.items.forEach((it) => {
+      qtyByProductId[it.productId] = Number(it.quantity) || 0;
+    });
+    setReplicationItems((prev) =>
+      recalcLineTotals(prev.map((it) => ({ ...it, quantity: qtyByProductId[it.productId] ?? it.quantity })))
+    );
+  }, [historicalInvoice]);
 
   const handleDoubleQty = useCallback(() => {
     setReplicationItems((prev) =>
@@ -550,7 +559,7 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
         loading={loading}
         error={error}
       />
-      <Box sx={{ flex: 1, overflow: 'auto', overflowX: 'hidden', px: 2, py: 2 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', overflowX: 'hidden', px: 2, py: 2, bgcolor: 'background.default' }}>
         {/* Vertical stack: each section full width */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 1400, mx: 'auto' }}>
           {/* 1. Historical Order — full width */}
@@ -571,8 +580,6 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaym
               onPriceSelection={handlePriceSelection}
               onSelectAllNew={handleSelectAllNew}
               onSelectAllOld={handleSelectAllOld}
-              onOnlyIncreased={handleOnlyIncreased}
-              onOnlyDecreased={handleOnlyDecreased}
               onPriceHistoryClick={(row) => {
                 setPriceHistoryProduct({ productId: row.productId, productCode: row.productCode, productName: row.productName });
                 setPriceHistoryOpen(true);
