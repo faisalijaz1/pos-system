@@ -1,57 +1,53 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-  TableHead,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TablePagination,
-  Chip,
-  useTheme,
-  alpha,
-} from '@mui/material';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import TablePagination from '@mui/material/TablePagination';
+import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import AddIcon from '@mui/icons-material/Add';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import PrintIcon from '@mui/icons-material/Print';
+import GetAppIcon from '@mui/icons-material/GetApp';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { ledgerApi } from '../api/ledger';
 import { accountsApi } from '../api/accounts';
+import LedgerHeader from './ledger/LedgerHeader';
+import LedgerFilter from './ledger/LedgerFilter';
+import LedgerTable from './ledger/LedgerTable';
+import LedgerFooter from './ledger/LedgerFooter';
+import { buildLedgerPrintHtml, openLedgerPrintPreview } from './ledger/LedgerPrintTemplate';
+import { toApiDate } from './ledger/ledgerUtils';
 
-function formatMoney(n) {
-  if (n == null) return '—';
-  return new Intl.NumberFormat('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(Number(n));
-}
+const today = new Date();
+const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-const today = new Date().toISOString().slice(0, 10);
-const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
+const defaultFrom = toApiDate(firstDayOfMonth);
+const defaultTo = toApiDate(today);
 
 export default function Ledger() {
-  const theme = useTheme();
-  const [accounts, setAccounts] = useState([]);
-  const [entries, setEntries] = useState([]);
-  const [trialBalance, setTrialBalance] = useState(null);
-  const [fromDate, setFromDate] = useState(monthStart);
-  const [toDate, setToDate] = useState(today);
-  const [accountId, setAccountId] = useState('');
+  const navigate = useNavigate();
+  const [accountOptions, setAccountOptions] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [fromDate, setFromDate] = useState(defaultFrom);
+  const [toDate, setToDate] = useState(defaultTo);
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
-  const [totalElements, setTotalElements] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [manualOpen, setManualOpen] = useState(false);
   const [manual, setManual] = useState({
     voucherNo: '',
-    transactionDate: today,
+    transactionDate: toApiDate(today),
     description: '',
     debitAccountId: '',
     creditAccountId: '',
@@ -60,35 +56,96 @@ export default function Ledger() {
   const [submitting, setSubmitting] = useState(false);
 
   const loadAccounts = useCallback(() => {
-    accountsApi.list().then((res) => setAccounts(res.data || [])).catch(() => setAccounts([]));
+    accountsApi.list().then((res) => setAccountOptions(res.data || [])).catch(() => setAccountOptions([]));
   }, []);
 
-  const loadEntries = useCallback(() => {
+  const searchAccounts = useCallback((term) => {
+    if (!term || term.length < 2) {
+      loadAccounts();
+      return;
+    }
+    accountsApi.search(term).then((res) => setAccountOptions(res.data || [])).catch(() => setAccountOptions([]));
+  }, [loadAccounts]);
+
+  const loadReport = useCallback((pageOverride) => {
+    if (!selectedAccount?.accountId) return;
+    const p = pageOverride !== undefined ? pageOverride : page;
+    setError(null);
     setLoading(true);
     ledgerApi
-      .entries(fromDate, toDate, accountId || undefined, page, rowsPerPage)
-      .then((res) => {
-        setEntries(res.data?.content ?? []);
-        setTotalElements(res.data?.totalElements ?? 0);
-      })
-      .catch(() => {
-        setEntries([]);
-        setTotalElements(0);
+      .report(selectedAccount.accountId, fromDate, toDate, p, rowsPerPage)
+      .then((res) => setReport(res.data))
+      .catch((err) => {
+        setReport(null);
+        setError(err.response?.data?.message || 'Failed to load ledger');
       })
       .finally(() => setLoading(false));
-  }, [fromDate, toDate, accountId, page, rowsPerPage]);
+  }, [selectedAccount?.accountId, fromDate, toDate, page, rowsPerPage]);
 
-  const loadTrialBalance = useCallback(() => {
-    ledgerApi.trialBalance(toDate).then((res) => setTrialBalance(res.data)).catch(() => setTrialBalance(null));
-  }, [toDate]);
+  const handleGo = useCallback(() => {
+    setPage(0);
+    loadReport(0);
+  }, [loadReport]);
 
-  useEffect(() => loadAccounts(), [loadAccounts]);
-  useEffect(() => loadEntries(), [loadEntries]);
-  useEffect(() => loadTrialBalance(), [loadTrialBalance]);
+  const handleReset = useCallback(() => {
+    setSelectedAccount(null);
+    setReport(null);
+    setFromDate(defaultFrom);
+    setToDate(defaultTo);
+    setPage(0);
+    setError(null);
+    loadAccounts();
+  }, [loadAccounts]);
+
+  const handleExit = useCallback(() => {
+    navigate('/');
+  }, [navigate]);
+
+  const handleReport = useCallback(() => {
+    if (!selectedAccount?.accountId) return;
+    setLoading(true);
+    ledgerApi
+      .reportPrint(selectedAccount.accountId, fromDate, toDate)
+      .then((res) => {
+        const data = res.data;
+        const html = buildLedgerPrintHtml({
+          account: data.account,
+          fromDate: data.fromDate,
+          toDate: data.toDate,
+          entries: data.entries || [],
+          totalDr: data.totalDr,
+          totalCr: data.totalCr,
+          closingBalance: data.closingBalance,
+          closingBalanceType: data.closingBalanceType,
+        });
+        openLedgerPrintPreview(html);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [selectedAccount?.accountId, fromDate, toDate]);
+
+  const handleExport = useCallback(() => {
+    if (!report || !report.entries?.length) return;
+    const headers = ['Vch #', 'Date', 'Particulars', 'Dr', 'Cr', 'Balance'];
+    const rows = report.entries.map((e) => [
+      e.voucherNo,
+      e.transactionDate,
+      e.description || '',
+      e.debitAmount || 0,
+      e.creditAmount || 0,
+      `${e.runningBalance} ${e.balanceType || 'Dr'}`,
+    ]);
+    const csv = [headers.join(','), ...rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `ledger_${report.account?.accountCode || 'report'}_${fromDate}_${toDate}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }, [report, fromDate, toDate]);
 
   const handleManualSubmit = async () => {
     if (!manual.voucherNo || !manual.description || !manual.debitAccountId || !manual.creditAccountId || !manual.amount || Number(manual.amount) <= 0) {
-      alert('Fill all required fields and amount > 0.');
       return;
     }
     setSubmitting(true);
@@ -102,116 +159,131 @@ export default function Ledger() {
         amount: Number(manual.amount),
       });
       setManualOpen(false);
-      setManual({ voucherNo: '', transactionDate: today, description: '', debitAccountId: '', creditAccountId: '', amount: '' });
-      loadEntries();
-      loadTrialBalance();
+      setManual({ voucherNo: '', transactionDate: toApiDate(today), description: '', debitAccountId: '', creditAccountId: '', amount: '' });
+      if (report) loadReport();
+      loadAccounts();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to post entry');
+      // could show snackbar
     } finally {
       setSubmitting(false);
     }
   };
 
+  useEffect(() => loadAccounts(), [loadAccounts]);
+
+  const totalElements = report?.totalElements ?? 0;
+  const totalPages = report?.totalPages ?? 0;
+
   return (
-    <Box>
+    <Box sx={{ p: 2, maxWidth: 1200, mx: 'auto' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-        <Typography variant="h5" fontWeight={700}>Ledger</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setManualOpen(true)}>Manual Entry</Button>
+        <Typography variant="h5" fontWeight={700}>Ledger Report</Typography>
+        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setManualOpen(true)}>Manual Entry</Button>
       </Box>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-        <TextField type="date" label="From" size="small" value={fromDate} onChange={(e) => setFromDate(e.target.value)} InputLabelProps={{ shrink: true }} sx={{ minWidth: 140 }} />
-        <TextField type="date" label="To" size="small" value={toDate} onChange={(e) => setToDate(e.target.value)} InputLabelProps={{ shrink: true }} sx={{ minWidth: 140 }} />
-        <FormControl size="small" sx={{ minWidth: 220 }}>
-          <InputLabel>Account</InputLabel>
-          <Select value={accountId} label="Account" onChange={(e) => setAccountId(e.target.value)}>
-            <MenuItem value="">All accounts</MenuItem>
-            {accounts.map((a) => (
-              <MenuItem key={a.accountId} value={a.accountId}>{a.accountCode} — {a.accountName}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Box>
-      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden', mb: 2 }}>
-        <Box sx={{ px: 2, py: 1.5, borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1 }}>
-          <AccountBalanceIcon color="action" />
-          <Typography variant="subtitle2">Entries</Typography>
-        </Box>
-        <Table size="small">
-          <TableHead>
-            <TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.08) }}>
-              <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Voucher</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Account</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Description</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 600 }}>Dr</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 600 }}>Cr</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {entries.length === 0 && !loading ? (
-              <TableRow><TableCell colSpan={6} align="center" sx={{ py: 4 }}>No entries</TableCell></TableRow>
-            ) : (
-              entries.map((e) => (
-                <TableRow key={e.ledgerEntryId} hover>
-                  <TableCell>{e.transactionDate}</TableCell>
-                  <TableCell>{e.voucherNo}</TableCell>
-                  <TableCell>{e.accountCode} — {e.accountName}</TableCell>
-                  <TableCell>{e.description}</TableCell>
-                  <TableCell align="right">{Number(e.debitAmount) > 0 ? formatMoney(e.debitAmount) : '—'}</TableCell>
-                  <TableCell align="right">{Number(e.creditAmount) > 0 ? formatMoney(e.creditAmount) : '—'}</TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        <TablePagination
-          component="div"
-          count={totalElements}
-          page={page}
-          onPageChange={(_, p) => setPage(p)}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
-          rowsPerPageOptions={[10, 20, 50]}
-        />
-      </Paper>
-      {trialBalance && (
-        <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
-          <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>Trial balance as of {trialBalance.asOfDate}</Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
-            <Chip label={`Total Dr: ${formatMoney(trialBalance.totalDebit)}`} color="primary" variant="outlined" />
-            <Chip label={`Total Cr: ${formatMoney(trialBalance.totalCredit)}`} color="secondary" variant="outlined" />
-          </Box>
-        </Paper>
+
+      <LedgerHeader account={report?.account || selectedAccount} />
+
+      <LedgerFilter
+        fromDate={fromDate}
+        toDate={toDate}
+        onFromDateChange={setFromDate}
+        onToDateChange={setToDate}
+        accountOptions={accountOptions}
+        selectedAccount={selectedAccount}
+        onAccountChange={setSelectedAccount}
+        onGo={handleGo}
+        onReset={handleReset}
+        onReport={handleReport}
+        onExit={handleExit}
+        loading={loading}
+        onAccountSearchChange={(v) => searchAccounts(v)}
+      />
+
+      {error && (
+        <Typography color="error" sx={{ mb: 1 }}>{error}</Typography>
       )}
-      <Dialog open={manualOpen} onClose={() => !submitting && setManualOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Manual ledger entry</DialogTitle>
-        <DialogContent>
-          <TextField fullWidth label="Voucher no" value={manual.voucherNo} onChange={(e) => setManual((m) => ({ ...m, voucherNo: e.target.value }))} sx={{ mt: 1 }} />
-          <TextField fullWidth type="date" label="Transaction date" value={manual.transactionDate} onChange={(e) => setManual((m) => ({ ...m, transactionDate: e.target.value }))} InputLabelProps={{ shrink: true }} sx={{ mt: 2 }} />
-          <TextField fullWidth label="Description" value={manual.description} onChange={(e) => setManual((m) => ({ ...m, description: e.target.value }))} sx={{ mt: 2 }} />
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Debit account</InputLabel>
-            <Select value={manual.debitAccountId} label="Debit account" onChange={(e) => setManual((m) => ({ ...m, debitAccountId: e.target.value }))}>
-              {accounts.map((a) => (
-                <MenuItem key={a.accountId} value={a.accountId}>{a.accountCode} — {a.accountName}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Credit account</InputLabel>
-            <Select value={manual.creditAccountId} label="Credit account" onChange={(e) => setManual((m) => ({ ...m, creditAccountId: e.target.value }))}>
-              {accounts.map((a) => (
-                <MenuItem key={a.accountId} value={a.accountId}>{a.accountCode} — {a.accountName}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <TextField fullWidth type="number" label="Amount" value={manual.amount} onChange={(e) => setManual((m) => ({ ...m, amount: e.target.value }))} sx={{ mt: 2 }} inputProps={{ min: 0, step: 0.01 }} />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setManualOpen(false)} disabled={submitting}>Cancel</Button>
-          <Button variant="contained" onClick={handleManualSubmit} disabled={submitting}>{submitting ? 'Posting…' : 'Post'}</Button>
-        </DialogActions>
-      </Dialog>
+
+      {loading && !report ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          <LedgerTable
+            entries={report?.entries || []}
+            emptyMessage="No entries found for selected period. Select account and date range, then click Go."
+          />
+
+          {report && (
+            <>
+              <TablePagination
+                component="div"
+                count={totalElements}
+                page={page}
+                onPageChange={(_, p) => { setPage(p); loadReport(p); }}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); loadReport(0); }}
+                rowsPerPageOptions={[10, 20, 50, 100]}
+                labelRowsPerPage="Rows per page:"
+                labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count}`}
+              />
+
+              <LedgerFooter
+                totalDr={report.totalDr}
+                totalCr={report.totalCr}
+                balance={report.closingBalance}
+                balanceType={report.closingBalanceType}
+              />
+            </>
+          )}
+
+          {report && (
+            <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
+              <Button variant="outlined" startIcon={<OpenInNewIcon />} onClick={() => window.open(window.location.href, '_blank')}>
+                Windows
+              </Button>
+              <Button variant="outlined" startIcon={<GetAppIcon />} onClick={handleExport} disabled={!report?.entries?.length}>
+                Export
+              </Button>
+              <Button variant="outlined" startIcon={<PrintIcon />} onClick={handleReport} disabled={!selectedAccount}>
+                Printer
+              </Button>
+            </Box>
+          )}
+        </>
+      )}
+
+      {manualOpen && (
+        <Dialog open={manualOpen} onClose={() => !submitting && setManualOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Manual ledger entry</DialogTitle>
+          <DialogContent>
+            <TextField fullWidth label="Voucher no" value={manual.voucherNo} onChange={(e) => setManual((m) => ({ ...m, voucherNo: e.target.value }))} sx={{ mt: 1 }} />
+            <TextField fullWidth type="date" label="Transaction date" value={manual.transactionDate} onChange={(e) => setManual((m) => ({ ...m, transactionDate: e.target.value }))} InputLabelProps={{ shrink: true }} sx={{ mt: 2 }} />
+            <TextField fullWidth label="Description" value={manual.description} onChange={(e) => setManual((m) => ({ ...m, description: e.target.value }))} sx={{ mt: 2 }} />
+            <FormControl fullWidth sx={{ mt: 2 }}>
+              <InputLabel>Debit account</InputLabel>
+              <Select value={manual.debitAccountId} label="Debit account" onChange={(e) => setManual((m) => ({ ...m, debitAccountId: e.target.value }))}>
+                {accountOptions.map((a) => (
+                  <MenuItem key={a.accountId} value={a.accountId}>{a.accountCode} — {a.accountName}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth sx={{ mt: 2 }}>
+              <InputLabel>Credit account</InputLabel>
+              <Select value={manual.creditAccountId} label="Credit account" onChange={(e) => setManual((m) => ({ ...m, creditAccountId: e.target.value }))}>
+                {accountOptions.map((a) => (
+                  <MenuItem key={a.accountId} value={a.accountId}>{a.accountCode} — {a.accountName}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField fullWidth type="number" label="Amount" value={manual.amount} onChange={(e) => setManual((m) => ({ ...m, amount: e.target.value }))} sx={{ mt: 2 }} inputProps={{ min: 0, step: 0.01 }} />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setManualOpen(false)} disabled={submitting}>Cancel</Button>
+            <Button variant="contained" onClick={handleManualSubmit} disabled={submitting || !manual.voucherNo || !manual.description || !manual.debitAccountId || !manual.creditAccountId || !manual.amount || Number(manual.amount) <= 0}>{submitting ? 'Posting…' : 'Post'}</Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </Box>
   );
 }

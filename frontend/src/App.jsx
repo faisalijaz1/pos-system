@@ -49,7 +49,7 @@ function AppContent() {
             <Route path="customers" element={<Customers />} />
             <Route path="purchases" element={<ProtectedRoute roles={['ADMIN', 'MANAGER']}><Purchases /></ProtectedRoute>} />
             <Route path="stock" element={<Stock />} />
-            <Route path="ledger" element={<ProtectedRoute roles={['ADMIN', 'MANAGER']}><Ledger /></ProtectedRoute>} />
+            <Route path="ledger" element={<ProtectedRoute roles={['ADMIN', 'MANAGER', 'CASHIER']}><Ledger /></ProtectedRoute>} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

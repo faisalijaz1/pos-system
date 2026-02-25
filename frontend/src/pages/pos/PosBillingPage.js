@@ -16,6 +16,7 @@ import { alpha } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import HistoryIcon from '@mui/icons-material/History';
 import PinIcon from '@mui/icons-material/Pin';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { invoicesApi } from '../../api/invoices';

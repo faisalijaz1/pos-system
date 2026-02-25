@@ -26,6 +26,15 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Intege
             Pageable pageable
     );
 
+    @Query("SELECT e FROM LedgerEntry e JOIN FETCH e.account " +
+           "WHERE e.account.accountId = :accountId AND e.transactionDate >= :fromDate AND e.transactionDate <= :toDate " +
+           "ORDER BY e.transactionDate, e.ledgerEntryId")
+    List<LedgerEntry> findAllByAccountAndDateRangeOrderByDate(
+            @Param("accountId") Integer accountId,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate
+    );
+
     @Query(value = "SELECT a.account_id, a.account_code, a.account_name, " +
            "COALESCE(SUM(le.debit_amount), 0) AS debit_total, COALESCE(SUM(le.credit_amount), 0) AS credit_total " +
            "FROM accounts a " +
@@ -35,4 +44,11 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Intege
            "HAVING COALESCE(SUM(le.debit_amount), 0) <> 0 OR COALESCE(SUM(le.credit_amount), 0) <> 0 " +
            "ORDER BY a.account_code", nativeQuery = true)
     List<Object[]> trialBalanceAsOf(@Param("asOfDate") LocalDate asOfDate);
+
+    @Query("SELECT COALESCE(SUM(e.debitAmount - e.creditAmount), 0) FROM LedgerEntry e WHERE e.account.accountId = :accountId AND e.transactionDate < :beforeDate")
+    java.math.BigDecimal openingBalanceBefore(@Param("accountId") Integer accountId, @Param("beforeDate") LocalDate beforeDate);
+
+    @Query("SELECT COALESCE(SUM(e.debitAmount), 0), COALESCE(SUM(e.creditAmount), 0) FROM LedgerEntry e " +
+           "WHERE e.account.accountId = :accountId AND e.transactionDate >= :fromDate AND e.transactionDate <= :toDate")
+    Object[] periodTotals(@Param("accountId") Integer accountId, @Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
 }

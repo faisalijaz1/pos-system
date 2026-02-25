@@ -3,6 +3,9 @@ package com.pos.service;
 import com.pos.domain.Account;
 import com.pos.domain.LedgerEntry;
 import com.pos.domain.User;
+import com.pos.dto.AccountSummaryDto;
+import com.pos.dto.LedgerEntryRowDto;
+import com.pos.dto.LedgerReportDto;
 import com.pos.dto.LedgerEntryDto;
 import com.pos.dto.TrialBalanceDto;
 import com.pos.exception.BadRequestException;
@@ -141,6 +144,80 @@ public class LedgerService {
                 .rows(list)
                 .totalDebit(totalDebit)
                 .totalCredit(totalCredit)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public LedgerReportDto getLedgerReport(Integer accountId, LocalDate fromDate, LocalDate toDate, int page, int size) {
+        if (accountId == null) {
+            throw new BadRequestException("Account is required for ledger report");
+        }
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Account", accountId));
+        if (fromDate == null) fromDate = LocalDate.now();
+        if (toDate == null) toDate = LocalDate.now();
+        if (size <= 0) size = 20;
+        if (page < 0) page = 0;
+
+        BigDecimal opening = ledgerEntryRepository.openingBalanceBefore(accountId, fromDate);
+        String openingType = opening.compareTo(BigDecimal.ZERO) >= 0 ? "Dr" : "Cr";
+        if (opening.compareTo(BigDecimal.ZERO) < 0) opening = opening.negate();
+
+        Object[] totals = ledgerEntryRepository.periodTotals(accountId, fromDate, toDate);
+        BigDecimal totalDr = totals != null && totals[0] != null ? (BigDecimal) totals[0] : BigDecimal.ZERO;
+        BigDecimal totalCr = totals != null && totals[1] != null ? (BigDecimal) totals[1] : BigDecimal.ZERO;
+
+        List<LedgerEntry> allEntries = ledgerEntryRepository.findAllByAccountAndDateRangeOrderByDate(accountId, fromDate, toDate);
+        BigDecimal runBal = openingType.equals("Cr") ? opening.negate() : opening;
+        List<LedgerEntryRowDto> rows = new ArrayList<>();
+        for (LedgerEntry e : allEntries) {
+            runBal = runBal.add(e.getDebitAmount() != null ? e.getDebitAmount() : BigDecimal.ZERO)
+                    .subtract(e.getCreditAmount() != null ? e.getCreditAmount() : BigDecimal.ZERO);
+            BigDecimal runAbs = runBal.compareTo(BigDecimal.ZERO) >= 0 ? runBal : runBal.negate();
+            String runType = runBal.compareTo(BigDecimal.ZERO) >= 0 ? "Dr" : "Cr";
+            rows.add(LedgerEntryRowDto.builder()
+                    .ledgerEntryId(e.getLedgerEntryId())
+                    .voucherNo(e.getVoucherNo())
+                    .transactionDate(e.getTransactionDate())
+                    .description(e.getDescription())
+                    .debitAmount(e.getDebitAmount())
+                    .creditAmount(e.getCreditAmount())
+                    .runningBalance(runAbs)
+                    .balanceType(runType)
+                    .build());
+        }
+        BigDecimal closingAbs = runBal.compareTo(BigDecimal.ZERO) >= 0 ? runBal : runBal.negate();
+        String closingType = runBal.compareTo(BigDecimal.ZERO) >= 0 ? "Dr" : "Cr";
+
+        int totalElements = rows.size();
+        int totalPages = totalElements == 0 ? 0 : (int) Math.ceil((double) totalElements / size);
+        int fromIndex = Math.min(page * size, totalElements);
+        int toIndex = Math.min(fromIndex + size, totalElements);
+        List<LedgerEntryRowDto> pageEntries = fromIndex < toIndex ? rows.subList(fromIndex, toIndex) : new ArrayList<>();
+
+        AccountSummaryDto accountDto = AccountSummaryDto.builder()
+                .accountId(account.getAccountId())
+                .accountCode(account.getAccountCode())
+                .accountName(account.getAccountName())
+                .accountType(account.getAccountType())
+                .currentBalance(account.getCurrentBalance())
+                .balanceType(account.getBalanceType())
+                .build();
+
+        return LedgerReportDto.builder()
+                .account(accountDto)
+                .fromDate(fromDate)
+                .toDate(toDate)
+                .openingBalance(opening)
+                .openingBalanceType(openingType)
+                .entries(pageEntries)
+                .totalDr(totalDr)
+                .totalCr(totalCr)
+                .closingBalance(closingAbs)
+                .closingBalanceType(closingType)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .number(page)
                 .build();
     }
 

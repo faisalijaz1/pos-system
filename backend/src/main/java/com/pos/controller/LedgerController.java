@@ -1,6 +1,7 @@
 package com.pos.controller;
 
 import com.pos.dto.LedgerEntryDto;
+import com.pos.dto.LedgerReportDto;
 import com.pos.dto.ManualLedgerEntryRequest;
 import com.pos.dto.TrialBalanceDto;
 import com.pos.service.LedgerService;
@@ -67,6 +68,34 @@ public class LedgerController {
     ) {
         LocalDate date = asOfDate != null ? asOfDate : LocalDate.now();
         TrialBalanceDto dto = ledgerService.getTrialBalance(date);
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/report")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    public ResponseEntity<LedgerReportDto> report(
+            @RequestParam Integer accountId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        LocalDate from = fromDate != null ? fromDate : LocalDate.now();
+        LocalDate to = toDate != null ? toDate : LocalDate.now();
+        LedgerReportDto dto = ledgerService.getLedgerReport(accountId, from, to, page, size);
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/report/print")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    public ResponseEntity<LedgerReportDto> reportPrint(
+            @RequestParam Integer accountId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate
+    ) {
+        LocalDate from = fromDate != null ? fromDate : LocalDate.now();
+        LocalDate to = toDate != null ? toDate : LocalDate.now();
+        LedgerReportDto dto = ledgerService.getLedgerReport(accountId, from, to, 0, Integer.MAX_VALUE);
         return ResponseEntity.ok(dto);
     }
 }
