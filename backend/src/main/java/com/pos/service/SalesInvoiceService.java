@@ -332,26 +332,30 @@ public class SalesInvoiceService {
     public InvoiceSummaryDto navigate(LocalDate date, Integer currentId, String direction) {
         Pageable one = PageRequest.of(0, 1);
         if (direction == null) direction = "next";
+        Page<SalesInvoice> page;
         switch (direction.toLowerCase()) {
             case "first":
-                return salesInvoiceRepository.findFirstByDateOrderByIdAsc(date, one)
-                        .map(this::toSummaryDto).orElse(null);
+                page = salesInvoiceRepository.findFirstByDateOrderByIdAsc(date, one);
+                break;
             case "last":
-                return salesInvoiceRepository.findFirstByDateOrderByIdDesc(date, one)
-                        .map(this::toSummaryDto).orElse(null);
+                page = salesInvoiceRepository.findFirstByDateOrderByIdDesc(date, one);
+                break;
             case "prev":
                 if (currentId == null) return null;
-                return salesInvoiceRepository.findPreviousInvoice(date, currentId, one)
-                        .map(this::toSummaryDto).orElse(null);
+                page = salesInvoiceRepository.findPreviousInvoice(date, currentId, one);
+                break;
             case "next":
-                if (currentId == null) return salesInvoiceRepository.findFirstByDateOrderByIdAsc(date, one)
-                        .map(this::toSummaryDto).orElse(null);
-                return salesInvoiceRepository.findNextInvoice(date, currentId, one)
-                        .map(this::toSummaryDto).orElse(null);
+                if (currentId == null) {
+                    page = salesInvoiceRepository.findFirstByDateOrderByIdAsc(date, one);
+                } else {
+                    page = salesInvoiceRepository.findNextInvoice(date, currentId, one);
+                }
+                break;
             default:
-                return salesInvoiceRepository.findFirstByDateOrderByIdAsc(date, one)
-                        .map(this::toSummaryDto).orElse(null);
+                page = salesInvoiceRepository.findFirstByDateOrderByIdAsc(date, one);
+                break;
         }
+        return page.getContent().isEmpty() ? null : toSummaryDto(page.getContent().get(0));
     }
 
     private InvoiceResponse toResponse(SalesInvoice inv) {
