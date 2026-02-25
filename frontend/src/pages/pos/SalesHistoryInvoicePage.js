@@ -23,6 +23,7 @@ import BillingDetailsPanel from './BillingDetailsPanel';
 import PrintOptionsPanel from './PrintOptionsPanel';
 import ProductSearchModal from './ProductSearchModal';
 import { DATE_INPUT_SX } from './posUtils';
+import ConfirmDialog from './ConfirmDialog';
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -42,7 +43,7 @@ function formatSoldHist(inv) {
   return (invNum ? 'Inv # ' + invNum : '') + (dateStr ? ' Dated ' + dateStr : '') + (inv.netTotal != null ? ' — ' + formatMoney(inv.netTotal) : '');
 }
 
-export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
+export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify }) {
   const theme = useTheme();
   const [selectedDate, setSelectedDate] = useState(today);
   const [currentInvoice, setCurrentInvoice] = useState(null);
@@ -62,6 +63,8 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
   const [saveLoading, setSaveLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [focusedRowIndex, setFocusedRowIndex] = useState(-1);
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const invoiceId = currentInvoice?.salesInvoiceId ?? null;
   const items = currentInvoice?.items ?? [];
@@ -183,9 +186,13 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
     if (originalInvoice) setCurrentInvoice(originalInvoice);
     setEditMode(false);
     setOriginalInvoice(null);
-    setSuccessMsg('Changes discarded.');
-    setTimeout(() => setSuccessMsg(''), 3000);
-  }, [originalInvoice]);
+    const msg = 'Changes discarded.';
+    if (onNotify) onNotify(msg, 'info');
+    else {
+      setSuccessMsg(msg);
+      setTimeout(() => setSuccessMsg(''), 3000);
+    }
+  }, [originalInvoice, onNotify]);
 
   const handleSaveChanges = useCallback(() => {
     if (!invoiceId) return;
@@ -211,15 +218,23 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
         setCurrentInvoice(res.data);
         setEditMode(false);
         setOriginalInvoice(null);
-        setSuccessMsg('Saved.');
-        setTimeout(() => setSuccessMsg(''), 3000);
+        const msg = 'Saved.';
+        if (onNotify) onNotify(msg, 'success');
+        else {
+          setSuccessMsg(msg);
+          setTimeout(() => setSuccessMsg(''), 3000);
+        }
       })
       .catch(() => {
-        setSuccessMsg('Save failed.');
-        setTimeout(() => setSuccessMsg(''), 4000);
+        const msg = 'Save failed.';
+        if (onNotify) onNotify(msg, 'error');
+        else {
+          setSuccessMsg(msg);
+          setTimeout(() => setSuccessMsg(''), 4000);
+        }
       })
       .finally(() => setSaveLoading(false));
-  }, [invoiceId, currentInvoice]);
+  }, [invoiceId, currentInvoice, onNotify]);
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -274,15 +289,38 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
       if (!invoiceId) return;
       const item = items.find((it, i) => i === rowId || it.salesInvoiceItemId === rowId || it.productId === rowId);
       if (!item || !item.salesInvoiceItemId) return;
-      if (!window.confirm('Remove this line?')) return;
-      setLoading(true);
-      invoicesApi
-        .deleteItem(invoiceId, item.salesInvoiceItemId)
-        .then((res) => setCurrentInvoice(res.data))
-        .finally(() => setLoading(false));
+      setDeleteConfirmItem(item);
     },
     [invoiceId, items]
   );
+
+  const handleConfirmRemoveItem = useCallback(() => {
+    if (!invoiceId || !deleteConfirmItem?.salesInvoiceItemId) return;
+    setDeleteLoading(true);
+    invoicesApi
+      .deleteItem(invoiceId, deleteConfirmItem.salesInvoiceItemId)
+      .then(() => {
+        setDeleteConfirmItem(null);
+        loadInvoiceById(invoiceId);
+        if (onNotify) onNotify('Line removed.', 'success');
+        else {
+          setSuccessMsg('Line removed.');
+          setTimeout(() => setSuccessMsg(''), 3000);
+        }
+      })
+      .catch(() => {
+        if (onNotify) onNotify('Failed to remove line.', 'error');
+        else {
+          setSuccessMsg('Failed to remove line.');
+          setTimeout(() => setSuccessMsg(''), 3000);
+        }
+      })
+      .finally(() => setDeleteLoading(false));
+  }, [invoiceId, deleteConfirmItem, loadInvoiceById, onNotify]);
+
+  const handleCloseDeleteConfirm = useCallback(() => {
+    if (!deleteLoading) setDeleteConfirmItem(null);
+  }, [deleteLoading]);
 
   const handleQtyChange = useCallback(
     (rowId, delta) => {
@@ -539,6 +577,17 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint }) {
           handleAddItem(p, 1);
           setProductSearchModalOpen(false);
         }}
+      />
+      <ConfirmDialog
+        open={!!deleteConfirmItem}
+        title="Remove line"
+        message={deleteConfirmItem ? `Remove "${deleteConfirmItem.productName || deleteConfirmItem.productCode || 'this item'}" from the invoice?` : ''}
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        confirmColor="error"
+        loading={deleteLoading}
+        onConfirm={handleConfirmRemoveItem}
+        onCancel={handleCloseDeleteConfirm}
       />
     </Box>
   );

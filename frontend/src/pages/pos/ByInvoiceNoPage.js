@@ -59,7 +59,7 @@ function recalcLineTotals(items) {
   }));
 }
 
-export default function ByInvoiceNoPage({ onCreated, onEnd }) {
+export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify }) {
   const [invoiceNoInput, setInvoiceNoInput] = useState('');
   const [historicalInvoice, setHistoricalInvoice] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -353,7 +353,9 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
 
   const handleCreateOrder = useCallback(() => {
     if (replicationItems.length === 0) {
-      setSuccessMsg('Add at least one item.');
+      const msg = 'Add at least one item.';
+      if (onNotify) onNotify(msg, 'warning');
+      else setSuccessMsg(msg);
       return;
     }
     setCreateLoading(true);
@@ -361,19 +363,25 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
     invoicesApi
       .create(buildCreateBody(false))
       .then((res) => {
-        setSuccessMsg(`Order created: ${res.data?.invoiceNumber || newInvoiceNumber}`);
+        const msg = `Order created: ${res.data?.invoiceNumber || newInvoiceNumber}`;
+        if (onNotify) onNotify(msg, 'success');
+        else setSuccessMsg(msg);
         if (onCreated) onCreated(res.data);
         setNewInvoiceNumber(generateInvoiceNumber());
       })
       .catch((err) => {
-        setSuccessMsg(err.response?.data?.message || 'Create failed.');
+        const msg = err.response?.data?.message || 'Create failed.';
+        if (onNotify) onNotify(msg, 'error');
+        else setSuccessMsg(msg);
       })
       .finally(() => setCreateLoading(false));
-  }, [replicationItems.length, buildCreateBody, newInvoiceNumber, onCreated]);
+  }, [replicationItems.length, buildCreateBody, newInvoiceNumber, onCreated, onNotify]);
 
   const handleSaveDraft = useCallback(() => {
     if (replicationItems.length === 0) {
-      setSuccessMsg('Add at least one item.');
+      const msg = 'Add at least one item.';
+      if (onNotify) onNotify(msg, 'warning');
+      else setSuccessMsg(msg);
       return;
     }
     setCreateLoading(true);
@@ -381,15 +389,19 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
     invoicesApi
       .create(buildCreateBody(true))
       .then((res) => {
-        setSuccessMsg(`Draft saved: ${res.data?.invoiceNumber || newInvoiceNumber}`);
+        const msg = `Draft saved: ${res.data?.invoiceNumber || newInvoiceNumber}`;
+        if (onNotify) onNotify(msg, 'success');
+        else setSuccessMsg(msg);
         if (onCreated) onCreated(res.data);
         setNewInvoiceNumber(generateInvoiceNumber());
       })
       .catch((err) => {
-        setSuccessMsg(err.response?.data?.message || 'Save draft failed.');
+        const msg = err.response?.data?.message || 'Save draft failed.';
+        if (onNotify) onNotify(msg, 'error');
+        else setSuccessMsg(msg);
       })
       .finally(() => setCreateLoading(false));
-  }, [replicationItems.length, buildCreateBody, newInvoiceNumber, onCreated]);
+  }, [replicationItems.length, buildCreateBody, newInvoiceNumber, onCreated, onNotify]);
 
   const handleSelectCustomer = useCallback((customer) => {
     setSelectedCustomer({ customerId: customer.customerId, name: customer.name || customer.nameEnglish || customer.customerCode || `#${customer.customerId}` });
@@ -602,7 +614,7 @@ export default function ByInvoiceNoPage({ onCreated, onEnd }) {
             <Button variant="outlined" onClick={handleClear} disabled={createLoading}>
               Cancel
             </Button>
-            {successMsg && (
+            {successMsg && !onNotify && (
               <Typography
                 variant="body2"
                 color={successMsg.startsWith('Order created') || successMsg.startsWith('Draft saved') ? 'success.main' : 'error.main'}

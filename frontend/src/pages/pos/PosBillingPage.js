@@ -14,7 +14,8 @@ import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import { alpha } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
-import HistoryIcon from '@mui/icons-material/History';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import PinIcon from '@mui/icons-material/Pin';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { invoicesApi } from '../../api/invoices';
@@ -70,7 +71,6 @@ export default function PosBillingPage() {
   const [amountReceived, setAmountReceived] = useState('');
   const [printReceiptAfterSave, setPrintReceiptAfterSave] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
   const [historyFrom, setHistoryFrom] = useState(today);
   const [historyTo, setHistoryTo] = useState(today);
   const [historyList, setHistoryList] = useState([]);
@@ -87,6 +87,11 @@ export default function PosBillingPage() {
   const [productSearchModalOpen, setProductSearchModalOpen] = useState(false);
   const [soldHist, setSoldHist] = useState('');
   const [soldHistLoading, setSoldHistLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
+
+  const showNotification = useCallback((message, severity = 'info') => {
+    setSnackbar({ open: true, message: String(message), severity: severity || 'info' });
+  }, []);
 
   const grandTotal = cart.reduce((s, r) => s + Number(r.lineTotal || 0), 0);
   const netTotal = Math.max(0, grandTotal - Number(additionalDiscount) + Number(additionalExpenses));
@@ -329,7 +334,6 @@ export default function PosBillingPage() {
   function handleSaveDraft() {
     if (cart.length === 0) return;
     setLoading(true);
-    setSuccessMsg('');
     const body = {
       invoiceNumber,
       customerId: isCashCustomer ? null : (selectedCustomer && selectedCustomer.customerId) || null,
@@ -354,18 +358,16 @@ export default function PosBillingPage() {
     };
     invoicesApi.create(body).then(function (res) {
       clearScreen();
-      setSuccessMsg('Draft saved.');
-      setTimeout(function () { setSuccessMsg(''); }, 3000);
+      showNotification('Draft saved.', 'success');
       if (tab === 1) loadHistory();
     }).catch(function (err) {
-      alert((err.response && err.response.data && err.response.data.message) || 'Failed to save draft');
+      showNotification((err.response && err.response.data && err.response.data.message) || 'Failed to save draft', 'error');
     }).finally(function () { setLoading(false); });
   }
 
   function handleCompleteSale() {
     if (cart.length === 0) return;
     setLoading(true);
-    setSuccessMsg('');
     const body = {
       invoiceNumber,
       customerId: isCashCustomer ? null : (selectedCustomer && selectedCustomer.customerId) || null,
@@ -397,8 +399,7 @@ export default function PosBillingPage() {
       setPaymentOpen(false);
       setFocusedRowIndex(-1);
       setInvoiceNumber(generateInvoiceNumber());
-      setSuccessMsg('Invoice saved.');
-      setTimeout(function () { setSuccessMsg(''); }, 3000);
+      showNotification('Invoice saved.', 'success');
       if (tab === 1) loadHistory();
       if (printReceiptAfterSave && res && res.data) {
         setDetailInvoice(res.data);
@@ -406,7 +407,7 @@ export default function PosBillingPage() {
         setTimeout(handlePrint, 300);
       }
     }).catch(function (err) {
-      alert((err.response && err.response.data && err.response.data.message) || 'Failed to create invoice');
+      showNotification((err.response && err.response.data && err.response.data.message) || 'Failed to create invoice', 'error');
     }).finally(function () { setLoading(false); });
   }
 
@@ -579,19 +580,24 @@ export default function PosBillingPage() {
             completeDisabled={cart.length === 0}
             loading={loading}
           />
-          {successMsg && <Typography variant="caption" color="success.main" fontWeight={600} sx={{ display: 'block', mt: 1 }}>{successMsg}</Typography>}
         </Box>
       </Box>
       <Box role="region" id="pos-panel-1" hidden={tab !== 1} sx={{ flex: 1, display: tab === 1 ? 'flex' : 'none', flexDirection: 'column', minHeight: 0 }}>
         <SalesHistoryInvoicePage
           onExit={function () { setTab(0); }}
           onPrint={handlePrint}
+          onNotify={showNotification}
         />
       </Box>
       <Box role="region" id="pos-panel-2" hidden={tab !== 2} sx={{ flex: 1, display: tab === 2 ? 'flex' : 'none', flexDirection: 'column', minHeight: 0 }}>
-        <ByInvoiceNoPage onEnd={() => setTab(0)} />
+        <ByInvoiceNoPage onEnd={() => setTab(0)} onNotify={showNotification} />
       </Box>
       <PaymentModal open={paymentOpen} onClose={function () { if (!loading) setPaymentOpen(false); }} netTotal={netTotal} amountReceived={amountReceived} onAmountChange={setAmountReceived} change={change} receiptPreviewLines={receiptPreviewLines} printReceiptAfterSave={printReceiptAfterSave} onPrintReceiptChange={setPrintReceiptAfterSave} onConfirm={handleCompleteSale} loading={loading} cartLength={cart.length} />
+      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={function () { setSnackbar(function (s) { return { ...s, open: false }; }); }} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity={snackbar.severity} onClose={function () { setSnackbar(function (s) { return { ...s, open: false }; }); }} variant="filled">
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
       <InvoiceDetailModal open={detailOpen} onClose={function () { setDetailOpen(false); }} invoice={detailInvoice} onPrint={handlePrint} />
       <ProductSearchModal
         open={productSearchModalOpen}
