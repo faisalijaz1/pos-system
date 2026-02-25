@@ -1,5 +1,5 @@
 /**
- * Price Comparison Panel — Center column. Old vs New price per item, Use New checkbox, master toggle.
+ * Price Comparison Panel — Center column. Old vs New price per item, Use New checkbox, bulk actions, Stock/Unit.
  */
 import React from 'react';
 import Box from '@mui/material/Box';
@@ -13,12 +13,18 @@ import TableHead from '@mui/material/TableHead';
 import TableContainer from '@mui/material/TableContainer';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import Button from '@mui/material/Button';
 import PriceCell from './PriceCell';
+import { formatMoney } from './posUtils';
 
 export default function PriceComparisonPanel({
   items = [],
   onPriceSelection,
   onSelectAllNew,
+  onSelectAllOld,
+  onOnlyIncreased,
+  onOnlyDecreased,
   allUseNew,
 }) {
   if (items.length === 0) {
@@ -65,12 +71,22 @@ export default function PriceComparisonPanel({
         label="Use all new prices"
         sx={{ mb: 1 }}
       />
+      <Box sx={{ mb: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+        <ButtonGroup size="small" variant="outlined">
+          <Button onClick={() => onSelectAllNew && onSelectAllNew(true)}>All New</Button>
+          <Button onClick={() => onSelectAllOld && onSelectAllOld()}>All Old</Button>
+          <Button onClick={() => onOnlyIncreased && onOnlyIncreased()}>Only ↑</Button>
+          <Button onClick={() => onOnlyDecreased && onOnlyDecreased()}>Only ↓</Button>
+        </ButtonGroup>
+      </Box>
       <TableContainer sx={{ maxHeight: 220, border: 1, borderColor: 'divider', borderRadius: 1 }}>
         <Table size="small" stickyHeader>
           <TableHead>
-            <TableRow sx={{ bgcolor: 'action.hover' }}>
+            <TableRow sx={{ bgcolor: '#f5f5f5' }}>
               <TableCell sx={{ fontWeight: 600 }}>Code</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Product</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>Stock</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Unit</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>Old</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>New</TableCell>
               <TableCell align="center" sx={{ fontWeight: 600 }}>Use New</TableCell>
@@ -78,9 +94,11 @@ export default function PriceComparisonPanel({
           </TableHead>
           <TableBody>
             {items.map((row) => (
-              <TableRow key={row.productId || row.salesInvoiceItemId}>
+              <TableRow key={row.productId || row.salesInvoiceItemId} sx={{ '&:nth-of-type(even)': { bgcolor: 'action.hover' } }}>
                 <TableCell sx={{ fontFamily: 'monospace' }}>{row.productCode}</TableCell>
                 <TableCell>{row.productName}</TableCell>
+                <TableCell align="right">{row.currentStock != null ? formatMoney(row.currentStock) : '—'}</TableCell>
+                <TableCell>{row.uomName ?? '—'}</TableCell>
                 <TableCell align="right">
                   {Number(row.oldPrice ?? row.unitPrice).toLocaleString('en-PK', { maximumFractionDigits: 0 })}
                 </TableCell>

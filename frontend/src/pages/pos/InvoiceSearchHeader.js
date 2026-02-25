@@ -1,6 +1,5 @@
 /**
- * Invoice Search Header — "By Invoice No" tab.
- * Invoice number input, Go, Clear; loading and error state.
+ * Invoice Search Header — "By Invoice No" tab. Invoice number input, Go, Clear, End; optional Delete/Copy to.
  */
 import React from 'react';
 import Box from '@mui/material/Box';
@@ -9,12 +8,14 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
 export default function InvoiceSearchHeader({
   invoiceNo,
   onInvoiceNoChange,
   onSearch,
   onClear,
+  onEnd,
   loading = false,
   error = null,
 }) {
@@ -58,6 +59,11 @@ export default function InvoiceSearchHeader({
       <Button variant="outlined" startIcon={<ClearIcon />} onClick={onClear} disabled={loading}>
         Clear
       </Button>
+      {onEnd && (
+        <Button variant="outlined" startIcon={<ExitToAppIcon />} onClick={onEnd} disabled={loading}>
+          End
+        </Button>
+      )}
     </Box>
   );
 }

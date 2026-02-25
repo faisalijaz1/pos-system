@@ -580,7 +580,7 @@ export default function PosBillingPage() {
         />
       </Box>
       <Box role="region" id="pos-panel-2" hidden={tab !== 2} sx={{ flex: 1, display: tab === 2 ? 'flex' : 'none', flexDirection: 'column', minHeight: 0 }}>
-        <ByInvoiceNoPage />
+        <ByInvoiceNoPage onEnd={() => setTab(0)} />
       </Box>
       <PaymentModal open={paymentOpen} onClose={function () { if (!loading) setPaymentOpen(false); }} netTotal={netTotal} amountReceived={amountReceived} onAmountChange={setAmountReceived} change={change} receiptPreviewLines={receiptPreviewLines} printReceiptAfterSave={printReceiptAfterSave} onPrintReceiptChange={setPrintReceiptAfterSave} onConfirm={handleCompleteSale} loading={loading} cartLength={cart.length} />
       <InvoiceDetailModal open={detailOpen} onClose={function () { setDetailOpen(false); }} invoice={detailInvoice} onPrint={handlePrint} />

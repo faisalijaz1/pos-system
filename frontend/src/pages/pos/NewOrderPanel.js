@@ -1,5 +1,5 @@
 /**
- * New Order Panel — Right column. Draft order with editable qty, selected prices, new total.
+ * New Order Panel — 3rd column. Editable draft: customer, items with +/- qty, quick actions, stock warnings.
  */
 import React from 'react';
 import Box from '@mui/material/Box';
@@ -11,10 +11,15 @@ import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import TableHead from '@mui/material/TableHead';
 import TableContainer from '@mui/material/TableContainer';
-import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import Button from '@mui/material/Button';
 import DeleteIcon from '@mui/icons-material/Delete';
+import RemoveIcon from '@mui/icons-material/Remove';
+import AddIcon from '@mui/icons-material/Add';
 import { formatMoney } from './posUtils';
+
+const TOUCH_TARGET = 44;
 
 export default function NewOrderPanel({
   invoiceNumber,
@@ -23,6 +28,10 @@ export default function NewOrderPanel({
   items = [],
   onUpdateQuantity,
   onRemoveItem,
+  onSameQty,
+  onDoubleQty,
+  onHalfQty,
+  onClearAll,
 }) {
   const newTotal = items.reduce((sum, it) => sum + (Number(it.lineTotal) || 0), 0);
 
@@ -48,7 +57,13 @@ export default function NewOrderPanel({
         <Typography variant="body2" color="text.secondary">
           Customer: {customerName || '—'}
           {onCustomerChange && (
-            <Typography component="span" variant="body2" color="primary" sx={{ ml: 1 }} onClick={onCustomerChange}>
+            <Typography
+              component="span"
+              variant="body2"
+              color="primary"
+              sx={{ ml: 1, cursor: 'pointer', textDecoration: 'underline' }}
+              onClick={onCustomerChange}
+            >
               [Change]
             </Typography>
           )}
@@ -57,7 +72,7 @@ export default function NewOrderPanel({
       <TableContainer sx={{ maxHeight: 200, border: 1, borderColor: 'divider', borderRadius: 1 }}>
         <Table size="small" stickyHeader>
           <TableHead>
-            <TableRow sx={{ bgcolor: 'action.hover' }}>
+            <TableRow sx={{ bgcolor: '#f5f5f5' }}>
               <TableCell sx={{ fontWeight: 600 }}>Code</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Product</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>Qty</TableCell>
@@ -67,35 +82,77 @@ export default function NewOrderPanel({
             </TableRow>
           </TableHead>
           <TableBody>
-            {items.map((it, idx) => (
-              <TableRow key={it.productId || idx}>
-                <TableCell sx={{ fontFamily: 'monospace' }}>{it.productCode}</TableCell>
-                <TableCell>{it.productName}</TableCell>
-                <TableCell align="right">
-                  <TextField
-                    size="small"
-                    type="number"
-                    inputProps={{ min: 0.01, step: 0.01 }}
-                    value={it.quantity ?? ''}
-                    onChange={(e) => onUpdateQuantity && onUpdateQuantity(idx, e.target.value)}
-                    sx={{ width: 72, '& .MuiInputBase-input': { textAlign: 'right' } }}
-                  />
-                </TableCell>
-                <TableCell align="right">{formatMoney(it.unitPrice)}</TableCell>
-                <TableCell align="right">{formatMoney(it.lineTotal)}</TableCell>
-                <TableCell align="right">
-                  <IconButton size="small" onClick={() => onRemoveItem && onRemoveItem(idx)} aria-label="Remove">
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
+            {items.map((it, idx) => {
+              const qty = Number(it.quantity) || 0;
+              const stock = it.currentStock != null ? Number(it.currentStock) : null;
+              const overStock = stock != null && qty > stock;
+              return (
+                <TableRow key={it.productId || idx} sx={{ '&:nth-of-type(even)': { bgcolor: 'action.hover' } }}>
+                  <TableCell sx={{ fontFamily: 'monospace' }}>{it.productCode}</TableCell>
+                  <TableCell>
+                    <Box>
+                      {it.productName}
+                      {overStock && (
+                        <Typography component="span" variant="caption" color="error.main" sx={{ display: 'block' }}>
+                          Over stock ({formatMoney(stock)})
+                        </Typography>
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0 }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => onUpdateQuantity && onUpdateQuantity(idx, Math.max(0, qty - 1))}
+                        sx={{ minWidth: TOUCH_TARGET, minHeight: TOUCH_TARGET }}
+                        aria-label="Decrease quantity"
+                      >
+                        <RemoveIcon />
+                      </IconButton>
+                      <Typography variant="body2" sx={{ minWidth: 32, textAlign: 'center' }}>
+                        {formatMoney(qty)}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => onUpdateQuantity && onUpdateQuantity(idx, qty + 1)}
+                        sx={{ minWidth: TOUCH_TARGET, minHeight: TOUCH_TARGET }}
+                        aria-label="Increase quantity"
+                      >
+                        <AddIcon />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                  <TableCell align="right">{formatMoney(it.unitPrice)}</TableCell>
+                  <TableCell align="right">{formatMoney(it.lineTotal)}</TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={() => onRemoveItem && onRemoveItem(idx)}
+                      sx={{ minWidth: TOUCH_TARGET, minHeight: TOUCH_TARGET }}
+                      aria-label="Remove"
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
+      <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5, alignItems: 'center' }}>
+        <ButtonGroup size="small" variant="outlined">
+          <Button onClick={() => onSameQty && onSameQty()}>Same Qty</Button>
+          <Button onClick={() => onDoubleQty && onDoubleQty()}>Double</Button>
+          <Button onClick={() => onHalfQty && onHalfQty()}>Half</Button>
+          <Button onClick={() => onClearAll && onClearAll()} color="secondary">
+            Clear All
+          </Button>
+        </ButtonGroup>
+      </Box>
       <Box sx={{ mt: 1, textAlign: 'right' }}>
-        <Typography variant="body2" color="text.secondary">
-          New Total: <strong>{formatMoney(newTotal)}</strong>
+        <Typography variant="body2" fontWeight={700} sx={{ fontSize: 16 }}>
+          New Total: {formatMoney(newTotal)}
         </Typography>
       </Box>
     </Paper>

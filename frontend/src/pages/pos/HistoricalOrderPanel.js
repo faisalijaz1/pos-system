@@ -1,6 +1,5 @@
 /**
- * Historical Order Panel — Left column, read-only view of original invoice.
- * Muted archival styling; customer info, metadata, items table, historical total.
+ * Historical Order Panel — 1st column, read-only. Full invoice metadata, customer details, items table.
  */
 import React from 'react';
 import Box from '@mui/material/Box';
@@ -14,8 +13,19 @@ import TableHead from '@mui/material/TableHead';
 import TableContainer from '@mui/material/TableContainer';
 import LockIcon from '@mui/icons-material/Lock';
 import { formatMoney } from './posUtils';
+import { DELIVERY_MODES, TRANSACTION_TYPES } from './posUtils';
 
-export default function HistoricalOrderPanel({ invoice }) {
+export default function HistoricalOrderPanel({
+  invoice,
+  displayItems,
+  prevBalance = 0,
+  deliveryModeOptions = DELIVERY_MODES,
+  transactionTypes = TRANSACTION_TYPES,
+}) {
+  const items = (displayItems != null && displayItems.length > 0)
+    ? displayItems
+    : (invoice?.items || []);
+
   if (!invoice) {
     return (
       <Paper
@@ -26,7 +36,7 @@ export default function HistoricalOrderPanel({ invoice }) {
           border: '1px dashed',
           borderColor: 'divider',
           bgcolor: 'grey.50',
-          minHeight: 280,
+          minHeight: 320,
         }}
       >
         <Typography variant="body2" color="text.secondary">
@@ -35,10 +45,12 @@ export default function HistoricalOrderPanel({ invoice }) {
       </Paper>
     );
   }
-  const items = invoice.items || [];
+
   const total = invoice.netTotal != null ? Number(invoice.netTotal) : 0;
   const dateStr = invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().slice(0, 10) : '—';
-  const timeStr = invoice.invoiceTime != null ? String(invoice.invoiceTime).slice(0, 5) : '';
+  const timeStr = invoice.invoiceTime != null ? String(invoice.invoiceTime).slice(0, 5) : '—';
+  const deliveryMode = deliveryModeOptions.find((m) => m.deliveryModeId === invoice.deliveryModeId);
+  const txnType = transactionTypes.find((t) => t.code === invoice.transactionTypeCode);
 
   return (
     <Paper
@@ -48,14 +60,14 @@ export default function HistoricalOrderPanel({ invoice }) {
         borderRadius: 2,
         border: '1px solid',
         borderColor: 'divider',
-        bgcolor: 'grey.50',
-        minHeight: 280,
+        bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.900' : '#faf9f8'),
+        minHeight: 320,
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1.5 }}>
         <LockIcon fontSize="small" color="action" />
         <Typography variant="subtitle2" fontWeight={700} color="text.secondary">
-          Original Order (Historical)
+          Historical Order (Read-Only)
         </Typography>
       </Box>
       <Box sx={{ mb: 1.5 }}>
@@ -63,29 +75,58 @@ export default function HistoricalOrderPanel({ invoice }) {
           Invoice: <strong>{invoice.invoiceNumber}</strong>
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Date: {dateStr} {timeStr ? ` · ${timeStr}` : ''}
+          Date: {dateStr} · Time: {timeStr}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Customer: {invoice.customerName || 'Cash'}
+          Del Mode: {deliveryMode?.modeName ?? '—'}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Type: {txnType?.name ?? invoice.transactionTypeCode ?? '—'}
         </Typography>
       </Box>
-      <TableContainer sx={{ maxHeight: 240, border: 1, borderColor: 'divider', borderRadius: 1 }}>
+      <Box sx={{ mb: 1.5 }}>
+        <Typography variant="caption" fontWeight={700} color="text.secondary">
+          Customer Details
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          ID: {invoice.customerId ?? '—'}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Name: {invoice.customerName || 'Cash'}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Prev Bal: <strong>{formatMoney(prevBalance)}</strong>
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          With this Bill: <strong>{formatMoney(total)}</strong>
+        </Typography>
+      </Box>
+      <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+        Historical Items
+      </Typography>
+      <TableContainer sx={{ maxHeight: 220, border: 1, borderColor: 'divider', borderRadius: 1 }}>
         <Table size="small" stickyHeader>
           <TableHead>
-            <TableRow sx={{ bgcolor: 'action.hover' }}>
+            <TableRow sx={{ bgcolor: '#f5f5f5' }}>
               <TableCell sx={{ fontWeight: 600 }}>Code</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Product</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Brand</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>Stock</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>Qty</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Unit</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>Price</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>Total</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {items.map((it) => (
-              <TableRow key={it.salesInvoiceItemId || it.productId}>
+              <TableRow key={it.salesInvoiceItemId || it.productId} sx={{ '&:nth-of-type(even)': { bgcolor: 'action.hover' } }}>
                 <TableCell sx={{ fontFamily: 'monospace' }}>{it.productCode}</TableCell>
                 <TableCell>{it.productName}</TableCell>
+                <TableCell>{it.brandName ?? '—'}</TableCell>
+                <TableCell align="right">{it.currentStock != null ? formatMoney(it.currentStock) : '—'}</TableCell>
                 <TableCell align="right">{formatMoney(it.quantity)}</TableCell>
+                <TableCell>{it.uomName ?? '—'}</TableCell>
                 <TableCell align="right">{formatMoney(it.unitPrice)}</TableCell>
                 <TableCell align="right">{formatMoney(it.lineTotal)}</TableCell>
               </TableRow>
@@ -94,8 +135,8 @@ export default function HistoricalOrderPanel({ invoice }) {
         </Table>
       </TableContainer>
       <Box sx={{ mt: 1, textAlign: 'right' }}>
-        <Typography variant="body2" color="text.secondary">
-          Historical Total: <strong>{formatMoney(total)}</strong>
+        <Typography variant="body2" fontWeight={700} sx={{ fontSize: 16 }}>
+          Hist Total: {formatMoney(total)}
         </Typography>
       </Box>
     </Paper>
