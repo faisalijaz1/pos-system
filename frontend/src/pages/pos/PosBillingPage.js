@@ -117,8 +117,8 @@ export default function PosBillingPage() {
   }
 
   const effectiveCustomerId = getEffectiveCustomerId(selectedCustomer);
-  const billingRequiresCustomer = !isCashCustomer && cart.length > 0;
-  const billingCustomerMissing = billingRequiresCustomer && (effectiveCustomerId == null || effectiveCustomerId === '');
+  const billingRequiresCustomer = cart.length > 0 && (effectiveCustomerId == null || effectiveCustomerId === '');
+  const billingCustomerMissing = billingRequiresCustomer;
 
   const grandTotal = cart.reduce((s, r) => s + Number(r.lineTotal || 0), 0);
   const netTotal = Math.max(0, grandTotal - Number(additionalDiscount) + Number(additionalExpenses));
@@ -220,7 +220,7 @@ export default function PosBillingPage() {
       if (e.key === 'F4' && cart.length > 0) {
         e.preventDefault();
         if (billingCustomerMissing) {
-          showNotification('Please select a customer before completing the sale.', 'warning');
+          showNotification('Please select a customer from the dropdown. Save/Complete is not allowed without a customer.', 'warning');
           return;
         }
         setPaymentOpen(true);
@@ -375,13 +375,13 @@ export default function PosBillingPage() {
   function handleSaveDraft() {
     if (cart.length === 0) return;
     if (billingCustomerMissing) {
-      showNotification('Please select a customer. Ledger is maintained against customer accounts.', 'warning');
+      showNotification('Please select a customer from the dropdown. Save/Complete is not allowed without a customer.', 'warning');
       return;
     }
     setLoading(true);
     const body = {
       invoiceNumber,
-      customerId: isCashCustomer ? null : (effectiveCustomerId != null ? Number(effectiveCustomerId) : null),
+      customerId: effectiveCustomerId != null ? Number(effectiveCustomerId) : null,
       invoiceDate,
       invoiceTime: invoiceTime ? (invoiceTime.length === 5 ? invoiceTime + ':00' : invoiceTime) : null,
       transactionTypeCode: transactionTypeCode || 'SALE',
@@ -413,13 +413,13 @@ export default function PosBillingPage() {
   function handleCompleteSale() {
     if (cart.length === 0) return;
     if (billingCustomerMissing) {
-      showNotification('Please select a customer. Ledger is maintained against customer accounts.', 'warning');
+      showNotification('Please select a customer from the dropdown. Save/Complete is not allowed without a customer.', 'warning');
       return;
     }
     setLoading(true);
     const body = {
       invoiceNumber,
-      customerId: isCashCustomer ? null : (effectiveCustomerId != null ? Number(effectiveCustomerId) : null),
+      customerId: effectiveCustomerId != null ? Number(effectiveCustomerId) : null,
       invoiceDate,
       invoiceTime: invoiceTime ? (invoiceTime.length === 5 ? invoiceTime + ':00' : invoiceTime) : null,
       transactionTypeCode: transactionTypeCode || 'SALE',
@@ -581,16 +581,17 @@ export default function PosBillingPage() {
   }
 
   function handlePrint(invoiceFromHistory) {
-    const inv = invoiceFromHistory || detailInvoice;
+    const inv = invoiceFromHistory != null ? invoiceFromHistory : detailInvoice;
     if (!inv) return;
-    const noHeader = invoiceFromHistory ? (inv.printWithoutHeader ?? false) : printWithoutHeader;
-    const noBalance = invoiceFromHistory ? (inv.printWithoutBalance ?? false) : printWithoutBalance;
+    const noHeader = (inv.printWithoutHeader ?? printWithoutHeader) ?? false;
+    const noBalance = (inv.printWithoutBalance ?? printWithoutBalance) ?? false;
     printInvoice({
       invoice: {
         invoiceNumber: inv.invoiceNumber,
         invoiceDate: inv.invoiceDate,
         invoiceTime: inv.invoiceTime,
-        customerName: inv.customerName || 'Cash Bill',
+        customerId: inv.customerId,
+        customerName: inv.customerName != null && String(inv.customerName).trim() !== '' ? inv.customerName : 'Cash',
         remarks: inv.remarks,
         grandTotal: inv.grandTotal,
         additionalDiscount: inv.additionalDiscount,
@@ -601,7 +602,7 @@ export default function PosBillingPage() {
         billingDate: inv.billingDate,
         userName: inv.userName,
       },
-      items: inv.items || [],
+      items: Array.isArray(inv.items) ? inv.items : [],
       printWithoutHeader: !!noHeader,
       printWithoutBalance: !!noBalance,
     });
@@ -707,7 +708,7 @@ export default function PosBillingPage() {
             onPrintWithoutHeaderChange={setPrintWithoutHeader}
             onCompleteSale={function () {
               if (billingCustomerMissing) {
-                showNotification('Please select a customer before completing the sale.', 'warning');
+                showNotification('Please select a customer from the dropdown. Save/Complete is not allowed without a customer.', 'warning');
                 return;
               }
               setPaymentOpen(true);

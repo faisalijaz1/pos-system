@@ -72,7 +72,7 @@ export default function InvoiceDetailModal({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Close (Esc)</Button>
-        <Button variant="contained" startIcon={<PrintIcon />} onClick={onPrint}>
+        <Button variant="contained" startIcon={<PrintIcon />} onClick={() => onPrint && onPrint(invoice)}>
           Print (Ctrl+P)
         </Button>
       </DialogActions>

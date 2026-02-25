@@ -64,8 +64,13 @@ public class SalesInvoiceService {
             throw new BadRequestException("Invoice number already exists: " + request.getInvoiceNumber());
         }
 
+        boolean saveAsDraft = Boolean.TRUE.equals(request.getSaveAsDraft());
+        if (!saveAsDraft && request.getCustomerId() == null) {
+            throw new BadRequestException("Customer is required to complete the sale. Please select a customer from the dropdown.");
+        }
+
         Customer customer = null;
-        if (request.getCustomerId() != null && !Boolean.TRUE.equals(request.getIsCashCustomer())) {
+        if (request.getCustomerId() != null) {
             customer = customerRepository.findById(request.getCustomerId())
                     .orElseThrow(() -> new ResourceNotFoundException("Customer", request.getCustomerId()));
             if (customer.getDeletedAt() != null) {
@@ -81,7 +86,6 @@ public class SalesInvoiceService {
                 ? deliveryModeRepository.findById(request.getDeliveryModeId()).orElse(null)
                 : null;
 
-        boolean saveAsDraft = Boolean.TRUE.equals(request.getSaveAsDraft());
         BigDecimal grandTotal = BigDecimal.ZERO;
         List<SalesInvoiceItem> invoiceItems = new ArrayList<>();
         List<StockTransactionItem> stockItems = new ArrayList<>();

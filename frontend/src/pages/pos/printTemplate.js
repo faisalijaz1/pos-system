@@ -96,7 +96,7 @@ export function buildPrintHtml(opts) {
   const dateStr = inv.invoiceDate ? formatPrintDate(inv.invoiceDate) : '—';
   const timeStr = inv.invoiceTime != null ? formatPrintTime(inv.invoiceTime) : '';
 
-  const customerDisplay = inv.customerName && String(inv.customerName).trim() ? inv.customerName : 'Cash Bill';
+  const customerDisplay = inv.customerName && String(inv.customerName).trim() ? inv.customerName : 'Cash';
   const billNo = inv.billingNo || inv.invoiceNumber || '—';
 
   const customerBlockHtml = `
