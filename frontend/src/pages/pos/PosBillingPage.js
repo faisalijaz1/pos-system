@@ -89,6 +89,10 @@ export default function PosBillingPage() {
   const [soldHist, setSoldHist] = useState('');
   const [soldHistLoading, setSoldHistLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
+  const [paymentForHistory, setPaymentForHistory] = useState(null);
+  const [paymentHistoryPrevBalance, setPaymentHistoryPrevBalance] = useState(0);
+  const [paymentHistoryOnConfirmed, setPaymentHistoryOnConfirmed] = useState(null);
+  const [paymentForByInvoiceNo, setPaymentForByInvoiceNo] = useState(null);
 
   const showNotification = useCallback((message, severity = 'info') => {
     setSnackbar({ open: true, message: String(message), severity: severity || 'info' });
@@ -403,13 +407,90 @@ export default function PosBillingPage() {
       showNotification('Invoice saved.', 'success');
       if (tab === 1) loadHistory();
       if (printReceiptAfterSave && res && res.data) {
-        setDetailInvoice(res.data);
+        var savedInv = res.data;
+        setDetailInvoice(savedInv);
         setDetailOpen(true);
-        setTimeout(handlePrint, 300);
+        setTimeout(function () { handlePrint(savedInv); }, 150);
       }
     }).catch(function (err) {
       showNotification((err.response && err.response.data && err.response.data.message) || 'Failed to create invoice', 'error');
     }).finally(function () { setLoading(false); });
+  }
+
+  function openPaymentForHistory(invoice, historyPrevBalance, onConfirmed) {
+    if (!invoice) return;
+    setPaymentForHistory(invoice);
+    setPaymentHistoryPrevBalance(Number(historyPrevBalance) || 0);
+    setPaymentHistoryOnConfirmed(onConfirmed || null);
+    setAmountReceived(invoice.amountReceived != null ? String(invoice.amountReceived) : '');
+    setPaymentOpen(true);
+  }
+
+  function handleConfirmPaymentHistory() {
+    var inv = paymentForHistory;
+    if (!inv || !inv.salesInvoiceId) return;
+    setLoading(true);
+    var received = Number(amountReceived) || 0;
+    var net = Number(inv.netTotal) || 0;
+    var changeReturned = Math.max(0, received - net);
+    var payload = {
+      invoiceDate: inv.invoiceDate,
+      invoiceTime: inv.invoiceTime,
+      deliveryModeId: inv.deliveryModeId,
+      additionalDiscount: inv.additionalDiscount ?? 0,
+      additionalExpenses: inv.additionalExpenses ?? 0,
+      printWithoutHeader: inv.printWithoutHeader ?? false,
+      printWithoutBalance: inv.printWithoutBalance ?? false,
+      remarks: inv.remarks ?? '',
+      billingNo: inv.billingNo ?? '',
+      billingDate: inv.billingDate || null,
+      billingPacking: inv.billingPacking ?? '',
+      billingAdda: inv.billingAdda ?? '',
+      amountReceived: received,
+      changeReturned: changeReturned,
+    };
+    invoicesApi.update(inv.salesInvoiceId, payload).then(function (res) {
+      var updated = res.data;
+      setPaymentOpen(false);
+      setPaymentForHistory(null);
+      setPaymentHistoryOnConfirmed(null);
+      setAmountReceived('');
+      showNotification('Payment updated.', 'success');
+      if (tab === 1) loadHistory();
+      if (paymentHistoryOnConfirmed) paymentHistoryOnConfirmed(updated);
+      setDetailInvoice(updated);
+      setDetailOpen(true);
+      if (printReceiptAfterSave) setTimeout(function () { handlePrint(updated); }, 150);
+    }).catch(function (err) {
+      showNotification((err.response && err.response.data && err.response.data.message) || 'Failed to update payment', 'error');
+    }).finally(function () { setLoading(false); });
+  }
+
+  function openPaymentForByInvoiceNo(payload) {
+    if (!payload) return;
+    setPaymentForByInvoiceNo(payload);
+    setAmountReceived(payload.netTotal != null ? String(payload.netTotal) : '');
+    setPaymentOpen(true);
+  }
+
+  function handleConfirmByInvoiceNo() {
+    var p = paymentForByInvoiceNo;
+    if (!p || !p.executeCreate) return;
+    var received = Number(amountReceived) || 0;
+    var net = Number(p.netTotal) || 0;
+    var changeReturned = Math.max(0, received - net);
+    setLoading(true);
+    p.executeCreate(received, changeReturned).then(function (created) {
+      setPaymentOpen(false);
+      setPaymentForByInvoiceNo(null);
+      setAmountReceived('');
+      showNotification('Order created.', 'success');
+      if (printReceiptAfterSave && created) {
+        setDetailInvoice(created);
+        setDetailOpen(true);
+        setTimeout(function () { handlePrint(created); }, 150);
+      }
+    }).catch(function () {}).finally(function () { setLoading(false); });
   }
 
   const loadHistory = useCallback(function (pageOverride) {
@@ -485,6 +566,9 @@ export default function PosBillingPage() {
   const receiptPreviewLines = cart.map(function (r) {
     return (r.productName || r.productCode) + ' x' + r.quantity + ' = ' + formatMoney(r.lineTotal);
   }).join('\n');
+  const receiptPreviewItems = cart.map(function (r) {
+    return { label: (r.productName || r.productCode) + ' x' + r.quantity, amount: r.lineTotal };
+  });
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 88px)', minHeight: 480 }}>
@@ -588,12 +672,13 @@ export default function PosBillingPage() {
           onExit={function () { setTab(0); }}
           onPrint={handlePrint}
           onNotify={showNotification}
+          onOpenPayment={openPaymentForHistory}
         />
       </Box>
       <Box role="region" id="pos-panel-2" hidden={tab !== 2} sx={{ flex: 1, display: tab === 2 ? 'flex' : 'none', flexDirection: 'column', minHeight: 0 }}>
-        <ByInvoiceNoPage onEnd={() => setTab(0)} onNotify={showNotification} />
+        <ByInvoiceNoPage onEnd={() => setTab(0)} onNotify={showNotification} onOpenPaymentBeforeCreate={openPaymentForByInvoiceNo} />
       </Box>
-      <PaymentModal open={paymentOpen} onClose={function () { if (!loading) setPaymentOpen(false); }} netTotal={netTotal} amountReceived={amountReceived} onAmountChange={setAmountReceived} change={change} receiptPreviewLines={receiptPreviewLines} printReceiptAfterSave={printReceiptAfterSave} onPrintReceiptChange={setPrintReceiptAfterSave} onConfirm={handleCompleteSale} loading={loading} cartLength={cart.length} />
+      <PaymentModal open={paymentOpen} onClose={function () { if (!loading) { setPaymentOpen(false); setPaymentForHistory(null); setPaymentHistoryOnConfirmed(null); setPaymentForByInvoiceNo(null); } }} netTotal={paymentForByInvoiceNo ? paymentForByInvoiceNo.netTotal : (paymentForHistory ? (Number(paymentForHistory.netTotal) || 0) : netTotal)} grandTotal={paymentForByInvoiceNo ? paymentForByInvoiceNo.grandTotal : (paymentForHistory ? (Number(paymentForHistory.grandTotal) || 0) : grandTotal)} additionalDiscount={paymentForByInvoiceNo ? paymentForByInvoiceNo.additionalDiscount : (paymentForHistory ? (Number(paymentForHistory.additionalDiscount) || 0) : additionalDiscount)} additionalExpenses={paymentForByInvoiceNo ? paymentForByInvoiceNo.additionalExpenses : (paymentForHistory ? (Number(paymentForHistory.additionalExpenses) || 0) : additionalExpenses)} prevBalance={paymentForByInvoiceNo ? (Number(paymentForByInvoiceNo.prevBalance) || 0) : (paymentForHistory ? paymentHistoryPrevBalance : prevBalance)} amountReceived={amountReceived} onAmountChange={setAmountReceived} change={change} receiptPreviewLines={paymentForByInvoiceNo ? (paymentForByInvoiceNo.items || []).map(function (r) { return r.label + ' = ' + formatMoney(r.amount); }).join('\n') : (paymentForHistory ? (paymentForHistory.items || []).map(function (r) { return (r.productName || r.productCode) + ' x' + r.quantity + ' = ' + formatMoney(r.lineTotal); }).join('\n') : receiptPreviewLines)} receiptPreviewItems={paymentForByInvoiceNo ? (paymentForByInvoiceNo.items || []) : (paymentForHistory ? (paymentForHistory.items || []).map(function (r) { return { label: (r.productName || r.productCode) + ' x' + r.quantity, amount: r.lineTotal }; }) : receiptPreviewItems)} printReceiptAfterSave={printReceiptAfterSave} onPrintReceiptChange={setPrintReceiptAfterSave} onConfirm={paymentForByInvoiceNo ? handleConfirmByInvoiceNo : (paymentForHistory ? handleConfirmPaymentHistory : handleCompleteSale)} loading={loading} cartLength={paymentForByInvoiceNo ? 1 : (paymentForHistory ? 1 : cart.length)} isCreditCustomer={paymentForByInvoiceNo ? paymentForByInvoiceNo.isCreditCustomer : (paymentForHistory ? !paymentForHistory.isCashCustomer : (!isCashCustomer && !!selectedCustomer))} />
       <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={function () { setSnackbar(function (s) { return { ...s, open: false }; }); }} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
         <Alert severity={snackbar.severity} onClose={function () { setSnackbar(function (s) { return { ...s, open: false }; }); }} variant="filled">
           {snackbar.message}

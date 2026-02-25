@@ -20,6 +20,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
+import PaymentIcon from '@mui/icons-material/Payment';
 import { DELIVERY_MODES } from './posUtils';
 
 const editableFieldSx = {
@@ -47,6 +48,7 @@ export default function InvoiceHeaderPanel({
   onCancelEdit,
   onPrint,
   onExit,
+  onConfirmPayment,
   onInvoiceDateChange,
   onInvoiceTimeChange,
   onDeliveryModeChange,
@@ -182,6 +184,16 @@ export default function InvoiceHeaderPanel({
               >
                 Edit Invoice
               </Button>
+              {onConfirmPayment && (
+                <Button
+                  variant="contained"
+                  color="success"
+                  startIcon={<PaymentIcon />}
+                  onClick={onConfirmPayment}
+                >
+                  Confirm payment
+                </Button>
+              )}
               <Button variant="outlined" startIcon={<PrintIcon />} onClick={onPrint}>
                 Print
               </Button>

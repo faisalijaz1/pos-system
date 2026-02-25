@@ -253,6 +253,8 @@ public class SalesInvoiceService {
         if (request.getBillingDate() != null) inv.setBillingDate(request.getBillingDate());
         if (request.getBillingPacking() != null) inv.setBillingPacking(request.getBillingPacking());
         if (request.getBillingAdda() != null) inv.setBillingAdda(request.getBillingAdda());
+        if (request.getAmountReceived() != null) inv.setAmountReceived(request.getAmountReceived());
+        if (request.getChangeReturned() != null) inv.setChangeReturned(request.getChangeReturned());
         recalcNetTotal(inv);
         salesInvoiceRepository.save(inv);
         return getById(id);

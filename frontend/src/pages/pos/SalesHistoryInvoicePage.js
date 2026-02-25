@@ -43,7 +43,7 @@ function formatSoldHist(inv) {
   return (invNum ? 'Inv # ' + invNum : '') + (dateStr ? ' Dated ' + dateStr : '') + (inv.netTotal != null ? ' — ' + formatMoney(inv.netTotal) : '');
 }
 
-export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify }) {
+export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onOpenPayment }) {
   const theme = useTheme();
   const [selectedDate, setSelectedDate] = useState(today);
   const [currentInvoice, setCurrentInvoice] = useState(null);
@@ -471,6 +471,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify }) {
                 saveLoading={saveLoading}
                 onPrint={handlePrint}
                 onExit={onExit}
+                onConfirmPayment={onOpenPayment ? () => onOpenPayment(currentInvoice, prevBalance, setCurrentInvoice) : undefined}
                 onInvoiceDateChange={(v) => updateLocalInvoice({ invoiceDate: v })}
                 onInvoiceTimeChange={(v) => updateLocalInvoice({ invoiceTime: v })}
                 onDeliveryModeChange={(v) => updateLocalInvoice({ deliveryModeId: v })}

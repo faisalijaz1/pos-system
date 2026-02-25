@@ -8,8 +8,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
- * Request body for updating an existing sales invoice (header, billing, print options).
- * Used by Sales History tab for Edit/Modify.
+ * Request body for updating an existing sales invoice (header, billing, print options, payment).
+ * Used by Sales History tab for Edit/Modify and for Confirm payment (amount received / change).
  */
 @Data
 public class UpdateInvoiceRequest {
@@ -31,4 +31,12 @@ public class UpdateInvoiceRequest {
     private LocalDate billingDate;
     private String billingPacking;
     private String billingAdda;
+
+    /** Amount received from customer (for Confirm payment from Sales History). */
+    @DecimalMin(value = "0", message = "Amount received must be non-negative")
+    private BigDecimal amountReceived;
+
+    /** Change returned to customer (for Confirm payment). */
+    @DecimalMin(value = "0", message = "Change returned must be non-negative")
+    private BigDecimal changeReturned;
 }

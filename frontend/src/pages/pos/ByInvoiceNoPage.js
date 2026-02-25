@@ -59,7 +59,7 @@ function recalcLineTotals(items) {
   }));
 }
 
-export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify }) {
+export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify, onOpenPaymentBeforeCreate }) {
   const [invoiceNoInput, setInvoiceNoInput] = useState('');
   const [historicalInvoice, setHistoricalInvoice] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -302,13 +302,15 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify }) {
   }, []);
 
   const buildCreateBody = useCallback(
-    (saveAsDraft) => {
+    (saveAsDraft, paymentOverrides) => {
       const items = replicationItems.map((it) => ({
         productId: it.productId,
         quantity: it.quantity,
         unitPrice: it.unitPrice,
         uomId: it.uomId || undefined,
       }));
+      const amt = paymentOverrides && paymentOverrides.amountReceived != null ? Number(paymentOverrides.amountReceived) : (Number(amountReceived) || 0);
+      const ch = paymentOverrides && paymentOverrides.changeReturned != null ? Number(paymentOverrides.changeReturned) : 0;
       return {
         invoiceNumber: newInvoiceNumber,
         customerId: isCashCustomer ? null : customerIdForCreate,
@@ -320,8 +322,8 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify }) {
         items,
         additionalDiscount: Number(additionalDiscount) || 0,
         additionalExpenses: Number(additionalExpenses) || 0,
-        amountReceived: Number(amountReceived) || 0,
-        changeReturned: 0,
+        amountReceived: amt,
+        changeReturned: ch,
         saveAsDraft: !!saveAsDraft,
         printWithoutHeader: !!printWithoutHeader,
         printWithoutBalance: !!printWithoutBalance,
@@ -358,6 +360,43 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify }) {
       else setSuccessMsg(msg);
       return;
     }
+    if (onOpenPaymentBeforeCreate) {
+      const received = Number(amountReceived) || 0;
+      const changeVal = Math.max(0, received - netTotal);
+      onOpenPaymentBeforeCreate({
+        netTotal,
+        grandTotal,
+        additionalDiscount: Number(additionalDiscount) || 0,
+        additionalExpenses: Number(additionalExpenses) || 0,
+        prevBalance: customerPrevBalance,
+        isCreditCustomer: !isCashCustomer,
+        items: replicationItems.map((it) => ({ label: (it.productName || it.productCode) + ' x' + it.quantity, amount: it.lineTotal })),
+        printWithoutHeader: !!printWithoutHeader,
+        printWithoutBalance: !!printWithoutBalance,
+        executeCreate: (amountReceivedVal, changeReturnedVal) => {
+          setCreateLoading(true);
+          setSuccessMsg(null);
+          return invoicesApi
+            .create(buildCreateBody(false, { amountReceived: amountReceivedVal, changeReturned: changeReturnedVal }))
+            .then((res) => {
+              const msg = `Order created: ${res.data?.invoiceNumber || newInvoiceNumber}`;
+              if (onNotify) onNotify(msg, 'success');
+              else setSuccessMsg(msg);
+              if (onCreated) onCreated(res.data);
+              setNewInvoiceNumber(generateInvoiceNumber());
+              return res.data;
+            })
+            .catch((err) => {
+              const msg = err.response?.data?.message || 'Create failed.';
+              if (onNotify) onNotify(msg, 'error');
+              else setSuccessMsg(msg);
+              throw err;
+            })
+            .finally(() => setCreateLoading(false));
+        },
+      });
+      return;
+    }
     setCreateLoading(true);
     setSuccessMsg(null);
     invoicesApi
@@ -375,7 +414,7 @@ export default function ByInvoiceNoPage({ onCreated, onEnd, onNotify }) {
         else setSuccessMsg(msg);
       })
       .finally(() => setCreateLoading(false));
-  }, [replicationItems.length, buildCreateBody, newInvoiceNumber, onCreated, onNotify]);
+  }, [replicationItems.length, replicationItems, buildCreateBody, newInvoiceNumber, onCreated, onNotify, onOpenPaymentBeforeCreate, netTotal, grandTotal, additionalDiscount, additionalExpenses, customerPrevBalance, isCashCustomer, amountReceived, printWithoutHeader, printWithoutBalance]);
 
   const handleSaveDraft = useCallback(() => {
     if (replicationItems.length === 0) {
