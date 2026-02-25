@@ -11,6 +11,7 @@ const DEFAULT_BUSINESS = {
 
 const PRINT_STYLES = `
   @media print { body { -webkit-print-color-adjust: exact; } }
+  @media print { .no-print { display: none !important; } }
   body { font-family: 'Segoe UI', system-ui, Arial, sans-serif; padding: 16px; font-size: 12px; color: #000; background: #fff; }
   .print-header { text-align: center; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #333; }
   .print-header .business-name { font-size: 18px; font-weight: 700; margin: 0 0 4px 0; }
@@ -22,6 +23,8 @@ const PRINT_STYLES = `
   .report-table th { background: #e0e0e0; font-weight: 600; }
   .report-table .num { text-align: right; }
   .report-footer { margin-top: 12px; padding-top: 8px; border-top: 1px solid #333; font-weight: 700; }
+  .toolbar { margin-bottom: 12px; padding: 8px; background: #f5f5f5; border: 1px solid #ddd; display: flex; gap: 8px; align-items: center; }
+  .toolbar button { padding: 6px 14px; cursor: pointer; font-size: 13px; }
 `;
 
 function escapeHtml(s) {
@@ -34,7 +37,7 @@ function escapeHtml(s) {
 }
 
 export function buildLedgerPrintHtml(opts) {
-  const { account, fromDate, toDate, entries = [], totalDr, totalCr, closingBalance, closingBalanceType } = opts;
+  const { account, fromDate, toDate, entries = [], totalDr, totalCr, closingBalance, closingBalanceType, showToolbar } = opts;
   const biz = { ...DEFAULT_BUSINESS, ...(opts.business || {}) };
   const fromStr = fromDate ? formatLedgerDate(fromDate) : '—';
   const toStr = toDate ? formatLedgerDate(toDate) : '—';
@@ -58,6 +61,22 @@ export function buildLedgerPrintHtml(opts) {
 
   const balanceStr = closingBalance != null ? `${formatMoney(closingBalance)} ${closingBalanceType || 'Dr'}` : '—';
 
+  const toolbarHtml = showToolbar
+    ? `<div class="toolbar no-print">
+        <button type="button" id="ledger-print-btn">Print</button>
+        <button type="button" id="ledger-close-btn">Close</button>
+      </div>`
+    : '';
+
+  const printScript = showToolbar
+    ? `<script>
+        window.onload = function() {
+          document.getElementById('ledger-print-btn').onclick = function() { window.print(); };
+          document.getElementById('ledger-close-btn').onclick = function() { window.close(); };
+        };
+      </script>`
+    : '<script>window.onload = function() { window.print(); }</script>';
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,6 +85,7 @@ export function buildLedgerPrintHtml(opts) {
   <style>${PRINT_STYLES}</style>
 </head>
 <body>
+  ${toolbarHtml}
   <div class="print-header">
     <div class="business-name">${escapeHtml(biz.name)}</div>
     <div class="business-address">${escapeHtml(biz.address)}</div>
@@ -92,7 +112,7 @@ export function buildLedgerPrintHtml(opts) {
   <div class="report-footer">
     Total Dr: ${formatMoney(totalDr)} &nbsp; Total Cr: ${formatMoney(totalCr)} &nbsp; Balance: ${balanceStr}
   </div>
-  <script>window.onload = function() { window.print(); }</script>
+  ${printScript}
 </body>
 </html>`;
 

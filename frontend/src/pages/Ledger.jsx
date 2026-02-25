@@ -117,6 +117,7 @@ export default function Ledger() {
           totalCr: data.totalCr,
           closingBalance: data.closingBalance,
           closingBalanceType: data.closingBalanceType,
+          showToolbar: true,
         });
         openLedgerPrintPreview(html);
       })
@@ -239,7 +240,7 @@ export default function Ledger() {
 
           {report && (
             <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
-              <Button variant="outlined" startIcon={<OpenInNewIcon />} onClick={() => window.open(window.location.href, '_blank')}>
+              <Button variant="outlined" startIcon={<OpenInNewIcon />} onClick={handleReport} disabled={!selectedAccount}>
                 Windows
               </Button>
               <Button variant="outlined" startIcon={<GetAppIcon />} onClick={handleExport} disabled={!report?.entries?.length}>
