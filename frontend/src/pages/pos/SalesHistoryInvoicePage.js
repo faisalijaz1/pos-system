@@ -316,7 +316,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
       if (!editMode) return;
       if (e.ctrlKey && e.key === 's') {
         e.preventDefault();
-        setPreviewAmountReceived(currentInvoice?.amountReceived ?? '');
+        setPreviewAmountReceived(currentInvoice?.amountReceived != null ? String(currentInvoice.amountReceived) : '');
         setPreviewOpen(true);
       }
       if (e.key === 'Escape') {
@@ -581,7 +581,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
                 editMode={editMode}
                 onEnterEdit={handleEnterEdit}
                 onSaveChanges={() => {
-                  setPreviewAmountReceived(currentInvoice?.amountReceived ?? '');
+                  setPreviewAmountReceived(currentInvoice?.amountReceived != null ? String(currentInvoice.amountReceived) : '');
                   setPreviewOpen(true);
                 }}
                 onCancelEdit={handleCancelEdit}

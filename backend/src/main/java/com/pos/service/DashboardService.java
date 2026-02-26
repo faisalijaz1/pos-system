@@ -81,27 +81,49 @@ public class DashboardService {
     public MonthToDateDto getMonthToDate(LocalDate fromDate, LocalDate toDate) {
         try {
             LocalDate today = LocalDate.now();
-            LocalDate fromDay = (fromDate != null && toDate != null) ? fromDate : today.withDayOfMonth(1);
-            LocalDate toDay = (fromDate != null && toDate != null) ? toDate : today;
-            LocalDateTime from = fromDay.atStartOfDay();
-            LocalDateTime to = toDay.atTime(LocalTime.MAX);
-            Object[] row = dashboardRepository.monthToDateSales(from, to);
+
+            LocalDate fromDay = (fromDate != null && toDate != null)
+                    ? fromDate
+                    : today.withDayOfMonth(1);
+
+            LocalDate toDay = (fromDate != null && toDate != null)
+                    ? toDate
+                    : today;
+
+            String fromStr = fromDay.toString();
+            String toStr   = toDay.toString();
+
+            Object[] row = dashboardRepository.monthToDateSales(fromStr, toStr);
+
             if (row == null || row.length < 2) {
-                return MonthToDateDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).fromDate(fromDay).toDate(toDay).build();
+                return MonthToDateDto.builder()
+                        .totalSales(BigDecimal.ZERO)
+                        .invoiceCount(0L)
+                        .fromDate(fromDay)
+                        .toDate(toDay)
+                        .build();
             }
+
             BigDecimal total = toBigDecimal(row[0]);
             Long count = toLong(row[1]);
+
             return MonthToDateDto.builder()
                     .totalSales(total)
                     .invoiceCount(count)
                     .fromDate(fromDay)
                     .toDate(toDay)
                     .build();
+
         } catch (Exception e) {
             log.warn("Dashboard getMonthToDate failed", e);
             LocalDate today = LocalDate.now();
             LocalDate from = today.withDayOfMonth(1);
-            return MonthToDateDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).fromDate(from).toDate(today).build();
+            return MonthToDateDto.builder()
+                    .totalSales(BigDecimal.ZERO)
+                    .invoiceCount(0L)
+                    .fromDate(from)
+                    .toDate(today)
+                    .build();
         }
     }
 

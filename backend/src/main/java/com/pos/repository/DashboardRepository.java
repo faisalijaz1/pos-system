@@ -24,8 +24,14 @@ public interface DashboardRepository extends JpaRepository<SalesInvoice, Integer
 		       "WHERE s.invoiceDate >= :from AND s.invoiceDate <= :to")
 		Object[] todaySales(@Param("from") LocalDate from,
 		                     @Param("to") LocalDate to);
-    @Query("SELECT COALESCE(SUM(s.netTotal), 0), COUNT(s) FROM SalesInvoice s WHERE s.invoiceDate >= :from AND s.invoiceDate <= :to")
-    Object[] monthToDateSales(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+	@Query(value = "SELECT COALESCE(SUM(si.net_total), 0), COUNT(*) " +
+	        "FROM sales_invoices si " +
+	        "WHERE si.invoice_date >= to_date(:fromDateStr, 'YYYY-MM-DD') " +
+	        "AND si.invoice_date < to_date(:toDateStr, 'YYYY-MM-DD') + interval '1 day'",
+	        nativeQuery = true)
+	Object[] monthToDateSales(
+	        @Param("fromDateStr") String fromDateStr,
+	        @Param("toDateStr") String toDateStr);
 
     @Query(value = "SELECT " +
            "COALESCE((SELECT SUM(si2.net_total) FROM sales_invoices si2 WHERE si2.invoice_date >= to_date(:fromDateStr, 'YYYY-MM-DD') AND si2.invoice_date < to_date(:toDateStr, 'YYYY-MM-DD') + interval '1 day'), 0) AS revenue, " +

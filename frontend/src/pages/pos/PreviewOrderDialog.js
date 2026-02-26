@@ -41,7 +41,6 @@ export default function PreviewOrderDialog({
   confirmLoading = false,
   onAmountReceivedChange,
 }) {
-  const received = Number(amountReceived) || 0;
   const isAmountEditable = typeof onAmountReceivedChange === 'function';
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -53,7 +52,7 @@ export default function PreviewOrderDialog({
               Invoice: <strong>{invoiceNumber}</strong>
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Customer: {isCashCustomer ? 'Cash' : (customerName || '—')}
+              Customer: {(customerName && String(customerName).trim()) ? customerName : (isCashCustomer ? 'Cash' : '—')}
             </Typography>
           </Box>
           <TableContainer sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}>

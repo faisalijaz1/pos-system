@@ -64,9 +64,11 @@ class DashboardServiceTest {
     void getMonthToDate_returnsDtoFromRepository() {
         LocalDate fromDay = LocalDate.now().withDayOfMonth(1);
         LocalDate toDay = LocalDate.now();
-        LocalDateTime from = fromDay.atStartOfDay();
-        LocalDateTime to = toDay.atTime(LocalTime.MAX);
-        when(dashboardRepository.monthToDateSales(eq(from), eq(to)))
+
+        String fromStr = fromDay.toString();
+        String toStr   = toDay.toString();
+
+        when(dashboardRepository.monthToDateSales(eq(fromStr), eq(toStr)))
                 .thenReturn(new Object[]{ new BigDecimal("120000.00"), 42L });
 
         MonthToDateDto result = dashboardService.getMonthToDate(fromDay, toDay);
