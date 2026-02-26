@@ -42,6 +42,10 @@ export default function PreviewOrderDialog({
   onAmountReceivedChange,
 }) {
   const isAmountEditable = typeof onAmountReceivedChange === 'function';
+  const received = Number(amountReceived) || 0;
+  const net = Number(netTotal) || 0;
+  const changeToReturn = Math.max(0, received - net);
+  const balanceDueThisBill = Math.max(0, net - received);
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Preview Order</DialogTitle>
@@ -97,6 +101,16 @@ export default function PreviewOrderDialog({
               />
             ) : (
               <Typography variant="body2">Amt Received: {formatMoney(amountReceived)}</Typography>
+            )}
+            {isAmountEditable && received > 0 && (
+              <>
+                {changeToReturn > 0 && (
+                  <Typography variant="body2" fontWeight={600}>Change: {formatMoney(changeToReturn)}</Typography>
+                )}
+                {balanceDueThisBill > 0 && (
+                  <Typography variant="body2" fontWeight={600} color="warning.main">Balance due (this bill): {formatMoney(balanceDueThisBill)}</Typography>
+                )}
+              </>
             )}
           </Box>
           {(billingNo || billingDate || packing || adda) && (

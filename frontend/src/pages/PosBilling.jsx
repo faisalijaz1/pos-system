@@ -129,7 +129,9 @@ export default function PosBilling() {
   const grandTotal = cart.reduce((s, r) => s + Number(r.lineTotal || 0), 0);
   const netTotal = Math.max(0, grandTotal - Number(additionalDiscount) + Number(additionalExpenses));
   const amtReceived = Number(amountReceived) || 0;
-  const change = Math.max(0, amtReceived - netTotal);
+  const changeToReturn = Math.max(0, amtReceived - netTotal);
+  const balanceDueThisBill = Math.max(0, netTotal - amtReceived);
+  const change = changeToReturn;
   const noOfTitles = cart.length;
   const totalQuantity = cart.reduce((s, r) => s + Number(r.quantity || 0), 0);
   const prevBalance = selectedCustomer?.currentBalance != null ? Number(selectedCustomer.currentBalance) : 0;
@@ -838,11 +840,20 @@ export default function PosBilling() {
             autoFocus
           />
           {amtReceived > 0 && (
-            <Typography variant="body1" fontWeight={600} sx={{ mt: 1 }}>Change: {formatMoney(change)}</Typography>
+            <>
+              {changeToReturn > 0 && (
+                <Typography variant="body1" fontWeight={600} sx={{ mt: 1 }}>Change: {formatMoney(changeToReturn)}</Typography>
+              )}
+              {balanceDueThisBill > 0 && (
+                <Typography variant="body1" fontWeight={600} sx={{ mt: 1 }} color="warning.main">Balance due (this bill): {formatMoney(balanceDueThisBill)}</Typography>
+              )}
+            </>
           )}
           <Box sx={{ mt: 2, p: 1.5, bgcolor: 'grey.100', borderRadius: 1, fontFamily: 'monospace', fontSize: '0.75rem', whiteSpace: 'pre-wrap' }}>
             <Typography variant="caption" fontWeight={600}>Receipt preview</Typography>
-            <pre style={{ margin: '4px 0 0', overflow: 'auto', maxHeight: 120 }}>{receiptPreviewLines + '\n\nNet: ' + formatMoney(netTotal) + '  Received: ' + formatMoney(amtReceived) + '  Change: ' + formatMoney(change)}</pre>
+            <pre style={{ margin: '4px 0 0', overflow: 'auto', maxHeight: 120 }}>
+              {receiptPreviewLines + '\n\nNet: ' + formatMoney(netTotal) + '  Received: ' + formatMoney(amtReceived) + (changeToReturn > 0 ? '  Change: ' + formatMoney(changeToReturn) : balanceDueThisBill > 0 ? '  Balance due: ' + formatMoney(balanceDueThisBill) : '')}
+            </pre>
           </Box>
           <FormControlLabel
             control={<Checkbox checked={printReceiptAfterSave} onChange={(e) => setPrintReceiptAfterSave(e.target.checked)} />}

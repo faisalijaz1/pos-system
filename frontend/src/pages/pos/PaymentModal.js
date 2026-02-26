@@ -40,8 +40,11 @@ export default function PaymentModal({
   isCreditCustomer = false,
 }) {
   const received = Number(amountReceived) || 0;
-  const changeAmt = change != null ? Number(change) : Math.max(0, received - (Number(netTotal) || 0));
-  const balanceDue = isCreditCustomer ? Math.max(0, prevBalance + (Number(netTotal) || 0) - received) : 0;
+  const net = Number(netTotal) || 0;
+  const changeToReturn = Math.max(0, received - net);
+  const balanceDueThisBill = Math.max(0, net - received);
+  const changeAmt = change != null ? Number(change) : changeToReturn;
+  const balanceDue = isCreditCustomer ? Math.max(0, prevBalance + net - received) : 0;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -61,9 +64,18 @@ export default function PaymentModal({
           inputProps={{ min: 0, step: 0.01 }}
         />
         {received > 0 && (
-          <Typography variant="body1" fontWeight={600} sx={{ mt: 1 }}>
-            Change: {formatMoney(changeAmt)}
-          </Typography>
+          <>
+            {changeToReturn > 0 && (
+              <Typography variant="body1" fontWeight={600} sx={{ mt: 1 }}>
+                Change: {formatMoney(changeAmt)}
+              </Typography>
+            )}
+            {balanceDueThisBill > 0 && (
+              <Typography variant="body1" fontWeight={600} sx={{ mt: 1 }} color="warning.main">
+                Balance due (this bill): {formatMoney(balanceDueThisBill)}
+              </Typography>
+            )}
+          </>
         )}
 
         <Box
@@ -135,10 +147,16 @@ export default function PaymentModal({
               <span>Received</span>
               <span>{formatMoney(received)}</span>
             </Box>
-            {received > 0 && (
+            {changeToReturn > 0 && (
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Change</span>
                 <span>{formatMoney(changeAmt)}</span>
+              </Box>
+            )}
+            {balanceDueThisBill > 0 && received > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+                <span>Balance due (this bill)</span>
+                <span>{formatMoney(balanceDueThisBill)}</span>
               </Box>
             )}
             {isCreditCustomer && balanceDue > 0 && (
