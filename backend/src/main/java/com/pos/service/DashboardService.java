@@ -30,7 +30,7 @@ public class DashboardService {
     public TodaySalesDto getTodaySales(LocalDate date) {
         try {
             LocalDate today = date != null ? date : LocalDate.now();
-            Object[] row = dashboardRepository.todaySales(today);
+            Object[] row = dashboardRepository.todaySales(today, today);
         if (row == null || row.length < 2) {
             return TodaySalesDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).build();
         }
