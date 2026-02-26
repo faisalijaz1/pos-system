@@ -27,9 +27,9 @@ public class DashboardService {
     private final DashboardRepository dashboardRepository;
 
     @Transactional(readOnly = true)
-    public TodaySalesDto getTodaySales() {
+    public TodaySalesDto getTodaySales(LocalDate date) {
         try {
-            LocalDate today = LocalDate.now();
+            LocalDate today = date != null ? date : LocalDate.now();
             Object[] row = dashboardRepository.todaySales(today);
         if (row == null || row.length < 2) {
             return TodaySalesDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).build();
@@ -47,9 +47,9 @@ public class DashboardService {
     }
 
     @Transactional(readOnly = true)
-    public MonthToDateDto getMonthToDate() {
+    public MonthToDateDto getMonthToDate(LocalDate date) {
         try {
-            LocalDate today = LocalDate.now();
+            LocalDate today = date != null ? date : LocalDate.now();
             LocalDate from = today.withDayOfMonth(1);
             Object[] row = dashboardRepository.monthToDateSales(from, today);
             if (row == null || row.length < 2) {

@@ -64,6 +64,14 @@ function formatMoney(n) {
   }).format(Number(n));
 }
 
+/** YYYY-MM-DD in local calendar (avoids UTC shift from toISOString). */
+function toLocalDateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export default function Dashboard() {
   const [today, setToday] = useState(null);
   const [mtd, setMtd] = useState(null);
@@ -77,20 +85,19 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const theme = useTheme();
 
-  const from = new Date();
-  from.setDate(1);
-  const fromStr = from.toISOString().slice(0, 10);
-  const toStr = new Date().toISOString().slice(0, 10);
-
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       setError(null);
+      const now = new Date();
+      const todayStr = toLocalDateStr(now);
+      const fromStr = toLocalDateStr(new Date(now.getFullYear(), now.getMonth(), 1));
+      const toStr = todayStr;
       try {
         const [todayRes, mtdRes, profitRes, trendRes, bestRes, topRes, alertsRes, cashRes] =
           await Promise.all([
-            dashboardApi.todaySales(),
-            dashboardApi.monthToDate(),
+            dashboardApi.todaySales(todayStr),
+            dashboardApi.monthToDate(todayStr),
             dashboardApi.profit(fromStr, toStr),
             dashboardApi.salesTrend(fromStr, toStr),
             dashboardApi.bestSellingProducts(fromStr, toStr, 5),

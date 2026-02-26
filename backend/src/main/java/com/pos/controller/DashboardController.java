@@ -20,14 +20,18 @@ public class DashboardController {
 
     @GetMapping("/today-sales")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<TodaySalesDto> todaySales() {
-        return ResponseEntity.ok(dashboardService.getTodaySales());
+    public ResponseEntity<TodaySalesDto> todaySales(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return ResponseEntity.ok(dashboardService.getTodaySales(date));
     }
 
     @GetMapping("/month-to-date")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<MonthToDateDto> monthToDate() {
-        return ResponseEntity.ok(dashboardService.getMonthToDate());
+    public ResponseEntity<MonthToDateDto> monthToDate(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return ResponseEntity.ok(dashboardService.getMonthToDate(date));
     }
 
     @GetMapping("/profit")

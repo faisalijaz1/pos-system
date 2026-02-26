@@ -8,8 +8,10 @@ const params = (fromDate, toDate) => {
 };
 
 export const dashboardApi = {
-  todaySales: () => axiosInstance.get('/v1/dashboard/today-sales'),
-  monthToDate: () => axiosInstance.get('/v1/dashboard/month-to-date'),
+  todaySales: (date) =>
+    axiosInstance.get('/v1/dashboard/today-sales', { params: date ? { date } : {} }),
+  monthToDate: (date) =>
+    axiosInstance.get('/v1/dashboard/month-to-date', { params: date ? { date } : {} }),
   profit: (fromDate, toDate) => axiosInstance.get('/v1/dashboard/profit', { params: params(fromDate, toDate) }),
   bestSellingProducts: (fromDate, toDate, limit = 10) =>
     axiosInstance.get('/v1/dashboard/best-selling-products', { params: { ...params(fromDate, toDate), limit } }),
