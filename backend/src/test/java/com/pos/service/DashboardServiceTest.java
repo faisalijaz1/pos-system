@@ -37,8 +37,9 @@ class DashboardServiceTest {
     @Test
     void getTodaySales_returnsDtoFromRepository() {
         LocalDate today = LocalDate.now();
-        LocalDateTime from = today.atStartOfDay();
-        LocalDateTime to = today.atTime(LocalTime.MAX);
+        LocalDate from = today;
+        LocalDate to = today;
+
         when(dashboardRepository.todaySales(eq(from), eq(to)))
                 .thenReturn(new Object[]{ new BigDecimal("15000.00"), 5L });
 
@@ -50,7 +51,8 @@ class DashboardServiceTest {
 
     @Test
     void getTodaySales_handlesNullSums() {
-        when(dashboardRepository.todaySales(any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(new Object[]{ null, null });
+        when(dashboardRepository.todaySales(any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(new Object[]{ null, null });
 
         TodaySalesDto result = dashboardService.getTodaySales(LocalDate.now(), LocalDate.now());
 
