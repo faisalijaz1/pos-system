@@ -39,8 +39,10 @@ class DashboardServiceTest {
         LocalDate today = LocalDate.now();
         LocalDate from = today;
         LocalDate to = today;
+        String fromStr = from.toString();
+        String toStr = to.toString();
 
-        when(dashboardRepository.todaySales(eq(from), eq(to)))
+        when(dashboardRepository.todaySalesByDateStr(eq(fromStr), eq(toStr)))
                 .thenReturn(new Object[]{ new BigDecimal("15000.00"), 5L });
 
         TodaySalesDto result = dashboardService.getTodaySales(today, today);
@@ -51,7 +53,7 @@ class DashboardServiceTest {
 
     @Test
     void getTodaySales_handlesNullSums() {
-        when(dashboardRepository.todaySales(any(LocalDate.class), any(LocalDate.class)))
+        when(dashboardRepository.todaySalesByDateStr(any(String.class), any(String.class)))
                 .thenReturn(new Object[]{ null, null });
 
         TodaySalesDto result = dashboardService.getTodaySales(LocalDate.now(), LocalDate.now());

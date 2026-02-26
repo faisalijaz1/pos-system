@@ -58,11 +58,13 @@ public class DashboardService {
             LocalDate today = LocalDate.now();
             LocalDate from = (fromDate != null && toDate != null) ? fromDate : today;
             LocalDate to = (fromDate != null && toDate != null) ? toDate : today;
+            String fromStr = from.toString();
+            String toStr = to.toString();
             
-            log.info("Processed dates - from: {}, to: {}", from, to);
-            log.info("Calling repository method: dashboardRepository.todaySales with params: from={}, to={}", from, to);
+            log.info("Processed dates - from: {}, to: {} -> fromStr: {}, toStr: {}", from, to, fromStr, toStr);
+            log.info("Calling repository method: dashboardRepository.todaySalesByDateStr with params: fromStr={}, toStr={}", fromStr, toStr);
 
-            Object[] row = dashboardRepository.todaySales(from, to);
+            Object[] row = dashboardRepository.todaySalesByDateStr(fromStr, toStr);
             
             log.info("Query executed successfully");
             log.info("Result row: {}, length: {}", row != null ? Arrays.toString(row) : "null", 
