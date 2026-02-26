@@ -52,7 +52,13 @@ public class DashboardService {
             LocalDate from = (fromDate != null && toDate != null) ? fromDate : today;
             LocalDate to = (fromDate != null && toDate != null) ? toDate : today;
             Object[] row = dashboardRepository.todaySales(from, to);
+            if (row != null && row.length >= 2) {
+                log.info("Dashboard todaySales from={} to={} total={} count={}", from, to, row[0], row[1]);
+            } else {
+                log.warn("Dashboard todaySales from={} to={} row null or length={}", from, to, row == null ? 0 : row.length);
+            }
         if (row == null || row.length < 2) {
+            log.warn("Dashboard todaySales returning zero: row null or length < 2");
             return TodaySalesDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).build();
         }
         BigDecimal total = toBigDecimal(row[0]);
@@ -74,7 +80,10 @@ public class DashboardService {
             LocalDate from = (fromDate != null && toDate != null) ? fromDate : today.withDayOfMonth(1);
             LocalDate to = (fromDate != null && toDate != null) ? toDate : today;
             Object[] row = dashboardRepository.monthToDateSales(from, to);
+            log.info("Dashboard monthToDate from={} to={} rowLen={} total={} count={}",
+                    from, to, row == null ? 0 : row.length, row != null && row.length > 0 ? row[0] : "n/a", row != null && row.length > 1 ? row[1] : "n/a");
             if (row == null || row.length < 2) {
+                log.warn("Dashboard monthToDate returning zero: row null or length < 2");
                 return MonthToDateDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).fromDate(from).toDate(to).build();
             }
             BigDecimal total = toBigDecimal(row[0]);

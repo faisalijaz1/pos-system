@@ -50,3 +50,12 @@ psql -h localhost -p 15432 -U pos_user -d pos_db -f database/03_seed_products.sq
 - Ledger balances are derived from `ledger_entries`; `accounts.current_balance` can be updated by application logic for display performance.
 - Running balance for reports: use view `v_ledger_running_balance` or compute in API.
 - All monetary columns use `NUMERIC(18,2)`; PKR assumed.
+
+## Dashboard shows 0 but direct SQL returns rows
+
+If the dashboard API returns zeros but running the queries in `dashboard_queries_for_test.sql` returns data:
+
+1. **Same database?** The app uses `DATABASE_URL` (e.g. on Railway: Variables). It must point to the **same** PostgreSQL instance where you ran the test SQL. If the app uses a different instance (e.g. empty DB), it will see no rows.
+2. **Check logs after deploy.** Look for:
+   - `Dashboard todaySales from=... to=... total=4700 count=3` → repo returned data.
+   - `Dashboard todaySales row null or length=0` → repo returned nothing; app DB has no data for that range. Point `DATABASE_URL` to the DB with your sales data.
