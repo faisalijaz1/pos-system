@@ -17,9 +17,9 @@ public interface StockTransactionRepository extends JpaRepository<StockTransacti
 
     @Query(value = "SELECT DISTINCT st FROM StockTransaction st " +
            "LEFT JOIN st.items it " +
-           "WHERE (:fromDate IS NULL OR st.transactionDate >= :fromDate) " +
-           "AND (:toDate IS NULL OR st.transactionDate <= :toDate) " +
-           "AND (:productId IS NULL OR it.product.productId = :productId)")
+           "WHERE st.transactionDate >= :fromDate " +
+           "AND st.transactionDate <= :toDate " +
+           "AND (:productId < 0 OR it.product.productId = :productId)")
     Page<StockTransaction> findByDateRangeAndProduct(
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate,

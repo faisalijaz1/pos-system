@@ -26,6 +26,8 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -65,6 +67,7 @@ export default function Stock() {
   const [productSearchDebounce, setProductSearchDebounce] = useState('');
   const [uomList, setUomList] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
   const loadMovements = useCallback(() => {
     setLoading(true);
@@ -138,7 +141,7 @@ export default function Stock() {
         uomId: it.uomId ? Number(it.uomId) : null,
       }));
     if (items.length === 0) {
-      alert('Add at least one item with product and quantity.');
+      setSnackbar({ open: true, message: 'Add at least one item with product and quantity.', severity: 'warning' });
       return;
     }
     setSubmitting(true);
@@ -152,8 +155,9 @@ export default function Stock() {
       setInForm({ transactionDate: today, description: '', items: [{ productId: null, productLabel: '', quantity: '', priceAtTransaction: '', uomId: '' }] });
       loadMovements();
       loadLowStock();
+      setSnackbar({ open: true, message: 'Stock In saved successfully.', severity: 'success' });
     } catch (err) {
-      alert(err.response?.data?.message || 'Stock in failed');
+      setSnackbar({ open: true, message: err.response?.data?.message || 'Stock In failed.', severity: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -168,7 +172,7 @@ export default function Stock() {
         uomId: it.uomId ? Number(it.uomId) : null,
       }));
     if (items.length === 0) {
-      alert('Add at least one item with product and quantity.');
+      setSnackbar({ open: true, message: 'Add at least one item with product and quantity.', severity: 'warning' });
       return;
     }
     setSubmitting(true);
@@ -182,8 +186,9 @@ export default function Stock() {
       setOutForm({ transactionDate: today, description: '', items: [{ productId: null, productLabel: '', quantity: '', uomId: '' }] });
       loadMovements();
       loadLowStock();
+      setSnackbar({ open: true, message: 'Stock Out saved successfully.', severity: 'success' });
     } catch (err) {
-      alert(err.response?.data?.message || 'Stock out failed');
+      setSnackbar({ open: true, message: err.response?.data?.message || 'Stock Out failed.', severity: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -372,6 +377,16 @@ export default function Stock() {
           <Button variant="contained" color="secondary" onClick={submitOut} disabled={submitting}>{submitting ? 'Saving…' : 'Save'}</Button>
         </DialogActions>
       </Dialog>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar((s) => ({ ...s, open: false }))} variant="filled">
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

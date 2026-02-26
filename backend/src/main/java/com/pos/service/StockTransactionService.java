@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -117,7 +118,10 @@ public class StockTransactionService {
 
     @Transactional(readOnly = true)
     public Page<StockMovementResponse> getMovements(java.time.LocalDate fromDate, java.time.LocalDate toDate, Integer productId, Pageable pageable) {
-        Page<StockTransaction> page = stockTransactionRepository.findByDateRangeAndProduct(fromDate, toDate, productId, pageable);
+        LocalDate from = fromDate != null ? fromDate : LocalDate.of(1900, 1, 1);
+        LocalDate to = toDate != null ? toDate : LocalDate.of(2100, 12, 31);
+        Integer pid = productId != null ? productId : -1;
+        Page<StockTransaction> page = stockTransactionRepository.findByDateRangeAndProduct(from, to, pid, pageable);
         return page.map(this::toResponse);
     }
 

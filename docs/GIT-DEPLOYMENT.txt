@@ -1,0 +1,33 @@
+PCS   10
+dozen  110
+Guruz   1100
+KG   400
+REAm   200
+Packet  450
+roll    150
+
+
+
+faisal@DESKTOP-CCUR0JC MINGW64 /d/POS (main)
+$ git add -A
+
+faisal@DESKTOP-CCUR0JC MINGW64 /d/POS (main)
+$ git commit -m "ui design NY INVOICE NO  FIX"
+[main 95831ea] ui design NY INVOICE NO  FIX
+ 6 files changed, 97 insertions(+), 19 deletions(-)
+
+faisal@DESKTOP-CCUR0JC MINGW64 /d/POS (main)
+$ git push origin main
+
+
+
+
+git checkout 9e7250f -- .
+
+
+
+We are migrating a real production desktop POS system to a web-based POS, and the print template must fully match or exceed the existing desktop invoice design.
+
+Nothing must be less capable, less informative, or less professional than the attached desktop print template.
+
+Improvements are allowed — degradation is NOT.
