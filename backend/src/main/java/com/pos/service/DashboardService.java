@@ -48,6 +48,17 @@ public class DashboardService {
         return 0L;
     }
 
+    /**
+     * Unwrap single-row native query result.
+     * Some JPA/driver combinations return Object[] of length 1 where the element is the row (another Object[]).
+     */
+    private static Object[] unwrapSingleRow(Object[] row) {
+        if (row == null) return null;
+        if (row.length >= 2) return row;
+        if (row.length == 1 && row[0] instanceof Object[]) return (Object[]) row[0];
+        return row;
+    }
+
     @Transactional(readOnly = true)
     public TodaySalesDto getTodaySales(LocalDate fromDate, LocalDate toDate) {
         String methodName = "getTodaySales";
@@ -65,6 +76,7 @@ public class DashboardService {
             log.info("Calling repository method: dashboardRepository.todaySalesByDateStr with params: fromStr={}, toStr={}", fromStr, toStr);
 
             Object[] row = dashboardRepository.todaySalesByDateStr(fromStr, toStr);
+            row = unwrapSingleRow(row);
             
             log.info("Query executed successfully");
             log.info("Result row: {}, length: {}", row != null ? Arrays.toString(row) : "null", 
@@ -121,6 +133,7 @@ public class DashboardService {
             log.info("Calling repository method: dashboardRepository.monthToDateSales with params: fromStr={}, toStr={}", fromStr, toStr);
 
             Object[] row = dashboardRepository.monthToDateSales(fromStr, toStr);
+            row = unwrapSingleRow(row);
             
             log.info("Query executed successfully");
             log.info("Result row: {}, length: {}", row != null ? Arrays.toString(row) : "null", 
@@ -170,6 +183,7 @@ public class DashboardService {
             log.info("Calling repository method: dashboardRepository.profitAggregate with params: fromStr={}, toStr={}", fromStr, toStr);
             
             Object[] row = dashboardRepository.profitAggregate(fromStr, toStr);
+            row = unwrapSingleRow(row);
             
             log.info("Query executed successfully");
             log.info("Result row: {}, length: {}", row != null ? Arrays.toString(row) : "null", 
@@ -385,6 +399,7 @@ public class DashboardService {
             log.info("Calling repository method: dashboardRepository.cashFlowTotal with params: fromStr={}, toStr={}", fromStr, toStr);
             
             Object[] totalRow = dashboardRepository.cashFlowTotal(fromStr, toStr);
+            totalRow = unwrapSingleRow(totalRow);
             
             log.info("Cash flow total query executed successfully");
             log.info("Total result row: {}, length: {}", totalRow != null ? Arrays.toString(totalRow) : "null", 
@@ -524,6 +539,7 @@ public class DashboardService {
             log.info("Calling repository method: dashboardRepository.cashCreditRatio with params: fromStr={}, toStr={}", fromStr, toStr);
             
             Object[] row = dashboardRepository.cashCreditRatio(fromStr, toStr);
+            row = unwrapSingleRow(row);
             
             log.info("Query executed successfully");
             log.info("Result row: {}, length: {}", row != null ? Arrays.toString(row) : "null", 
