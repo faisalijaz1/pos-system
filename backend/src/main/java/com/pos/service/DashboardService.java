@@ -30,6 +30,21 @@ public class DashboardService {
         return d != null ? d.toString() : defaultVal;
     }
 
+    /** Safely map result row value to BigDecimal (Hibernate may return Long/Double/BigInteger for SUM). */
+    private static BigDecimal toBigDecimal(Object o) {
+        if (o == null) return BigDecimal.ZERO;
+        if (o instanceof BigDecimal) return (BigDecimal) o;
+        if (o instanceof Number) return BigDecimal.valueOf(((Number) o).doubleValue());
+        return BigDecimal.ZERO;
+    }
+
+    /** Safely map result row value to Long (for COUNT). */
+    private static long toLong(Object o) {
+        if (o == null) return 0L;
+        if (o instanceof Number) return ((Number) o).longValue();
+        return 0L;
+    }
+
     @Transactional(readOnly = true)
     public TodaySalesDto getTodaySales(LocalDate fromDate, LocalDate toDate) {
         try {
@@ -40,8 +55,8 @@ public class DashboardService {
         if (row == null || row.length < 2) {
             return TodaySalesDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).build();
         }
-        BigDecimal total = row[0] != null ? (BigDecimal) row[0] : BigDecimal.ZERO;
-        Long count = row[1] != null ? ((Number) row[1]).longValue() : 0L;
+        BigDecimal total = toBigDecimal(row[0]);
+        Long count = toLong(row[1]);
         return TodaySalesDto.builder()
                 .totalSales(total)
                 .invoiceCount(count)
@@ -62,8 +77,8 @@ public class DashboardService {
             if (row == null || row.length < 2) {
                 return MonthToDateDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).fromDate(from).toDate(to).build();
             }
-            BigDecimal total = row[0] != null ? (BigDecimal) row[0] : BigDecimal.ZERO;
-            Long count = row[1] != null ? ((Number) row[1]).longValue() : 0L;
+            BigDecimal total = toBigDecimal(row[0]);
+            Long count = toLong(row[1]);
             return MonthToDateDto.builder()
                     .totalSales(total)
                     .invoiceCount(count)
@@ -87,8 +102,8 @@ public class DashboardService {
             if (row == null || row.length < 2) {
                 return ProfitDto.builder().revenue(BigDecimal.ZERO).cost(BigDecimal.ZERO).profit(BigDecimal.ZERO).marginPercent(BigDecimal.ZERO).build();
             }
-            BigDecimal revenue = row[0] != null ? (BigDecimal) row[0] : BigDecimal.ZERO;
-            BigDecimal cost = row[1] != null ? (BigDecimal) row[1] : BigDecimal.ZERO;
+            BigDecimal revenue = toBigDecimal(row[0]);
+            BigDecimal cost = toBigDecimal(row[1]);
             BigDecimal profit = revenue.subtract(cost);
             BigDecimal marginPercent = revenue.compareTo(BigDecimal.ZERO) > 0
                     ? profit.multiply(BigDecimal.valueOf(100)).divide(revenue, 2, RoundingMode.HALF_UP)
@@ -115,8 +130,8 @@ public class DashboardService {
                 .productId(((Number) row[0]).intValue())
                 .productCode((String) row[1])
                 .productName((String) row[2])
-                .quantitySold(row[3] != null ? (BigDecimal) row[3] : BigDecimal.ZERO)
-                .revenue(row[4] != null ? (BigDecimal) row[4] : BigDecimal.ZERO)
+                .quantitySold(toBigDecimal(row[3]))
+                .revenue(toBigDecimal(row[4]))
                 .build()).collect(Collectors.toList());
         } catch (Exception e) {
             log.warn("Dashboard getBestSellingProducts failed", e);
@@ -133,8 +148,8 @@ public class DashboardService {
             return rows.stream().map(row -> TopCustomerDto.builder()
                     .customerId(((Number) row[0]).intValue())
                     .customerName((String) row[1])
-                    .totalSales(row[2] != null ? (BigDecimal) row[2] : BigDecimal.ZERO)
-                    .invoiceCount(row[3] != null ? ((Number) row[3]).longValue() : 0L)
+                    .totalSales(toBigDecimal(row[2]))
+                    .invoiceCount(toLong(row[3]))
                     .build()).collect(Collectors.toList());
         } catch (Exception e) {
             log.warn("Dashboard getTopCustomers failed", e);
@@ -161,8 +176,8 @@ public class DashboardService {
                 }
             }
             if (date == null) continue;
-            BigDecimal amount = row[1] != null ? (BigDecimal) row[1] : BigDecimal.ZERO;
-            Long count = row[2] != null ? ((Number) row[2]).longValue() : 0L;
+            BigDecimal amount = toBigDecimal(row[1]);
+            Long count = toLong(row[2]);
             data.add(SalesTrendDto.SalesTrendRowDto.builder()
                     .date(date)
                     .amount(amount)
@@ -185,16 +200,16 @@ public class DashboardService {
             if (totalRow == null || totalRow.length < 2) {
                 return CashFlowDto.builder().inflows(BigDecimal.ZERO).outflows(BigDecimal.ZERO).net(BigDecimal.ZERO).byAccount(new ArrayList<>()).build();
             }
-            BigDecimal totalInflows = totalRow[0] != null ? (BigDecimal) totalRow[0] : BigDecimal.ZERO;
-            BigDecimal totalOutflows = totalRow[1] != null ? (BigDecimal) totalRow[1] : BigDecimal.ZERO;
+            BigDecimal totalInflows = toBigDecimal(totalRow[0]);
+            BigDecimal totalOutflows = toBigDecimal(totalRow[1]);
             BigDecimal net = totalInflows.subtract(totalOutflows);
 
             List<Object[]> byAccountRows = dashboardRepository.cashFlowByAccount(fromStr, toStr);
             List<CashFlowDto.CashFlowByAccountDto> byAccount = new ArrayList<>();
             for (Object[] row : byAccountRows) {
                 if (row == null || row.length < 5) continue;
-                BigDecimal in = row[3] != null ? (BigDecimal) row[3] : BigDecimal.ZERO;
-                BigDecimal out = row[4] != null ? (BigDecimal) row[4] : BigDecimal.ZERO;
+                BigDecimal in = toBigDecimal(row[3]);
+                BigDecimal out = toBigDecimal(row[4]);
                 byAccount.add(CashFlowDto.CashFlowByAccountDto.builder()
                         .accountId(((Number) row[0]).intValue())
                         .accountCode((String) row[1])
@@ -224,7 +239,7 @@ public class DashboardService {
                 .productId(((Number) row[0]).intValue())
                 .productCode((String) row[1])
                 .productName((String) row[2])
-                .currentStock(row[3] != null ? (BigDecimal) row[3] : BigDecimal.ZERO)
+                .currentStock(toBigDecimal(row[3]))
                 .minStockLevel(row[4] != null ? ((Number) row[4]).intValue() : 0)
                 .build()).collect(Collectors.toList());
         } catch (Exception e) {
@@ -242,8 +257,8 @@ public class DashboardService {
             if (row == null || row.length < 2) {
                 return CashCreditRatioDto.builder().cashSalesTotal(BigDecimal.ZERO).creditSalesTotal(BigDecimal.ZERO).cashRatio(BigDecimal.ZERO).creditRatio(BigDecimal.ZERO).build();
             }
-            BigDecimal cashTotal = row[0] != null ? (BigDecimal) row[0] : BigDecimal.ZERO;
-            BigDecimal creditTotal = row[1] != null ? (BigDecimal) row[1] : BigDecimal.ZERO;
+            BigDecimal cashTotal = toBigDecimal(row[0]);
+            BigDecimal creditTotal = toBigDecimal(row[1]);
             BigDecimal total = cashTotal.add(creditTotal);
             BigDecimal cashRatio = total.compareTo(BigDecimal.ZERO) > 0
                     ? cashTotal.divide(total, 4, RoundingMode.HALF_UP) : BigDecimal.ZERO;
