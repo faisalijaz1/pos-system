@@ -173,30 +173,29 @@ public class DashboardService {
     public SalesTrendDto getSalesTrend(LocalDate fromDate, LocalDate toDate) {
         try {
             String fromStr = toDateStr(fromDate, "1900-01-01");
-            String toStr = toDateStr(toDate, "2100-12-31");
+            String toStr   = toDateStr(toDate,   "2100-12-31");
+
             List<Object[]> rows = dashboardRepository.salesTrendDaily(fromStr, toStr);
-        List<SalesTrendDto.SalesTrendRowDto> data = new ArrayList<>();
-        for (Object[] row : rows) {
-            LocalDate date = null;
-            if (row[0] != null) {
-                if (row[0] instanceof java.sql.Date) {
-                    date = ((java.sql.Date) row[0]).toLocalDate();
-                } else if (row[0] instanceof java.sql.Timestamp) {
-                    date = ((java.sql.Timestamp) row[0]).toLocalDateTime().toLocalDate();
-                } else if (row[0] instanceof LocalDate) {
-                    date = (LocalDate) row[0];
-                }
+
+            List<SalesTrendDto.SalesTrendRowDto> data = new ArrayList<>();
+
+            for (Object[] row : rows) {
+
+                // Always safe — PostgreSQL DATE returns java.sql.Date
+                LocalDate date = ((java.sql.Date) row[0]).toLocalDate();
+
+                BigDecimal amount = toBigDecimal(row[1]);
+                Long count = toLong(row[2]);
+
+                data.add(SalesTrendDto.SalesTrendRowDto.builder()
+                        .date(date)
+                        .amount(amount)
+                        .invoiceCount(count)
+                        .build());
             }
-            if (date == null) continue;
-            BigDecimal amount = toBigDecimal(row[1]);
-            Long count = toLong(row[2]);
-            data.add(SalesTrendDto.SalesTrendRowDto.builder()
-                    .date(date)
-                    .amount(amount)
-                    .invoiceCount(count)
-                    .build());
-        }
+
             return SalesTrendDto.builder().data(data).build();
+
         } catch (Exception e) {
             log.warn("Dashboard getSalesTrend failed", e);
             return SalesTrendDto.builder().data(Collections.emptyList()).build();
