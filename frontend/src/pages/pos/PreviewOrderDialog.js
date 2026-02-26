@@ -15,6 +15,7 @@ import TableHead from '@mui/material/TableHead';
 import TableContainer from '@mui/material/TableContainer';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
 import { formatMoney } from './posUtils';
 
 export default function PreviewOrderDialog({
@@ -38,7 +39,10 @@ export default function PreviewOrderDialog({
   cancelLabel = 'Cancel',
   onConfirm,
   confirmLoading = false,
+  onAmountReceivedChange,
 }) {
+  const received = Number(amountReceived) || 0;
+  const isAmountEditable = typeof onAmountReceivedChange === 'function';
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Preview Order</DialogTitle>
@@ -81,7 +85,20 @@ export default function PreviewOrderDialog({
             <Typography variant="body2">Add Disc: {formatMoney(additionalDiscount)}</Typography>
             <Typography variant="body2">Add Exp: {formatMoney(additionalExpenses)}</Typography>
             <Typography variant="body2" fontWeight={700}>Net Total: {formatMoney(netTotal)}</Typography>
-            <Typography variant="body2">Amt Received: {formatMoney(amountReceived)}</Typography>
+            {isAmountEditable ? (
+              <TextField
+                fullWidth
+                label="Amount received"
+                type="number"
+                value={amountReceived ?? ''}
+                onChange={(e) => onAmountReceivedChange(e.target.value)}
+                size="small"
+                inputProps={{ min: 0, step: 0.01 }}
+                sx={{ mt: 0.5 }}
+              />
+            ) : (
+              <Typography variant="body2">Amt Received: {formatMoney(amountReceived)}</Typography>
+            )}
           </Box>
           {(billingNo || billingDate || packing || adda) && (
             <Box>

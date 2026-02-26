@@ -71,6 +71,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [uomList, setUomList] = useState([]);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewAmountReceived, setPreviewAmountReceived] = useState('');
 
   const invoiceId = currentInvoice?.salesInvoiceId ?? null;
   const items = currentInvoice?.items ?? [];
@@ -254,7 +255,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
     }
   }, [originalInvoice, onNotify]);
 
-  const handleSaveChanges = useCallback(() => {
+  const handleSaveChanges = useCallback((overrides = {}) => {
     if (!invoiceId) return Promise.reject();
     setSaveLoading(true);
     setSuccessMsg('');
@@ -271,6 +272,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
       billingDate: currentInvoice.billingDate || null,
       billingPacking: currentInvoice.billingPacking ?? '',
       billingAdda: currentInvoice.billingAdda ?? '',
+      ...overrides,
     };
     return invoicesApi
       .update(invoiceId, payload)
@@ -314,6 +316,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
       if (!editMode) return;
       if (e.ctrlKey && e.key === 's') {
         e.preventDefault();
+        setPreviewAmountReceived(currentInvoice?.amountReceived ?? '');
         setPreviewOpen(true);
       }
       if (e.key === 'Escape') {
@@ -577,7 +580,10 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
                 netTotal={netTotal}
                 editMode={editMode}
                 onEnterEdit={handleEnterEdit}
-                onSaveChanges={() => setPreviewOpen(true)}
+                onSaveChanges={() => {
+                  setPreviewAmountReceived(currentInvoice?.amountReceived ?? '');
+                  setPreviewOpen(true);
+                }}
                 onCancelEdit={handleCancelEdit}
                 saveLoading={saveLoading}
                 onPrint={handlePrint}
@@ -710,7 +716,8 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
         additionalDiscount={additionalDiscount}
         additionalExpenses={additionalExpenses}
         netTotal={netTotal}
-        amountReceived={currentInvoice?.amountReceived ?? 0}
+        amountReceived={previewAmountReceived}
+        onAmountReceivedChange={setPreviewAmountReceived}
         billingNo={currentInvoice?.billingNo ?? ''}
         billingDate={currentInvoice?.billingDate ?? ''}
         packing={currentInvoice?.billingPacking ?? ''}
@@ -720,7 +727,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
         cancelLabel="Cancel"
         confirmLoading={saveLoading}
         onConfirm={() => {
-          handleSaveChanges()
+          handleSaveChanges({ amountReceived: Number(previewAmountReceived) || 0 })
             .then(() => setPreviewOpen(false))
             .catch(() => {});
         }}
