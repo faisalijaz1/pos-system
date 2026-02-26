@@ -11,6 +11,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,7 +37,9 @@ class DashboardServiceTest {
     @Test
     void getTodaySales_returnsDtoFromRepository() {
         LocalDate today = LocalDate.now();
-        when(dashboardRepository.todaySales(eq(today), eq(today)))
+        LocalDateTime from = today.atStartOfDay();
+        LocalDateTime to = today.atTime(LocalTime.MAX);
+        when(dashboardRepository.todaySales(eq(from), eq(to)))
                 .thenReturn(new Object[]{ new BigDecimal("15000.00"), 5L });
 
         TodaySalesDto result = dashboardService.getTodaySales(today, today);
@@ -46,7 +50,7 @@ class DashboardServiceTest {
 
     @Test
     void getTodaySales_handlesNullSums() {
-        when(dashboardRepository.todaySales(any(LocalDate.class), any(LocalDate.class))).thenReturn(new Object[]{ null, null });
+        when(dashboardRepository.todaySales(any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(new Object[]{ null, null });
 
         TodaySalesDto result = dashboardService.getTodaySales(LocalDate.now(), LocalDate.now());
 
@@ -56,17 +60,19 @@ class DashboardServiceTest {
 
     @Test
     void getMonthToDate_returnsDtoFromRepository() {
-        LocalDate from = LocalDate.now().withDayOfMonth(1);
-        LocalDate to = LocalDate.now();
+        LocalDate fromDay = LocalDate.now().withDayOfMonth(1);
+        LocalDate toDay = LocalDate.now();
+        LocalDateTime from = fromDay.atStartOfDay();
+        LocalDateTime to = toDay.atTime(LocalTime.MAX);
         when(dashboardRepository.monthToDateSales(eq(from), eq(to)))
                 .thenReturn(new Object[]{ new BigDecimal("120000.00"), 42L });
 
-        MonthToDateDto result = dashboardService.getMonthToDate(from, to);
+        MonthToDateDto result = dashboardService.getMonthToDate(fromDay, toDay);
 
         assertThat(result.getTotalSales()).isEqualByComparingTo("120000.00");
         assertThat(result.getInvoiceCount()).isEqualTo(42L);
-        assertThat(result.getFromDate()).isEqualTo(from);
-        assertThat(result.getToDate()).isEqualTo(to);
+        assertThat(result.getFromDate()).isEqualTo(fromDay);
+        assertThat(result.getToDate()).isEqualTo(toDay);
     }
 
     @Test
