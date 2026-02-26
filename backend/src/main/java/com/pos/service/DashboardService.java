@@ -26,11 +26,16 @@ public class DashboardService {
 
     private final DashboardRepository dashboardRepository;
 
+    private static String toDateStr(LocalDate d, String defaultVal) {
+        return d != null ? d.toString() : defaultVal;
+    }
+
     @Transactional(readOnly = true)
     public TodaySalesDto getTodaySales(LocalDate date) {
         try {
             LocalDate today = date != null ? date : LocalDate.now();
-            Object[] row = dashboardRepository.todaySales(today, today);
+            String s = today.toString();
+            Object[] row = dashboardRepository.todaySales(s, s);
         if (row == null || row.length < 2) {
             return TodaySalesDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).build();
         }
@@ -51,7 +56,7 @@ public class DashboardService {
         try {
             LocalDate today = date != null ? date : LocalDate.now();
             LocalDate from = today.withDayOfMonth(1);
-            Object[] row = dashboardRepository.monthToDateSales(from, today);
+            Object[] row = dashboardRepository.monthToDateSales(from.toString(), today.toString());
             if (row == null || row.length < 2) {
                 return MonthToDateDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).fromDate(from).toDate(today).build();
             }
@@ -74,7 +79,9 @@ public class DashboardService {
     @Transactional(readOnly = true)
     public ProfitDto getProfit(LocalDate fromDate, LocalDate toDate) {
         try {
-            Object[] row = dashboardRepository.profitAggregate(fromDate, toDate);
+            String fromStr = toDateStr(fromDate, "1900-01-01");
+            String toStr = toDateStr(toDate, "2100-12-31");
+            Object[] row = dashboardRepository.profitAggregate(fromStr, toStr);
             if (row == null || row.length < 2) {
                 return ProfitDto.builder().revenue(BigDecimal.ZERO).cost(BigDecimal.ZERO).profit(BigDecimal.ZERO).marginPercent(BigDecimal.ZERO).build();
             }
@@ -99,7 +106,9 @@ public class DashboardService {
     @Transactional(readOnly = true)
     public List<BestSellingProductDto> getBestSellingProducts(LocalDate fromDate, LocalDate toDate, int limit) {
         try {
-            List<Object[]> rows = dashboardRepository.bestSellingProducts(fromDate, toDate, limit);
+            String fromStr = toDateStr(fromDate, "1900-01-01");
+            String toStr = toDateStr(toDate, "2100-12-31");
+            List<Object[]> rows = dashboardRepository.bestSellingProducts(fromStr, toStr, limit);
             return rows.stream().map(row -> BestSellingProductDto.builder()
                 .productId(((Number) row[0]).intValue())
                 .productCode((String) row[1])
@@ -116,7 +125,9 @@ public class DashboardService {
     @Transactional(readOnly = true)
     public List<TopCustomerDto> getTopCustomers(LocalDate fromDate, LocalDate toDate, int limit) {
         try {
-            List<Object[]> rows = dashboardRepository.topCustomers(fromDate, toDate, limit);
+            String fromStr = toDateStr(fromDate, "1900-01-01");
+            String toStr = toDateStr(toDate, "2100-12-31");
+            List<Object[]> rows = dashboardRepository.topCustomers(fromStr, toStr, limit);
             return rows.stream().map(row -> TopCustomerDto.builder()
                     .customerId(((Number) row[0]).intValue())
                     .customerName((String) row[1])
@@ -132,7 +143,9 @@ public class DashboardService {
     @Transactional(readOnly = true)
     public SalesTrendDto getSalesTrend(LocalDate fromDate, LocalDate toDate) {
         try {
-            List<Object[]> rows = dashboardRepository.salesTrendDaily(fromDate, toDate);
+            String fromStr = toDateStr(fromDate, "1900-01-01");
+            String toStr = toDateStr(toDate, "2100-12-31");
+            List<Object[]> rows = dashboardRepository.salesTrendDaily(fromStr, toStr);
         List<SalesTrendDto.SalesTrendRowDto> data = new ArrayList<>();
         for (Object[] row : rows) {
             LocalDate date = null;
@@ -164,7 +177,9 @@ public class DashboardService {
     @Transactional(readOnly = true)
     public CashFlowDto getCashFlow(LocalDate fromDate, LocalDate toDate) {
         try {
-            Object[] totalRow = dashboardRepository.cashFlowTotal(fromDate, toDate);
+            String fromStr = toDateStr(fromDate, "1900-01-01");
+            String toStr = toDateStr(toDate, "2100-12-31");
+            Object[] totalRow = dashboardRepository.cashFlowTotal(fromStr, toStr);
             if (totalRow == null || totalRow.length < 2) {
                 return CashFlowDto.builder().inflows(BigDecimal.ZERO).outflows(BigDecimal.ZERO).net(BigDecimal.ZERO).byAccount(new ArrayList<>()).build();
             }
@@ -172,7 +187,7 @@ public class DashboardService {
             BigDecimal totalOutflows = totalRow[1] != null ? (BigDecimal) totalRow[1] : BigDecimal.ZERO;
             BigDecimal net = totalInflows.subtract(totalOutflows);
 
-            List<Object[]> byAccountRows = dashboardRepository.cashFlowByAccount(fromDate, toDate);
+            List<Object[]> byAccountRows = dashboardRepository.cashFlowByAccount(fromStr, toStr);
             List<CashFlowDto.CashFlowByAccountDto> byAccount = new ArrayList<>();
             for (Object[] row : byAccountRows) {
                 if (row == null || row.length < 5) continue;
@@ -219,7 +234,9 @@ public class DashboardService {
     @Transactional(readOnly = true)
     public CashCreditRatioDto getCashCreditRatio(LocalDate fromDate, LocalDate toDate) {
         try {
-            Object[] row = dashboardRepository.cashCreditRatio(fromDate, toDate);
+            String fromStr = toDateStr(fromDate, "1900-01-01");
+            String toStr = toDateStr(toDate, "2100-12-31");
+            Object[] row = dashboardRepository.cashCreditRatio(fromStr, toStr);
             if (row == null || row.length < 2) {
                 return CashCreditRatioDto.builder().cashSalesTotal(BigDecimal.ZERO).creditSalesTotal(BigDecimal.ZERO).cashRatio(BigDecimal.ZERO).creditRatio(BigDecimal.ZERO).build();
             }

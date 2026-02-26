@@ -35,7 +35,7 @@ class DashboardServiceTest {
     @Test
     void getTodaySales_returnsDtoFromRepository() {
         LocalDate today = LocalDate.now();
-        when(dashboardRepository.todaySales(today, today))
+        when(dashboardRepository.todaySales(eq(today.toString()), eq(today.toString())))
                 .thenReturn(new Object[]{ new BigDecimal("15000.00"), 5L });
 
         TodaySalesDto result = dashboardService.getTodaySales(today);
@@ -46,7 +46,7 @@ class DashboardServiceTest {
 
     @Test
     void getTodaySales_handlesNullSums() {
-        when(dashboardRepository.todaySales(any(), any())).thenReturn(new Object[]{ null, null });
+        when(dashboardRepository.todaySales(any(String.class), any(String.class))).thenReturn(new Object[]{ null, null });
 
         TodaySalesDto result = dashboardService.getTodaySales(LocalDate.now());
 
@@ -58,7 +58,7 @@ class DashboardServiceTest {
     void getMonthToDate_returnsDtoFromRepository() {
         LocalDate from = LocalDate.now().withDayOfMonth(1);
         LocalDate to = LocalDate.now();
-        when(dashboardRepository.monthToDateSales(eq(from), eq(to)))
+        when(dashboardRepository.monthToDateSales(eq(from.toString()), eq(to.toString())))
                 .thenReturn(new Object[]{ new BigDecimal("120000.00"), 42L });
 
         MonthToDateDto result = dashboardService.getMonthToDate(to);
@@ -71,7 +71,7 @@ class DashboardServiceTest {
 
     @Test
     void getProfit_computesMarginCorrectly() {
-        when(dashboardRepository.profitAggregate(any(), any()))
+        when(dashboardRepository.profitAggregate(any(String.class), any(String.class)))
                 .thenReturn(new Object[]{ new BigDecimal("1000.00"), new BigDecimal("600.00") });
 
         ProfitDto result = dashboardService.getProfit(LocalDate.now().minusDays(30), LocalDate.now());
@@ -84,7 +84,7 @@ class DashboardServiceTest {
 
     @Test
     void getProfit_zeroRevenue_returnsZeroMargin() {
-        when(dashboardRepository.profitAggregate(any(), any()))
+        when(dashboardRepository.profitAggregate(any(String.class), any(String.class)))
                 .thenReturn(new Object[]{ BigDecimal.ZERO, BigDecimal.ZERO });
 
         ProfitDto result = dashboardService.getProfit(null, null);
@@ -94,7 +94,7 @@ class DashboardServiceTest {
 
     @Test
     void getBestSellingProducts_mapsRowsToDtos() {
-        when(dashboardRepository.bestSellingProducts(any(), any(), eq(10)))
+        when(dashboardRepository.bestSellingProducts(any(String.class), any(String.class), eq(10)))
                 .thenReturn(Collections.singletonList(
                         new Object[]{ 1, "P001", "Product A", new BigDecimal("100"), new BigDecimal("5000.00") }
                 ));
@@ -111,7 +111,7 @@ class DashboardServiceTest {
 
     @Test
     void getTopCustomers_mapsRowsToDtos() {
-        when(dashboardRepository.topCustomers(any(), any(), eq(5)))
+        when(dashboardRepository.topCustomers(any(String.class), any(String.class), eq(5)))
                 .thenReturn(Collections.singletonList(
                         new Object[]{ 10, "Customer X", new BigDecimal("25000.00"), 8L }
                 ));
@@ -128,7 +128,7 @@ class DashboardServiceTest {
     @Test
     void getSalesTrend_mapsDailyRows() {
         LocalDate d = LocalDate.now().minusDays(1);
-        when(dashboardRepository.salesTrendDaily(any(), any()))
+        when(dashboardRepository.salesTrendDaily(any(String.class), any(String.class)))
                 .thenReturn(Collections.singletonList(new Object[]{ java.sql.Date.valueOf(d), new BigDecimal("3000.00"), 2L }));
 
         SalesTrendDto result = dashboardService.getSalesTrend(LocalDate.now().minusDays(7), LocalDate.now());
@@ -141,9 +141,9 @@ class DashboardServiceTest {
 
     @Test
     void getCashFlow_aggregatesInflowsOutflows() {
-        when(dashboardRepository.cashFlowTotal(any(), any()))
+        when(dashboardRepository.cashFlowTotal(any(String.class), any(String.class)))
                 .thenReturn(new Object[]{ new BigDecimal("50000.00"), new BigDecimal("20000.00") });
-        when(dashboardRepository.cashFlowByAccount(any(), any()))
+        when(dashboardRepository.cashFlowByAccount(any(String.class), any(String.class)))
                 .thenReturn(Collections.singletonList(
                         new Object[]{ 1, "CASH01", "Cash", new BigDecimal("50000.00"), new BigDecimal("20000.00") }
                 ));
@@ -175,7 +175,7 @@ class DashboardServiceTest {
 
     @Test
     void getCashCreditRatio_computesRatios() {
-        when(dashboardRepository.cashCreditRatio(any(), any()))
+        when(dashboardRepository.cashCreditRatio(any(String.class), any(String.class)))
                 .thenReturn(new Object[]{ new BigDecimal("60.00"), new BigDecimal("40.00") });
 
         CashCreditRatioDto result = dashboardService.getCashCreditRatio(
