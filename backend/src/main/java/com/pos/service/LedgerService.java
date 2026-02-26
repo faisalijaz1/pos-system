@@ -106,8 +106,8 @@ public class LedgerService {
         debitAccount.setBalanceType("Dr");
         accountRepository.save(debitAccount);
 
-        creditAccount.setCurrentBalance(creditAccount.getCurrentBalance().add(amount));
-        creditAccount.setBalanceType("Cr");
+        creditAccount.setCurrentBalance(creditAccount.getCurrentBalance().subtract(amount));
+        creditAccount.setBalanceType(creditAccount.getCurrentBalance().compareTo(BigDecimal.ZERO) >= 0 ? "Dr" : "Cr");
         accountRepository.save(creditAccount);
     }
 

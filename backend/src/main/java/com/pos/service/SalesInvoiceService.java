@@ -44,7 +44,9 @@ public class SalesInvoiceService {
     private static final String TRANSACTION_TYPE_SALE = "SALE";
     private static final String TRANSACTION_TYPE_STOCK_OUT = "STOCK_OUT";
     private static final String ACCOUNT_TYPE_REVENUE = "Revenue";
+    private static final String ACCOUNT_TYPE_CASH = "Cash";
     private static final String REF_TYPE_SALE = "SALE";
+    private static final String REF_TYPE_PAYMENT = "PAYMENT";
 
     @Transactional(rollbackFor = Exception.class)
     public InvoiceResponse createInvoice(CreateInvoiceRequest request, String username) {
@@ -218,6 +220,23 @@ public class SalesInvoiceService {
             );
         }
 
+        if (!saveAsDraft && customer != null && amountReceived.compareTo(BigDecimal.ZERO) > 0) {
+            Account cashAccount = accountRepository.findFirstByAccountTypeAndIsActiveTrue(ACCOUNT_TYPE_CASH)
+                    .orElseThrow(() -> new BadRequestException("POS Cash account not found. Add an account with type 'Cash' (e.g. code POS-CASH or CASH001)."));
+            String voucherNo = "PAY-" + request.getInvoiceNumber().replaceFirst("^INV-", "");
+            ledgerService.post(
+                    voucherNo,
+                    request.getInvoiceDate(),
+                    "Payment, Invoice # " + request.getInvoiceNumber(),
+                    cashAccount.getAccountId(),
+                    customer.getAccount().getAccountId(),
+                    amountReceived,
+                    REF_TYPE_PAYMENT,
+                    invoice.getSalesInvoiceId().longValue(),
+                    user.getUserId()
+            );
+        }
+
         return toResponse(invoice);
     }
 
@@ -274,6 +293,8 @@ public class SalesInvoiceService {
     public InvoiceResponse updateInvoice(Integer id, UpdateInvoiceRequest request) {
         SalesInvoice inv = salesInvoiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice", id));
+        BigDecimal oldAmountReceived = inv.getAmountReceived() != null ? inv.getAmountReceived() : BigDecimal.ZERO;
+
         if (request.getInvoiceDate() != null) inv.setInvoiceDate(request.getInvoiceDate());
         if (request.getInvoiceTime() != null) inv.setInvoiceTime(request.getInvoiceTime());
         if (request.getDeliveryModeId() != null) {
@@ -292,6 +313,44 @@ public class SalesInvoiceService {
         if (request.getChangeReturned() != null) inv.setChangeReturned(request.getChangeReturned());
         recalcNetTotal(inv);
         salesInvoiceRepository.save(inv);
+
+        BigDecimal newAmountReceived = inv.getAmountReceived() != null ? inv.getAmountReceived() : BigDecimal.ZERO;
+        Customer customer = inv.getCustomer();
+        if (customer != null && customer.getAccount() != null) {
+            BigDecimal delta = newAmountReceived.subtract(oldAmountReceived);
+            if (delta.compareTo(BigDecimal.ZERO) > 0) {
+                Account cashAccount = accountRepository.findFirstByAccountTypeAndIsActiveTrue(ACCOUNT_TYPE_CASH)
+                        .orElseThrow(() -> new BadRequestException("POS Cash account not found. Add an account with type 'Cash' (e.g. code POS-CASH)."));
+                String voucherNo = "PAY-" + inv.getInvoiceNumber().replaceFirst("^INV-", "") + "-ADJ";
+                ledgerService.post(
+                        voucherNo,
+                        inv.getInvoiceDate(),
+                        "Payment (adj), Invoice # " + inv.getInvoiceNumber(),
+                        cashAccount.getAccountId(),
+                        customer.getAccount().getAccountId(),
+                        delta,
+                        REF_TYPE_PAYMENT,
+                        inv.getSalesInvoiceId().longValue(),
+                        inv.getUser() != null ? inv.getUser().getUserId() : null
+                );
+            } else if (delta.compareTo(BigDecimal.ZERO) < 0) {
+                Account cashAccount = accountRepository.findFirstByAccountTypeAndIsActiveTrue(ACCOUNT_TYPE_CASH)
+                        .orElseThrow(() -> new BadRequestException("POS Cash account not found. Add an account with type 'Cash' (e.g. code POS-CASH)."));
+                String voucherNo = "PAY-REV-" + inv.getInvoiceNumber().replaceFirst("^INV-", "");
+                ledgerService.post(
+                        voucherNo,
+                        inv.getInvoiceDate(),
+                        "Payment reversal (adj), Invoice # " + inv.getInvoiceNumber(),
+                        customer.getAccount().getAccountId(),
+                        cashAccount.getAccountId(),
+                        delta.negate(),
+                        REF_TYPE_PAYMENT,
+                        inv.getSalesInvoiceId().longValue(),
+                        inv.getUser() != null ? inv.getUser().getUserId() : null
+                );
+            }
+        }
+
         return getById(id);
     }
 

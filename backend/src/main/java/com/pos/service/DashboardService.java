@@ -47,7 +47,7 @@ public class DashboardService {
         return 0L;
     }
 
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     public TodaySalesDto getTodaySales(LocalDate fromDate, LocalDate toDate) {
         try {
             LocalDate today = LocalDate.now();
@@ -77,7 +77,7 @@ public class DashboardService {
         }
     }
 
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     public MonthToDateDto getMonthToDate(LocalDate fromDate, LocalDate toDate) {
         try {
             LocalDate today = LocalDate.now();
@@ -127,7 +127,7 @@ public class DashboardService {
         }
     }
 
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     public ProfitDto getProfit(LocalDate fromDate, LocalDate toDate) {
         try {
             String fromStr = toDateStr(fromDate, "1900-01-01");
@@ -154,7 +154,7 @@ public class DashboardService {
         }
     }
 
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     public List<BestSellingProductDto> getBestSellingProducts(LocalDate fromDate, LocalDate toDate, int limit) {
         try {
             String fromStr = toDateStr(fromDate, "1900-01-01");
@@ -173,7 +173,7 @@ public class DashboardService {
         }
     }
 
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     public List<TopCustomerDto> getTopCustomers(LocalDate fromDate, LocalDate toDate, int limit) {
         try {
             String fromStr = toDateStr(fromDate, "1900-01-01");
@@ -191,7 +191,7 @@ public class DashboardService {
         }
     }
 
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     public SalesTrendDto getSalesTrend(LocalDate fromDate, LocalDate toDate) {
         try {
             String fromStr = toDateStr(fromDate, "1900-01-01");
@@ -224,7 +224,7 @@ public class DashboardService {
         }
     }
 
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     public CashFlowDto getCashFlow(LocalDate fromDate, LocalDate toDate) {
         try {
             String fromStr = toDateStr(fromDate, "1900-01-01");
@@ -264,7 +264,7 @@ public class DashboardService {
         }
     }
 
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     public List<StockAlertDto> getStockAlerts() {
         try {
             List<Object[]> rows = dashboardRepository.stockAlerts();
@@ -281,7 +281,7 @@ public class DashboardService {
         }
     }
 
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     public CashCreditRatioDto getCashCreditRatio(LocalDate fromDate, LocalDate toDate) {
         try {
             String fromStr = toDateStr(fromDate, "1900-01-01");
