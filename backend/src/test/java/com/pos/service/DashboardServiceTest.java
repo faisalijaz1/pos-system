@@ -38,7 +38,7 @@ class DashboardServiceTest {
         when(dashboardRepository.todaySales(eq(today.toString()), eq(today.toString())))
                 .thenReturn(new Object[]{ new BigDecimal("15000.00"), 5L });
 
-        TodaySalesDto result = dashboardService.getTodaySales(today);
+        TodaySalesDto result = dashboardService.getTodaySales(today, today);
 
         assertThat(result.getTotalSales()).isEqualByComparingTo("15000.00");
         assertThat(result.getInvoiceCount()).isEqualTo(5L);
@@ -48,7 +48,7 @@ class DashboardServiceTest {
     void getTodaySales_handlesNullSums() {
         when(dashboardRepository.todaySales(any(String.class), any(String.class))).thenReturn(new Object[]{ null, null });
 
-        TodaySalesDto result = dashboardService.getTodaySales(LocalDate.now());
+        TodaySalesDto result = dashboardService.getTodaySales(LocalDate.now(), LocalDate.now());
 
         assertThat(result.getTotalSales()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(result.getInvoiceCount()).isEqualTo(0L);
@@ -61,7 +61,7 @@ class DashboardServiceTest {
         when(dashboardRepository.monthToDateSales(eq(from.toString()), eq(to.toString())))
                 .thenReturn(new Object[]{ new BigDecimal("120000.00"), 42L });
 
-        MonthToDateDto result = dashboardService.getMonthToDate(to);
+        MonthToDateDto result = dashboardService.getMonthToDate(from, to);
 
         assertThat(result.getTotalSales()).isEqualByComparingTo("120000.00");
         assertThat(result.getInvoiceCount()).isEqualTo(42L);

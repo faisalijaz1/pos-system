@@ -96,8 +96,8 @@ export default function Dashboard() {
       try {
         const [todayRes, mtdRes, profitRes, trendRes, bestRes, topRes, alertsRes, cashRes] =
           await Promise.all([
-            dashboardApi.todaySales(todayStr),
-            dashboardApi.monthToDate(todayStr),
+            dashboardApi.todaySales(todayStr, todayStr),
+            dashboardApi.monthToDate(fromStr, toStr),
             dashboardApi.profit(fromStr, toStr),
             dashboardApi.salesTrend(fromStr, toStr),
             dashboardApi.bestSellingProducts(fromStr, toStr, 5),

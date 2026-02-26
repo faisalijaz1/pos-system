@@ -21,17 +21,19 @@ public class DashboardController {
     @GetMapping("/today-sales")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<TodaySalesDto> todaySales(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate
     ) {
-        return ResponseEntity.ok(dashboardService.getTodaySales(date));
+        return ResponseEntity.ok(dashboardService.getTodaySales(fromDate, toDate));
     }
 
     @GetMapping("/month-to-date")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<MonthToDateDto> monthToDate(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate
     ) {
-        return ResponseEntity.ok(dashboardService.getMonthToDate(date));
+        return ResponseEntity.ok(dashboardService.getMonthToDate(fromDate, toDate));
     }
 
     @GetMapping("/profit")

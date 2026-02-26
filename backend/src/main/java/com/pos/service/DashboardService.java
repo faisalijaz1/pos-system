@@ -31,11 +31,14 @@ public class DashboardService {
     }
 
     @Transactional(readOnly = true)
-    public TodaySalesDto getTodaySales(LocalDate date) {
+    public TodaySalesDto getTodaySales(LocalDate fromDate, LocalDate toDate) {
         try {
-            LocalDate today = date != null ? date : LocalDate.now();
-            String s = today.toString();
-            Object[] row = dashboardRepository.todaySales(s, s);
+            LocalDate today = LocalDate.now();
+            LocalDate from = (fromDate != null && toDate != null) ? fromDate : today;
+            LocalDate to = (fromDate != null && toDate != null) ? toDate : today;
+            String fromStr = from.toString();
+            String toStr = to.toString();
+            Object[] row = dashboardRepository.todaySales(fromStr, toStr);
         if (row == null || row.length < 2) {
             return TodaySalesDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).build();
         }
@@ -52,13 +55,16 @@ public class DashboardService {
     }
 
     @Transactional(readOnly = true)
-    public MonthToDateDto getMonthToDate(LocalDate date) {
+    public MonthToDateDto getMonthToDate(LocalDate fromDate, LocalDate toDate) {
         try {
-            LocalDate today = date != null ? date : LocalDate.now();
-            LocalDate from = today.withDayOfMonth(1);
-            Object[] row = dashboardRepository.monthToDateSales(from.toString(), today.toString());
+            LocalDate today = LocalDate.now();
+            LocalDate from = (fromDate != null && toDate != null) ? fromDate : today.withDayOfMonth(1);
+            LocalDate to = (fromDate != null && toDate != null) ? toDate : today;
+            String fromStr = from.toString();
+            String toStr = to.toString();
+            Object[] row = dashboardRepository.monthToDateSales(fromStr, toStr);
             if (row == null || row.length < 2) {
-                return MonthToDateDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).fromDate(from).toDate(today).build();
+                return MonthToDateDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).fromDate(from).toDate(to).build();
             }
             BigDecimal total = row[0] != null ? (BigDecimal) row[0] : BigDecimal.ZERO;
             Long count = row[1] != null ? ((Number) row[1]).longValue() : 0L;
@@ -66,7 +72,7 @@ public class DashboardService {
                     .totalSales(total)
                     .invoiceCount(count)
                     .fromDate(from)
-                    .toDate(today)
+                    .toDate(to)
                     .build();
         } catch (Exception e) {
             log.warn("Dashboard getMonthToDate failed", e);
