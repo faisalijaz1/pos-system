@@ -34,6 +34,10 @@ public class StockTransactionItem {
     @Column(name = "price_at_transaction", precision = 18, scale = 2)
     private BigDecimal priceAtTransaction;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "uom_id")
+    private UnitOfMeasure uom;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

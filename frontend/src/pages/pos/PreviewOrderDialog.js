@@ -49,7 +49,7 @@ export default function PreviewOrderDialog({
           <TableContainer sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}>
             <Table size="small">
               <TableHead>
-                <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                <TableRow sx={{ bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.800' : '#f5f5f5') }}>
                   <TableCell sx={{ fontWeight: 600 }}>Code</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Product</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 600 }}>Qty</TableCell>

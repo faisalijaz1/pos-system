@@ -40,3 +40,10 @@ WHERE NOT EXISTS (SELECT 1 FROM transaction_types WHERE type_code = 'EXCHANGE');
 -- 3. CUSTOMERS — Balance is on accounts.current_balance (no schema change)
 --    Ensure API uses accounts.current_balance for customer balance.
 -- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- 4. STOCK_TRANSACTION_ITEMS — Unit of measure (optional)
+-- -----------------------------------------------------------------------------
+ALTER TABLE stock_transaction_items
+  ADD COLUMN IF NOT EXISTS uom_id INTEGER NULL REFERENCES units_of_measure(uom_id);
+COMMENT ON COLUMN stock_transaction_items.uom_id IS 'Unit of measure for the quantity (optional)';

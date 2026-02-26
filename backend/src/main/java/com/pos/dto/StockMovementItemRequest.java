@@ -20,4 +20,6 @@ public class StockMovementItemRequest {
     private BigDecimal quantity;
 
     private BigDecimal priceAtTransaction;
+
+    private Integer uomId;
 }

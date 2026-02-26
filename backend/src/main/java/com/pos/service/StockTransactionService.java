@@ -30,6 +30,7 @@ public class StockTransactionService {
     private final UserRepository userRepository;
     private final TransactionTypeRepository transactionTypeRepository;
     private final BranchRepository branchRepository;
+    private final UnitOfMeasureRepository unitOfMeasureRepository;
 
     @Transactional(rollbackFor = Exception.class)
     public StockMovementResponse stockIn(StockInRequest request, String username) {
@@ -91,6 +92,7 @@ public class StockTransactionService {
                     .product(product)
                     .quantityChange(quantityChange)
                     .priceAtTransaction(req.getPriceAtTransaction())
+                    .uom(req.getUomId() != null ? unitOfMeasureRepository.findById(req.getUomId()).orElse(null) : null)
                     .build();
             entityItems.add(sti);
         }

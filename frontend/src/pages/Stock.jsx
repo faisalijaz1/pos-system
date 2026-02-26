@@ -22,6 +22,10 @@ import {
   Tab,
   Autocomplete,
   Chip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -30,6 +34,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { stockApi } from '../api/stock';
 import { productsApi } from '../api/products';
+import { uomApi } from '../api/uom';
 
 const today = new Date().toISOString().slice(0, 10);
 const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
@@ -52,11 +57,13 @@ export default function Stock() {
   const [loading, setLoading] = useState(true);
   const [inOpen, setInOpen] = useState(false);
   const [outOpen, setOutOpen] = useState(false);
-  const [inForm, setInForm] = useState({ transactionDate: today, description: '', items: [{ productId: null, productLabel: '', quantity: '', priceAtTransaction: '' }] });
-  const [outForm, setOutForm] = useState({ transactionDate: today, description: '', items: [{ productId: null, productLabel: '', quantity: '' }] });
+  const [inForm, setInForm] = useState({ transactionDate: today, description: '', items: [{ productId: null, productLabel: '', quantity: '', priceAtTransaction: '', uomId: '' }] });
+  const [outForm, setOutForm] = useState({ transactionDate: today, description: '', items: [{ productId: null, productLabel: '', quantity: '', uomId: '' }] });
   const [submitting, setSubmitting] = useState(false);
   const [productOptions, setProductOptions] = useState([]);
   const [productSearch, setProductSearch] = useState('');
+  const [productSearchDebounce, setProductSearchDebounce] = useState('');
+  const [uomList, setUomList] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
 
   const loadMovements = useCallback(() => {
@@ -78,12 +85,26 @@ export default function Stock() {
 
   useEffect(() => {
     if (!inOpen && !outOpen) return;
-    const q = productSearch || ' ';
-    productsApi.list({ name: q }, 0, 25).then((res) => {
+    const t = setTimeout(() => setProductSearchDebounce(productSearch), 350);
+    return () => clearTimeout(t);
+  }, [inOpen, outOpen, productSearch]);
+
+  useEffect(() => {
+    if (!inOpen && !outOpen) return;
+    const q = (productSearchDebounce || '').trim();
+    productsApi.list(q ? { name: q } : {}, 0, 25).then((res) => {
       const list = res.data?.content ?? [];
       setProductOptions(list.map((p) => ({ ...p, label: `${p.code} — ${p.nameEn || p.nameUr || ''}` })));
     }).catch(() => setProductOptions([]));
-  }, [inOpen, outOpen, productSearch]);
+  }, [inOpen, outOpen, productSearchDebounce]);
+
+  useEffect(() => {
+    if (inOpen || outOpen) {
+      uomApi.list().then((res) => setUomList(res.data || [])).catch(() => setUomList([]));
+      setProductSearch('');
+      setProductSearchDebounce('');
+    }
+  }, [inOpen, outOpen]);
 
   const loadLowStock = useCallback(() => {
     productsApi.list({}, 0, 100).then((res) => {
@@ -93,14 +114,14 @@ export default function Stock() {
   }, []);
   useEffect(() => loadLowStock(), [loadLowStock]);
 
-  const addInItem = () => setInForm((f) => ({ ...f, items: [...f.items, { productId: null, productLabel: '', quantity: '', priceAtTransaction: '' }] }));
+  const addInItem = () => setInForm((f) => ({ ...f, items: [...f.items, { productId: null, productLabel: '', quantity: '', priceAtTransaction: '', uomId: '' }] }));
   const removeInItem = (idx) => setInForm((f) => ({ ...f, items: f.items.filter((_, i) => i !== idx) }));
   const updateInItem = (idx, field, value) => setInForm((f) => ({
     ...f,
     items: f.items.map((it, i) => i === idx ? { ...it, [field]: value } : it),
   }));
 
-  const addOutItem = () => setOutForm((f) => ({ ...f, items: [...f.items, { productId: null, productLabel: '', quantity: '' }] }));
+  const addOutItem = () => setOutForm((f) => ({ ...f, items: [...f.items, { productId: null, productLabel: '', quantity: '', uomId: '' }] }));
   const removeOutItem = (idx) => setOutForm((f) => ({ ...f, items: f.items.filter((_, i) => i !== idx) }));
   const updateOutItem = (idx, field, value) => setOutForm((f) => ({
     ...f,
@@ -114,6 +135,7 @@ export default function Stock() {
         productId: it.productId,
         quantity: Number(it.quantity),
         priceAtTransaction: it.priceAtTransaction ? Number(it.priceAtTransaction) : null,
+        uomId: it.uomId ? Number(it.uomId) : null,
       }));
     if (items.length === 0) {
       alert('Add at least one item with product and quantity.');
@@ -127,7 +149,7 @@ export default function Stock() {
         items,
       });
       setInOpen(false);
-      setInForm({ transactionDate: today, description: '', items: [{ productId: null, productLabel: '', quantity: '', priceAtTransaction: '' }] });
+      setInForm({ transactionDate: today, description: '', items: [{ productId: null, productLabel: '', quantity: '', priceAtTransaction: '', uomId: '' }] });
       loadMovements();
       loadLowStock();
     } catch (err) {
@@ -140,7 +162,11 @@ export default function Stock() {
   const submitOut = async () => {
     const items = outForm.items
       .filter((it) => it.productId != null && it.quantity !== '' && Number(it.quantity) > 0)
-      .map((it) => ({ productId: it.productId, quantity: Number(it.quantity) }));
+      .map((it) => ({
+        productId: it.productId,
+        quantity: Number(it.quantity),
+        uomId: it.uomId ? Number(it.uomId) : null,
+      }));
     if (items.length === 0) {
       alert('Add at least one item with product and quantity.');
       return;
@@ -153,7 +179,7 @@ export default function Stock() {
         items,
       });
       setOutOpen(false);
-      setOutForm({ transactionDate: today, description: '', items: [{ productId: null, productLabel: '', quantity: '' }] });
+      setOutForm({ transactionDate: today, description: '', items: [{ productId: null, productLabel: '', quantity: '', uomId: '' }] });
       loadMovements();
       loadLowStock();
     } catch (err) {
@@ -253,20 +279,37 @@ export default function Stock() {
           <TextField fullWidth label="Description" value={inForm.description} onChange={(e) => setInForm((f) => ({ ...f, description: e.target.value }))} sx={{ mt: 2 }} />
           <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>Items</Typography>
           {inForm.items.map((it, idx) => (
-            <Box key={idx} sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mb: 1 }}>
+            <Box key={idx} sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mb: 1, flexWrap: 'wrap' }}>
               <Autocomplete
                 size="small"
                 options={productOptions}
                 getOptionLabel={(o) => o.label || ''}
                 value={productOptions.find((o) => o.productId === it.productId) || null}
-                onInputChange={(_, v) => setProductSearch(v)}
+                onInputChange={(_, v) => {
+                  const selectedLabel = it.productLabel;
+                  if (v !== selectedLabel) setProductSearch(v);
+                }}
                 onChange={(_, v) => setInForm((f) => ({
                   ...f,
-                  items: f.items.map((it, i) => i === idx ? { ...it, productId: v?.productId ?? null, productLabel: v?.label ?? '' } : it),
+                  items: f.items.map((item, i) => i === idx ? { ...item, productId: v?.productId ?? null, productLabel: v?.label ?? '' } : item),
                 }))}
                 renderInput={(params) => <TextField {...params} label="Product" />}
-                sx={{ flex: 2 }}
+                sx={{ flex: '1 1 200px', minWidth: 200 }}
               />
+              <FormControl size="small" sx={{ minWidth: 100 }}>
+                <InputLabel id={`in-uom-${idx}`}>Unit</InputLabel>
+                <Select
+                  labelId={`in-uom-${idx}`}
+                  label="Unit"
+                  value={it.uomId ?? ''}
+                  onChange={(e) => updateInItem(idx, 'uomId', e.target.value)}
+                >
+                  <MenuItem value="">—</MenuItem>
+                  {uomList.map((u) => (
+                    <MenuItem key={u.uomId} value={u.uomId}>{u.name || u.symbol || u.uomId}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <TextField size="small" label="Qty" type="number" value={it.quantity} onChange={(e) => updateInItem(idx, 'quantity', e.target.value)} sx={{ width: 90 }} inputProps={{ min: 0, step: 0.001 }} />
               <TextField size="small" label="Price" type="number" value={it.priceAtTransaction} onChange={(e) => updateInItem(idx, 'priceAtTransaction', e.target.value)} sx={{ width: 100 }} inputProps={{ min: 0, step: 0.01 }} />
               <IconButton size="small" onClick={() => removeInItem(idx)} disabled={inForm.items.length <= 1}><DeleteOutlineIcon /></IconButton>
@@ -287,17 +330,37 @@ export default function Stock() {
           <TextField fullWidth label="Description" value={outForm.description} onChange={(e) => setOutForm((f) => ({ ...f, description: e.target.value }))} sx={{ mt: 2 }} />
           <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>Items</Typography>
           {outForm.items.map((it, idx) => (
-            <Box key={idx} sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mb: 1 }}>
+            <Box key={idx} sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mb: 1, flexWrap: 'wrap' }}>
               <Autocomplete
                 size="small"
                 options={productOptions}
                 getOptionLabel={(o) => o.label || ''}
                 value={productOptions.find((o) => o.productId === it.productId) || null}
-                onInputChange={(_, v) => setProductSearch(v)}
-                onChange={(_, v) => { updateOutItem(idx, 'productId', v?.productId); updateOutItem(idx, 'productLabel', v?.label || ''); }}
+                onInputChange={(_, v) => {
+                  const selectedLabel = it.productLabel;
+                  if (v !== selectedLabel) setProductSearch(v);
+                }}
+                onChange={(_, v) => setOutForm((f) => ({
+                  ...f,
+                  items: f.items.map((item, i) => i === idx ? { ...item, productId: v?.productId ?? null, productLabel: v?.label ?? '' } : item),
+                }))}
                 renderInput={(params) => <TextField {...params} label="Product" />}
-                sx={{ flex: 2 }}
+                sx={{ flex: '1 1 200px', minWidth: 200 }}
               />
+              <FormControl size="small" sx={{ minWidth: 100 }}>
+                <InputLabel id={`out-uom-${idx}`}>Unit</InputLabel>
+                <Select
+                  labelId={`out-uom-${idx}`}
+                  label="Unit"
+                  value={it.uomId ?? ''}
+                  onChange={(e) => updateOutItem(idx, 'uomId', e.target.value)}
+                >
+                  <MenuItem value="">—</MenuItem>
+                  {uomList.map((u) => (
+                    <MenuItem key={u.uomId} value={u.uomId}>{u.name || u.symbol || u.uomId}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <TextField size="small" label="Qty" type="number" value={it.quantity} onChange={(e) => updateOutItem(idx, 'quantity', e.target.value)} sx={{ width: 90 }} inputProps={{ min: 0, step: 0.001 }} />
               <IconButton size="small" onClick={() => removeOutItem(idx)} disabled={outForm.items.length <= 1}><DeleteOutlineIcon /></IconButton>
             </Box>
