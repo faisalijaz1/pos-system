@@ -23,6 +23,7 @@ import InvoiceBottomStrip from './InvoiceBottomStrip';
 import BillingDetailsPanel from './BillingDetailsPanel';
 import PrintOptionsPanel from './PrintOptionsPanel';
 import ProductSearchModal from './ProductSearchModal';
+import PreviewOrderDialog from './PreviewOrderDialog';
 import { DATE_INPUT_SX } from './posUtils';
 import ConfirmDialog from './ConfirmDialog';
 
@@ -69,6 +70,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
   const [deleteConfirmItem, setDeleteConfirmItem] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [uomList, setUomList] = useState([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const invoiceId = currentInvoice?.salesInvoiceId ?? null;
   const items = currentInvoice?.items ?? [];
@@ -253,7 +255,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
   }, [originalInvoice, onNotify]);
 
   const handleSaveChanges = useCallback(() => {
-    if (!invoiceId) return;
+    if (!invoiceId) return Promise.reject();
     setSaveLoading(true);
     setSuccessMsg('');
     const payload = {
@@ -270,7 +272,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
       billingPacking: currentInvoice.billingPacking ?? '',
       billingAdda: currentInvoice.billingAdda ?? '',
     };
-    invoicesApi
+    return invoicesApi
       .update(invoiceId, payload)
       .then((res) => {
         const updated = res.data;
@@ -291,6 +293,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
           setSuccessMsg(msg);
           setTimeout(() => setSuccessMsg(''), 4000);
         }
+        throw new Error(msg);
       })
       .finally(() => setSaveLoading(false));
   }, [invoiceId, currentInvoice, onNotify]);
@@ -311,7 +314,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
       if (!editMode) return;
       if (e.ctrlKey && e.key === 's') {
         e.preventDefault();
-        handleSaveChanges();
+        setPreviewOpen(true);
       }
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -324,7 +327,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editMode, handleSaveChanges, handleCancelEdit]);
+  }, [editMode, handleCancelEdit]);
 
   const updateLocalInvoice = useCallback((next) => {
     setCurrentInvoice((prev) => (prev ? { ...prev, ...next } : null));
@@ -574,7 +577,7 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
                 netTotal={netTotal}
                 editMode={editMode}
                 onEnterEdit={handleEnterEdit}
-                onSaveChanges={handleSaveChanges}
+                onSaveChanges={() => setPreviewOpen(true)}
                 onCancelEdit={handleCancelEdit}
                 saveLoading={saveLoading}
                 onPrint={handlePrint}
@@ -688,6 +691,39 @@ export default function SalesHistoryInvoicePage({ onExit, onPrint, onNotify, onO
         loading={deleteLoading}
         onConfirm={handleConfirmRemoveItem}
         onCancel={handleCloseDeleteConfirm}
+      />
+      <PreviewOrderDialog
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        invoiceNumber={currentInvoice?.invoiceNumber ?? ''}
+        customerName={currentInvoice?.customerName ?? ''}
+        isCashCustomer={currentInvoice?.isCashCustomer ?? false}
+        items={(currentInvoice?.items ?? []).map((it) => ({
+          productId: it.productId,
+          productCode: it.productCode ?? it.product_code ?? '',
+          productName: it.productName ?? it.product_name ?? '',
+          quantity: it.quantity,
+          unitPrice: it.unitPrice ?? it.unit_price,
+          lineTotal: it.lineTotal ?? it.line_total,
+        }))}
+        grandTotal={grandTotal}
+        additionalDiscount={additionalDiscount}
+        additionalExpenses={additionalExpenses}
+        netTotal={netTotal}
+        amountReceived={currentInvoice?.amountReceived ?? 0}
+        billingNo={currentInvoice?.billingNo ?? ''}
+        billingDate={currentInvoice?.billingDate ?? ''}
+        packing={currentInvoice?.billingPacking ?? ''}
+        adda={currentInvoice?.billingAdda ?? ''}
+        remarks={currentInvoice?.remarks ?? ''}
+        confirmLabel="Confirm & Save"
+        cancelLabel="Cancel"
+        confirmLoading={saveLoading}
+        onConfirm={() => {
+          handleSaveChanges()
+            .then(() => setPreviewOpen(false))
+            .catch(() => {});
+        }}
       />
     </Box>
   );

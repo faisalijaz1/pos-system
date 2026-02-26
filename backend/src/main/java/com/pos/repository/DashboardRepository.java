@@ -1,13 +1,15 @@
 package com.pos.repository;
 
-import com.pos.domain.SalesInvoice;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import com.pos.domain.SalesInvoice;
 
 /**
  * Dashboard aggregations.
@@ -17,9 +19,11 @@ import java.util.List;
 @Repository
 public interface DashboardRepository extends JpaRepository<SalesInvoice, Integer> {
 
-    @Query("SELECT COALESCE(SUM(s.netTotal), 0), COUNT(s) FROM SalesInvoice s WHERE s.invoiceDate >= :from AND s.invoiceDate <= :to")
-    Object[] todaySales(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
-
+	@Query("SELECT COALESCE(SUM(s.netTotal), 0), COUNT(s) " +
+		       "FROM SalesInvoice s " +
+		       "WHERE s.invoiceDate >= :from AND s.invoiceDate <= :to")
+		Object[] todaySales(@Param("from") LocalDate from,
+		                     @Param("to") LocalDate to);
     @Query("SELECT COALESCE(SUM(s.netTotal), 0), COUNT(s) FROM SalesInvoice s WHERE s.invoiceDate >= :from AND s.invoiceDate <= :to")
     Object[] monthToDateSales(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 

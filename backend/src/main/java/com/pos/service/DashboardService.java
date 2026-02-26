@@ -51,23 +51,29 @@ public class DashboardService {
     public TodaySalesDto getTodaySales(LocalDate fromDate, LocalDate toDate) {
         try {
             LocalDate today = LocalDate.now();
-            LocalDate fromDay = (fromDate != null && toDate != null) ? fromDate : today;
-            LocalDate toDay = (fromDate != null && toDate != null) ? toDate : today;
-            LocalDateTime from = fromDay.atStartOfDay();
-            LocalDateTime to = toDay.atTime(LocalTime.MAX);
+            LocalDate from = (fromDate != null && toDate != null) ? fromDate : today;
+            LocalDate to = (fromDate != null && toDate != null) ? toDate : today;
+
             Object[] row = dashboardRepository.todaySales(from, to);
-        if (row == null || row.length < 2) {
-            return TodaySalesDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).build();
-        }
-        BigDecimal total = toBigDecimal(row[0]);
-        Long count = toLong(row[1]);
-        return TodaySalesDto.builder()
-                .totalSales(total)
-                .invoiceCount(count)
-                .build();
+
+            if (row == null || row.length < 2) {
+                return TodaySalesDto.builder()
+                        .totalSales(BigDecimal.ZERO)
+                        .invoiceCount(0L)
+                        .build();
+            }
+
+            return TodaySalesDto.builder()
+                    .totalSales(toBigDecimal(row[0]))
+                    .invoiceCount(toLong(row[1]))
+                    .build();
+
         } catch (Exception e) {
             log.warn("Dashboard getTodaySales failed", e);
-            return TodaySalesDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).build();
+            return TodaySalesDto.builder()
+                    .totalSales(BigDecimal.ZERO)
+                    .invoiceCount(0L)
+                    .build();
         }
     }
 

@@ -5,6 +5,7 @@ import React from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 import Typography from '@mui/material/Typography';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -13,6 +14,7 @@ import TableRow from '@mui/material/TableRow';
 import TableHead from '@mui/material/TableHead';
 import TableContainer from '@mui/material/TableContainer';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import { formatMoney } from './posUtils';
 
 export default function PreviewOrderDialog({
@@ -32,6 +34,10 @@ export default function PreviewOrderDialog({
   packing,
   adda,
   remarks,
+  confirmLabel,
+  cancelLabel = 'Cancel',
+  onConfirm,
+  confirmLoading = false,
 }) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -91,6 +97,14 @@ export default function PreviewOrderDialog({
           )}
         </Box>
       </DialogContent>
+      {onConfirm && (
+        <DialogActions sx={{ px: 2, pb: 1 }}>
+          <Button onClick={onClose} disabled={confirmLoading}>{cancelLabel}</Button>
+          <Button variant="contained" onClick={onConfirm} disabled={confirmLoading}>
+            {confirmLoading ? 'Saving…' : (confirmLabel || 'Confirm')}
+          </Button>
+        </DialogActions>
+      )}
     </Dialog>
   );
 }
