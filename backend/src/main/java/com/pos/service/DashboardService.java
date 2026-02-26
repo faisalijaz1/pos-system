@@ -47,7 +47,7 @@ public class DashboardService {
         return 0L;
     }
 
-//    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public TodaySalesDto getTodaySales(LocalDate fromDate, LocalDate toDate) {
         try {
             LocalDate today = LocalDate.now();
@@ -70,11 +70,12 @@ public class DashboardService {
 
         } catch (Exception e) {
             log.warn("Dashboard getTodaySales failed", e);
-            return TodaySalesDto.builder()
-                    .totalSales(BigDecimal.ZERO)
-                    .invoiceCount(0L)
-                    .build();
+//            return TodaySalesDto.builder()
+//                    .totalSales(BigDecimal.ZERO)
+//                    .invoiceCount(0L)
+//                    .build();
         }
+		return null;
     }
 
 //    @Transactional(readOnly = true)
@@ -118,16 +119,17 @@ public class DashboardService {
             log.warn("Dashboard getMonthToDate failed", e);
             LocalDate today = LocalDate.now();
             LocalDate from = today.withDayOfMonth(1);
-            return MonthToDateDto.builder()
-                    .totalSales(BigDecimal.ZERO)
-                    .invoiceCount(0L)
-                    .fromDate(from)
-                    .toDate(today)
-                    .build();
+//            return MonthToDateDto.builder()
+//                    .totalSales(BigDecimal.ZERO)
+//                    .invoiceCount(0L)
+//                    .fromDate(from)
+//                    .toDate(today)
+//                    .build();
         }
+    	return null;
     }
 
-//    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public ProfitDto getProfit(LocalDate fromDate, LocalDate toDate) {
         try {
             String fromStr = toDateStr(fromDate, "1900-01-01");
@@ -150,11 +152,12 @@ public class DashboardService {
                     .build();
         } catch (Exception e) {
             log.warn("Dashboard getProfit failed", e);
-            return ProfitDto.builder().revenue(BigDecimal.ZERO).cost(BigDecimal.ZERO).profit(BigDecimal.ZERO).marginPercent(BigDecimal.ZERO).build();
+//            return ProfitDto.builder().revenue(BigDecimal.ZERO).cost(BigDecimal.ZERO).profit(BigDecimal.ZERO).marginPercent(BigDecimal.ZERO).build();
         }
+    	return null;
     }
 
-//    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public List<BestSellingProductDto> getBestSellingProducts(LocalDate fromDate, LocalDate toDate, int limit) {
         try {
             String fromStr = toDateStr(fromDate, "1900-01-01");
@@ -169,11 +172,12 @@ public class DashboardService {
                 .build()).collect(Collectors.toList());
         } catch (Exception e) {
             log.warn("Dashboard getBestSellingProducts failed", e);
-            return Collections.emptyList();
+//            return Collections.emptyList();
         }
+    	return null;
     }
 
-//    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public List<TopCustomerDto> getTopCustomers(LocalDate fromDate, LocalDate toDate, int limit) {
         try {
             String fromStr = toDateStr(fromDate, "1900-01-01");
@@ -187,11 +191,12 @@ public class DashboardService {
                     .build()).collect(Collectors.toList());
         } catch (Exception e) {
             log.warn("Dashboard getTopCustomers failed", e);
-            return Collections.emptyList();
+//            return Collections.emptyList();
         }
+    	return null;
     }
 
-//    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public SalesTrendDto getSalesTrend(LocalDate fromDate, LocalDate toDate) {
         try {
             String fromStr = toDateStr(fromDate, "1900-01-01");
@@ -220,11 +225,12 @@ public class DashboardService {
 
         } catch (Exception e) {
             log.warn("Dashboard getSalesTrend failed", e);
-            return SalesTrendDto.builder().data(Collections.emptyList()).build();
+//            return SalesTrendDto.builder().data(Collections.emptyList()).build();
         }
+    	return null;
     }
 
-//    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public CashFlowDto getCashFlow(LocalDate fromDate, LocalDate toDate) {
         try {
             String fromStr = toDateStr(fromDate, "1900-01-01");
@@ -260,11 +266,12 @@ public class DashboardService {
                     .build();
         } catch (Exception e) {
             log.warn("Dashboard getCashFlow failed", e);
-            return CashFlowDto.builder().inflows(BigDecimal.ZERO).outflows(BigDecimal.ZERO).net(BigDecimal.ZERO).byAccount(new ArrayList<>()).build();
+//            return CashFlowDto.builder().inflows(BigDecimal.ZERO).outflows(BigDecimal.ZERO).net(BigDecimal.ZERO).byAccount(new ArrayList<>()).build();
         }
+    	return null;
     }
 
-//    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public List<StockAlertDto> getStockAlerts() {
         try {
             List<Object[]> rows = dashboardRepository.stockAlerts();
@@ -277,11 +284,12 @@ public class DashboardService {
                 .build()).collect(Collectors.toList());
         } catch (Exception e) {
             log.warn("Dashboard getStockAlerts failed", e);
-            return Collections.emptyList();
+//            return Collections.emptyList();
         }
+    	return null;
     }
 
-//    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public CashCreditRatioDto getCashCreditRatio(LocalDate fromDate, LocalDate toDate) {
         try {
             String fromStr = toDateStr(fromDate, "1900-01-01");
@@ -305,7 +313,8 @@ public class DashboardService {
                     .build();
         } catch (Exception e) {
             log.warn("Dashboard getCashCreditRatio failed", e);
-            return CashCreditRatioDto.builder().cashSalesTotal(BigDecimal.ZERO).creditSalesTotal(BigDecimal.ZERO).cashRatio(BigDecimal.ZERO).creditRatio(BigDecimal.ZERO).build();
+//            return CashCreditRatioDto.builder().cashSalesTotal(BigDecimal.ZERO).creditSalesTotal(BigDecimal.ZERO).cashRatio(BigDecimal.ZERO).creditRatio(BigDecimal.ZERO).build();
         }
+    	return null;
     }
 }
