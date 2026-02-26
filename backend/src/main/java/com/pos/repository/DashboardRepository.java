@@ -6,22 +6,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Native queries for dashboard aggregations. Uses indexed columns:
- * sales_invoices(invoice_date), sales_invoice_items(sales_invoice_id, product_id),
- * ledger_entries(account_id, transaction_date), products(product_id, current_stock, min_stock_level).
- * Date params are passed as YYYY-MM-DD strings and parsed with to_date() to avoid JDBC/Postgres binding issues.
+ * Dashboard aggregations: today/month-to-date use JPQL (reliable LocalDate binding);
+ * others use native SQL with string dates for complex aggregates.
  */
 @Repository
 public interface DashboardRepository extends JpaRepository<SalesInvoice, Integer> {
 
-    @Query(value = "SELECT COALESCE(SUM(net_total), 0), COUNT(*) FROM sales_invoices WHERE invoice_date >= to_date(:fromDateStr, 'YYYY-MM-DD') AND invoice_date <= to_date(:toDateStr, 'YYYY-MM-DD')", nativeQuery = true)
-    Object[] todaySales(@Param("fromDateStr") String fromDateStr, @Param("toDateStr") String toDateStr);
+    @Query("SELECT COALESCE(SUM(s.netTotal), 0), COUNT(s) FROM SalesInvoice s WHERE s.invoiceDate >= :fromDate AND s.invoiceDate <= :toDate")
+    Object[] todaySales(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
 
-    @Query(value = "SELECT COALESCE(SUM(net_total), 0), COUNT(*) FROM sales_invoices WHERE invoice_date >= to_date(:fromDateStr, 'YYYY-MM-DD') AND invoice_date <= to_date(:toDateStr, 'YYYY-MM-DD')", nativeQuery = true)
-    Object[] monthToDateSales(@Param("fromDateStr") String fromDateStr, @Param("toDateStr") String toDateStr);
+    @Query("SELECT COALESCE(SUM(s.netTotal), 0), COUNT(s) FROM SalesInvoice s WHERE s.invoiceDate >= :fromDate AND s.invoiceDate <= :toDate")
+    Object[] monthToDateSales(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
 
     @Query(value = "SELECT " +
            "COALESCE((SELECT SUM(si2.net_total) FROM sales_invoices si2 WHERE si2.invoice_date >= to_date(:fromDateStr, 'YYYY-MM-DD') AND si2.invoice_date <= to_date(:toDateStr, 'YYYY-MM-DD')), 0) AS revenue, " +

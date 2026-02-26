@@ -36,9 +36,7 @@ public class DashboardService {
             LocalDate today = LocalDate.now();
             LocalDate from = (fromDate != null && toDate != null) ? fromDate : today;
             LocalDate to = (fromDate != null && toDate != null) ? toDate : today;
-            String fromStr = from.toString();
-            String toStr = to.toString();
-            Object[] row = dashboardRepository.todaySales(fromStr, toStr);
+            Object[] row = dashboardRepository.todaySales(from, to);
         if (row == null || row.length < 2) {
             return TodaySalesDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).build();
         }
@@ -60,9 +58,7 @@ public class DashboardService {
             LocalDate today = LocalDate.now();
             LocalDate from = (fromDate != null && toDate != null) ? fromDate : today.withDayOfMonth(1);
             LocalDate to = (fromDate != null && toDate != null) ? toDate : today;
-            String fromStr = from.toString();
-            String toStr = to.toString();
-            Object[] row = dashboardRepository.monthToDateSales(fromStr, toStr);
+            Object[] row = dashboardRepository.monthToDateSales(from, to);
             if (row == null || row.length < 2) {
                 return MonthToDateDto.builder().totalSales(BigDecimal.ZERO).invoiceCount(0L).fromDate(from).toDate(to).build();
             }
