@@ -17,10 +17,10 @@ import java.util.List;
 @Repository
 public interface DashboardRepository extends JpaRepository<SalesInvoice, Integer> {
 
-    @Query(value = "SELECT COALESCE(SUM(net_total), 0), COUNT(*) FROM sales_invoices WHERE invoice_date = :date", nativeQuery = true)
+    @Query(value = "SELECT COALESCE(SUM(net_total), 0), COUNT(*) FROM sales_invoices WHERE invoice_date = CAST(:date AS date)", nativeQuery = true)
     Object[] todaySales(@Param("date") LocalDate date);
 
-    @Query(value = "SELECT COALESCE(SUM(net_total), 0), COUNT(*) FROM sales_invoices WHERE invoice_date >= :fromDate AND invoice_date <= :toDate", nativeQuery = true)
+    @Query(value = "SELECT COALESCE(SUM(net_total), 0), COUNT(*) FROM sales_invoices WHERE invoice_date >= CAST(:fromDate AS date) AND invoice_date <= CAST(:toDate AS date)", nativeQuery = true)
     Object[] monthToDateSales(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
 
     @Query(value = "SELECT " +
