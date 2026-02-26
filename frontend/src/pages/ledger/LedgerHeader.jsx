@@ -5,7 +5,7 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { formatMoney } from './ledgerUtils';
 
-export default function LedgerHeader({ account }) {
+export default function LedgerHeader({ account, report }) {
   if (!account) {
     return (
       <Card variant="outlined" sx={{ mb: 2 }}>
@@ -17,6 +17,10 @@ export default function LedgerHeader({ account }) {
   }
 
   const balanceStr = `${formatMoney(account.currentBalance)} ${account.balanceType || 'Dr'}`;
+  const hasReport = report && (report.fromDate != null || report.toDate != null);
+  const closingStr = hasReport && report.closingBalance != null
+    ? `${formatMoney(report.closingBalance)} ${report.closingBalanceType || 'Dr'}`
+    : null;
 
   return (
     <Card variant="outlined" sx={{ mb: 2, bgcolor: 'background.paper' }}>
@@ -30,9 +34,14 @@ export default function LedgerHeader({ account }) {
             <strong>Account Name:</strong> {account.accountName}
             {account.accountType ? ` : ${account.accountType}` : ''}
           </Typography>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
-            Current Balance: {balanceStr}
+          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+            Current balance (account): {balanceStr}
           </Typography>
+          {closingStr != null && (
+            <Typography variant="body1" sx={{ fontWeight: 600, color: 'primary.main' }}>
+              Closing balance (this period): {closingStr}
+            </Typography>
+          )}
         </Box>
       </CardContent>
     </Card>

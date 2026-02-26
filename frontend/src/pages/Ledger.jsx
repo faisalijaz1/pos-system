@@ -192,7 +192,7 @@ export default function Ledger() {
         <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setManualOpen(true)}>Manual Entry</Button>
       </Box>
 
-      <LedgerHeader account={report?.account || selectedAccount} />
+      <LedgerHeader account={report?.account || selectedAccount} report={report} />
 
       <LedgerFilter
         fromDate={fromDate}

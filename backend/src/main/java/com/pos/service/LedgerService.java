@@ -167,11 +167,14 @@ public class LedgerService {
         String openingType = opening.compareTo(BigDecimal.ZERO) >= 0 ? "Dr" : "Cr";
         if (opening.compareTo(BigDecimal.ZERO) < 0) opening = opening.negate();
 
-        Object[] totals = ledgerEntryRepository.periodTotals(accountId, fromDate, toDate);
-        BigDecimal totalDr = toBigDecimal(totals != null && totals.length > 0 ? totals[0] : null);
-        BigDecimal totalCr = toBigDecimal(totals != null && totals.length > 1 ? totals[1] : null);
-
         List<LedgerEntry> allEntries = ledgerEntryRepository.findAllByAccountAndDateRangeOrderByDate(accountId, fromDate, toDate);
+        BigDecimal totalDr = BigDecimal.ZERO;
+        BigDecimal totalCr = BigDecimal.ZERO;
+        for (LedgerEntry e : allEntries) {
+            totalDr = totalDr.add(e.getDebitAmount() != null ? e.getDebitAmount() : BigDecimal.ZERO);
+            totalCr = totalCr.add(e.getCreditAmount() != null ? e.getCreditAmount() : BigDecimal.ZERO);
+        }
+
         BigDecimal runBal = openingType.equals("Cr") ? opening.negate() : opening;
         List<LedgerEntryRowDto> rows = new ArrayList<>();
         for (LedgerEntry e : allEntries) {
