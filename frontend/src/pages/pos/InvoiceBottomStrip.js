@@ -26,7 +26,7 @@ export default function InvoiceBottomStrip({
       className="bottom-strip"
       sx={{
         display: 'flex',
-        flexWrap: 'wrap',
+        flexWrap: 'nowrap',
         justifyContent: 'space-between',
         alignItems: 'center',
         alignContent: 'center',
@@ -42,7 +42,7 @@ export default function InvoiceBottomStrip({
         marginBottom: 2,
       }}
     >
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, minWidth: 0, flex: '1 1 auto' }}>
         <Typography variant="body2" color="text.secondary">
           No. titles: <strong>{noOfTitles}</strong>
         </Typography>
@@ -77,7 +77,6 @@ export default function InvoiceBottomStrip({
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
-          marginRight: 1,
           marginLeft: 'auto',
           flexShrink: 0,
           paddingLeft: 2,
