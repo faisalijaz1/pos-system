@@ -729,16 +729,16 @@ export default function PosBillingPage() {
               onExpensesChange={setAdditionalExpenses}
             />
           </Box>
-          <Box sx={{ px: 1, pt: 0.5, pb: 0.5, mb: 1.75, flexShrink: 0 }}>
-            <SoldHistoryPanel
-              productId={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productId : null}
-              productCode={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productCode : null}
-              productName={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productName : null}
-              customerId={effectiveCustomerId}
-              productsApiGetLastSale={function (pid, cid) { return productsApi.getLastSale(pid, cid); }}
-            />
-          </Box>
         </Paper>
+        <Box sx={{ px: { xs: 1, md: 2 }, mt: 0.5, mb: 1.25, flexShrink: 0 }}>
+          <SoldHistoryPanel
+            productId={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productId : null}
+            productCode={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productCode : null}
+            productName={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productName : null}
+            customerId={effectiveCustomerId}
+            productsApiGetLastSale={function (pid, cid) { return productsApi.getLastSale(pid, cid); }}
+          />
+        </Box>
         <Box
           sx={{
             px: { xs: 1, md: 2 },

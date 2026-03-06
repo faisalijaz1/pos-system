@@ -4,7 +4,7 @@ import { useTheme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 
-const WIDE_VIEWPORT = '1040px';
+const WIDE_CONTAINER = '920px';
 
 /**
  * Bottom strip below table.
@@ -36,8 +36,8 @@ export default function InvoiceBottomStrip({
         borderTop: '1px solid',
         borderColor: 'divider',
         flexShrink: 0,
-        // Wide desktop view: keep on same visual row and remove separator line.
-        [`@media (min-width: ${WIDE_VIEWPORT})`]: {
+        // Wide main content (typically sidebar closed): keep on same row and remove separator line.
+        [`@container main (min-width: ${WIDE_CONTAINER})`]: {
           width: 'auto',
           paddingTop: 0,
           borderTop: 'none',
@@ -98,8 +98,8 @@ export default function InvoiceBottomStrip({
         borderRadius: 0,
         flexShrink: 0,
         marginBottom: 1,
-        // Wide desktop view: one-row emphasis.
-        [`@media (min-width: ${WIDE_VIEWPORT})`]: {
+        // Wide main content: one-row emphasis.
+        [`@container main (min-width: ${WIDE_CONTAINER})`]: {
           flexWrap: 'nowrap',
           rowGap: 0,
           columnGap: 2,
@@ -115,7 +115,7 @@ export default function InvoiceBottomStrip({
           gap: 1.5,
           minWidth: 0,
           flex: '1 1 560px',
-          [`@media (min-width: ${WIDE_VIEWPORT})`]: {
+          [`@container main (min-width: ${WIDE_CONTAINER})`]: {
             flexWrap: 'nowrap',
             gap: 1,
             flex: '1 1 auto',
