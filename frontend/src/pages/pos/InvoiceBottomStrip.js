@@ -4,7 +4,7 @@ import { useTheme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 
-const WIDE_CONTAINER = '920px';
+const NARROW_CONTAINER = '900px';
 
 /**
  * Bottom strip below table.
@@ -31,18 +31,19 @@ export default function InvoiceBottomStrip({
         justifyContent: 'flex-end',
         alignItems: 'center',
         gap: 1.25,
-        width: '100%',
-        paddingTop: 0.75,
-        borderTop: '1px solid',
+        width: 'auto',
+        paddingTop: 0,
+        borderTop: 'none',
         borderColor: 'divider',
+        marginLeft: 'auto',
         flexShrink: 0,
-        // Wide main content (typically sidebar closed): keep on same row and remove separator line.
-        [`@container main (min-width: ${WIDE_CONTAINER})`]: {
-          width: 'auto',
-          paddingTop: 0,
-          borderTop: 'none',
-          marginLeft: 'auto',
+        // Narrow main content: move NET Total to its own row for readability.
+        [`@container main (max-width: ${NARROW_CONTAINER})`]: {
+          width: '100%',
+          paddingTop: 0.75,
+          borderTop: '1px solid',
           marginTop: 0,
+          marginLeft: 0,
         },
       }}
     >
@@ -86,9 +87,9 @@ export default function InvoiceBottomStrip({
       className="bottom-strip"
       sx={{
         display: 'flex',
-        flexWrap: 'wrap',
+        flexWrap: 'nowrap',
         alignItems: 'center',
-        rowGap: 1,
+        rowGap: 0,
         columnGap: 1.5,
         padding: '12px 16px',
         background: stripBg,
@@ -98,11 +99,11 @@ export default function InvoiceBottomStrip({
         borderRadius: 0,
         flexShrink: 0,
         marginBottom: 1,
-        // Wide main content: one-row emphasis.
-        [`@container main (min-width: ${WIDE_CONTAINER})`]: {
-          flexWrap: 'nowrap',
-          rowGap: 0,
-          columnGap: 2,
+        // Narrow main content: allow stacked rows.
+        [`@container main (max-width: ${NARROW_CONTAINER})`]: {
+          flexWrap: 'wrap',
+          rowGap: 1,
+          columnGap: 1.5,
         },
       }}
     >
@@ -110,14 +111,14 @@ export default function InvoiceBottomStrip({
       <Box
         sx={{
           display: 'flex',
-          flexWrap: 'wrap',
+          flexWrap: 'nowrap',
           alignItems: 'center',
           gap: 1.5,
           minWidth: 0,
-          flex: '1 1 560px',
-          [`@container main (min-width: ${WIDE_CONTAINER})`]: {
-            flexWrap: 'nowrap',
-            gap: 1,
+          flex: '1 1 auto',
+          [`@container main (max-width: ${NARROW_CONTAINER})`]: {
+            flexWrap: 'wrap',
+            gap: 1.5,
             flex: '1 1 auto',
           },
         }}
