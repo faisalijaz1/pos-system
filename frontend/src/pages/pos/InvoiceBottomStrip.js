@@ -6,7 +6,7 @@ import { formatMoney } from './posUtils';
 
 /**
  * Bottom strip below table: Row 1 = No. titles, Qty, Subtotal, Discount, Expenses.
- * Row 2 = NET Total (full width, right-aligned) so it never looks cramped.
+ * Row 2 = NET Total (full width, right-aligned). Uses column layout so both rows always visible.
  */
 export default function InvoiceBottomStrip({
   noOfTitles,
@@ -26,10 +26,8 @@ export default function InvoiceBottomStrip({
       className="bottom-strip"
       sx={{
         display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        alignContent: 'center',
-        gap: 2,
+        flexDirection: 'column',
+        gap: 1.5,
         padding: '16px 20px',
         background: stripBg,
         borderTop: '2px solid',
@@ -48,7 +46,6 @@ export default function InvoiceBottomStrip({
           alignItems: 'center',
           gap: 2.5,
           minWidth: 0,
-          flex: '1 1 auto',
         }}
       >
         <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
@@ -80,19 +77,17 @@ export default function InvoiceBottomStrip({
         />
       </Box>
 
-      {/* Row 2: NET Total on its own row — full width, right-aligned */}
+      {/* Row 2: NET Total — always visible, right-aligned */}
       <Box
         className="net-total-row"
         sx={{
-          flex: '1 1 100%',
           display: 'flex',
           justifyContent: 'flex-end',
           alignItems: 'center',
           gap: 1.5,
-          paddingTop: 0.5,
+          paddingTop: 1,
           borderTop: '1px solid',
           borderColor: 'divider',
-          marginTop: 0.5,
         }}
       >
         <Typography className="net-total-label" variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
