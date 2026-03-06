@@ -5,8 +5,8 @@ import { alpha } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 
 /**
- * Bottom strip directly below table: No. titles, Qty, Subtotal, Discount, Expenses, Net Total (right-aligned).
- * Matches table width; net total aligned with table's price/total column.
+ * Bottom strip below table: Row 1 = No. titles, Qty, Subtotal, Discount, Expenses.
+ * Row 2 = NET Total (full width, right-aligned) so it never looks cramped.
  */
 export default function InvoiceBottomStrip({
   noOfTitles,
@@ -26,32 +26,29 @@ export default function InvoiceBottomStrip({
       className="bottom-strip"
       sx={{
         display: 'flex',
-        flexWrap: 'nowrap',
+        flexWrap: 'wrap',
         alignItems: 'center',
+        alignContent: 'center',
         gap: 2,
-        padding: '14px 16px 14px 16px',
+        padding: '16px 20px',
         background: stripBg,
         borderTop: '2px solid',
         borderBottom: '1px solid',
         borderColor: 'divider',
         borderRadius: 0,
-        minHeight: 56,
-        maxHeight: 56,
         flexShrink: 0,
         marginBottom: 2,
-        overflowX: 'auto',
-        overflowY: 'hidden',
-        position: 'relative',
       }}
     >
+      {/* Row 1: Summary + Discount + Expenses */}
       <Box
         sx={{
           display: 'flex',
-          flexWrap: 'nowrap',
+          flexWrap: 'wrap',
           alignItems: 'center',
-          gap: 2,
-          flexShrink: 0,
+          gap: 2.5,
           minWidth: 0,
+          flex: '1 1 auto',
         }}
       >
         <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
@@ -82,19 +79,20 @@ export default function InvoiceBottomStrip({
           sx={{ width: 100, flexShrink: 0 }}
         />
       </Box>
+
+      {/* Row 2: NET Total on its own row — full width, right-aligned */}
       <Box
-        className="net-total-container"
+        className="net-total-row"
         sx={{
+          flex: '1 1 100%',
           display: 'flex',
+          justifyContent: 'flex-end',
           alignItems: 'center',
           gap: 1.5,
-          marginLeft: 'auto',
-          flexShrink: 0,
-          paddingLeft: 2,
-          position: 'sticky',
-          right: 0,
-          background: stripBg,
-          zIndex: 1,
+          paddingTop: 0.5,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          marginTop: 0.5,
         }}
       >
         <Typography className="net-total-label" variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
@@ -106,11 +104,11 @@ export default function InvoiceBottomStrip({
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            minWidth: 120,
-            px: 2,
-            py: 1.25,
+            minWidth: 140,
+            px: 2.5,
+            py: 1.5,
             borderRadius: 2,
-            bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.2) : alpha(theme.palette.primary.main, 0.08),
+            bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.25) : alpha(theme.palette.primary.main, 0.12),
             border: '2px solid',
             borderColor: 'primary.main',
             boxShadow: theme.palette.mode === 'dark' ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)',
@@ -119,7 +117,7 @@ export default function InvoiceBottomStrip({
           <Typography
             component="span"
             sx={{
-              fontSize: 24,
+              fontSize: '1.5rem',
               fontWeight: 800,
               color: 'primary.main',
               fontVariantNumeric: 'tabular-nums',
