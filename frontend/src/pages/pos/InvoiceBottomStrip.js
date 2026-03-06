@@ -4,9 +4,12 @@ import { useTheme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 
+const CONTAINER_WIDE = '800px'; // main content above this = one row (sidebar closed); below = two rows (sidebar open)
+
 /**
- * Bottom strip below table: Row 1 = No. titles, Qty, Subtotal, Discount, Expenses.
- * Row 2 = NET Total (full width, right-aligned). Uses column layout so both rows always visible.
+ * Bottom strip below table.
+ * - When main content is WIDE (sidebar closed): single row — summary + Discount + Expenses left, NET Total right (original look).
+ * - When main content is NARROW (sidebar open): two rows — Row 1 = summary + inputs, Row 2 = NET Total (full visibility).
  */
 export default function InvoiceBottomStrip({
   noOfTitles,
@@ -20,6 +23,62 @@ export default function InvoiceBottomStrip({
 }) {
   const theme = useTheme();
   const stripBg = theme.palette.mode === 'dark' ? theme.palette.action.hover : '#f8f9fa';
+
+  const netTotalBlock = (
+    <Box
+      className="net-total-row"
+      sx={{
+        display: 'flex',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        gap: 1.5,
+        paddingTop: 1,
+        borderTop: '1px solid',
+        borderColor: 'divider',
+        marginLeft: 'auto',
+        flexShrink: 0,
+        // Wide container: same row, no top border
+        [`@container main (min-width: ${CONTAINER_WIDE})`]: {
+          paddingTop: 0,
+          borderTop: 'none',
+          marginTop: 0,
+        },
+      }}
+    >
+      <Typography className="net-total-label" variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+        NET Total
+      </Typography>
+      <Box
+        className="net-total-value"
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          minWidth: 140,
+          px: 2.5,
+          py: 1.5,
+          borderRadius: 2,
+          bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.25) : alpha(theme.palette.primary.main, 0.12),
+          border: '2px solid',
+          borderColor: 'primary.main',
+          boxShadow: theme.palette.mode === 'dark' ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)',
+        }}
+      >
+        <Typography
+          component="span"
+          sx={{
+            fontSize: '1.5rem',
+            fontWeight: 800,
+            color: 'primary.main',
+            fontVariantNumeric: 'tabular-nums',
+            letterSpacing: '0.02em',
+          }}
+        >
+          {formatMoney(netTotal)}
+        </Typography>
+      </Box>
+    </Box>
+  );
 
   return (
     <Box
@@ -36,9 +95,15 @@ export default function InvoiceBottomStrip({
         borderRadius: 0,
         flexShrink: 0,
         marginBottom: 2,
+        // Wide container: single row, same as original
+        [`@container main (min-width: ${CONTAINER_WIDE})`]: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 2,
+        },
       }}
     >
-      {/* Row 1: Summary + Discount + Expenses */}
+      {/* Row 1 (or left part when wide): Summary + Discount + Expenses */}
       <Box
         sx={{
           display: 'flex',
@@ -46,6 +111,7 @@ export default function InvoiceBottomStrip({
           alignItems: 'center',
           gap: 2.5,
           minWidth: 0,
+          flex: '1 1 auto',
         }}
       >
         <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
@@ -77,52 +143,7 @@ export default function InvoiceBottomStrip({
         />
       </Box>
 
-      {/* Row 2: NET Total — always visible, right-aligned */}
-      <Box
-        className="net-total-row"
-        sx={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          gap: 1.5,
-          paddingTop: 1,
-          borderTop: '1px solid',
-          borderColor: 'divider',
-        }}
-      >
-        <Typography className="net-total-label" variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-          NET Total
-        </Typography>
-        <Box
-          className="net-total-value"
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            minWidth: 140,
-            px: 2.5,
-            py: 1.5,
-            borderRadius: 2,
-            bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.25) : alpha(theme.palette.primary.main, 0.12),
-            border: '2px solid',
-            borderColor: 'primary.main',
-            boxShadow: theme.palette.mode === 'dark' ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)',
-          }}
-        >
-          <Typography
-            component="span"
-            sx={{
-              fontSize: '1.5rem',
-              fontWeight: 800,
-              color: 'primary.main',
-              fontVariantNumeric: 'tabular-nums',
-              letterSpacing: '0.02em',
-            }}
-          >
-            {formatMoney(netTotal)}
-          </Typography>
-        </Box>
-      </Box>
+      {netTotalBlock}
     </Box>
   );
 }

@@ -180,7 +180,7 @@ export default function MainLayout({ themeMode, onThemeToggle }) {
         </Drawer>
       </Box>
 
-      {/* Main content */}
+      {/* Main content — container for POS strip layout (narrow = two rows, wide = one row) */}
       <Box
         component="main"
         sx={{
@@ -190,6 +190,8 @@ export default function MainLayout({ themeMode, onThemeToggle }) {
           mt: 8,
           minHeight: '100vh',
           transition: theme.transitions.create(['margin', 'width'], { duration: TRANSITION_MS }),
+          containerType: 'inline-size',
+          containerName: 'main',
         }}
       >
         <Outlet />
