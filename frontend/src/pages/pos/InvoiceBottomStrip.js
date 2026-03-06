@@ -4,7 +4,7 @@ import { useTheme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 
-const NARROW_CONTAINER = '900px';
+const NARROW_CONTAINER = '760px';
 
 /**
  * Bottom strip below table.
@@ -40,8 +40,8 @@ export default function InvoiceBottomStrip({
         // Narrow main content: move NET Total to its own row for readability.
         [`@container main (max-width: ${NARROW_CONTAINER})`]: {
           width: '100%',
-          paddingTop: 0.75,
-          borderTop: '1px solid',
+          paddingTop: 0.5,
+          borderTop: 'none',
           marginTop: 0,
           marginLeft: 0,
         },
@@ -90,7 +90,7 @@ export default function InvoiceBottomStrip({
         flexWrap: 'nowrap',
         alignItems: 'center',
         rowGap: 0,
-        columnGap: 1.5,
+        columnGap: 1.25,
         padding: '12px 16px',
         background: stripBg,
         borderTop: '2px solid',
@@ -103,7 +103,7 @@ export default function InvoiceBottomStrip({
         [`@container main (max-width: ${NARROW_CONTAINER})`]: {
           flexWrap: 'wrap',
           rowGap: 1,
-          columnGap: 1.5,
+          columnGap: 1.25,
         },
       }}
     >
@@ -113,12 +113,12 @@ export default function InvoiceBottomStrip({
           display: 'flex',
           flexWrap: 'nowrap',
           alignItems: 'center',
-          gap: 1.5,
+          gap: 1.25,
           minWidth: 0,
           flex: '1 1 auto',
           [`@container main (max-width: ${NARROW_CONTAINER})`]: {
             flexWrap: 'wrap',
-            gap: 1.5,
+            gap: 1.25,
             flex: '1 1 auto',
           },
         }}
@@ -139,7 +139,7 @@ export default function InvoiceBottomStrip({
           value={additionalDiscount}
           onChange={(e) => onDiscountChange(Number(e.target.value) || 0)}
           inputProps={{ min: 0, 'aria-label': 'Discount' }}
-          sx={{ width: 96, flexShrink: 0, '& .MuiInputBase-input': { fontSize: '0.875rem' }, '& .MuiInputLabel-root': { fontSize: '0.78rem' } }}
+          sx={{ width: 88, flexShrink: 0, '& .MuiInputBase-input': { fontSize: '0.875rem' }, '& .MuiInputLabel-root': { fontSize: '0.78rem' } }}
         />
         <TextField
           size="small"
@@ -148,7 +148,7 @@ export default function InvoiceBottomStrip({
           value={additionalExpenses}
           onChange={(e) => onExpensesChange(Number(e.target.value) || 0)}
           inputProps={{ min: 0, 'aria-label': 'Expenses' }}
-          sx={{ width: 96, flexShrink: 0, '& .MuiInputBase-input': { fontSize: '0.875rem' }, '& .MuiInputLabel-root': { fontSize: '0.78rem' } }}
+          sx={{ width: 88, flexShrink: 0, '& .MuiInputBase-input': { fontSize: '0.875rem' }, '& .MuiInputLabel-root': { fontSize: '0.78rem' } }}
         />
       </Box>
 
