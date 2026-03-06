@@ -187,9 +187,10 @@ export default function MainLayout({ themeMode, onThemeToggle }) {
           flexGrow: 1,
           p: 3,
           width: { md: `calc(100% - ${mainMargin}px)` },
-          mt: 8,
+          mt: { xs: 8, md: expanded ? 6 : 8 },
+          pt: { xs: 3, md: expanded ? 2 : 3 },
           minHeight: '100vh',
-          transition: theme.transitions.create(['margin', 'width'], { duration: TRANSITION_MS }),
+          transition: theme.transitions.create(['margin', 'width', 'margin-top', 'padding-top'], { duration: TRANSITION_MS }),
           containerType: 'inline-size',
           containerName: 'main',
         }}
