@@ -4,7 +4,7 @@ import { useTheme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 
-const WIDE_VIEWPORT = '1200px';
+const WIDE_VIEWPORT = '1040px';
 
 /**
  * Bottom strip below table.

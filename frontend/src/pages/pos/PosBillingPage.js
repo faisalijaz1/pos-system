@@ -729,7 +729,7 @@ export default function PosBillingPage() {
               onExpensesChange={setAdditionalExpenses}
             />
           </Box>
-          <Box sx={{ px: 1, pb: 1.5, mb: 1.25, flexShrink: 0 }}>
+          <Box sx={{ px: 1, pt: 0.5, pb: 0.5, mb: 1.75, flexShrink: 0 }}>
             <SoldHistoryPanel
               productId={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productId : null}
               productCode={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productCode : null}
@@ -743,13 +743,8 @@ export default function PosBillingPage() {
           sx={{
             px: { xs: 1, md: 2 },
             pb: 2,
-            pt: '12px',
-            mt: 0.5,
-            // Keep a small but clear visual gap so summary rows remain separated from Billing Details.
-            '@container main (max-width: 900px)': {
-              pt: '14px',
-              mt: 1,
-            },
+            pt: 0,
+            mt: 0,
           }}
         >
           <InvoiceBottomPanel

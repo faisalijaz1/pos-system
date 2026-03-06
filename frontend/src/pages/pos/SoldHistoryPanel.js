@@ -42,8 +42,8 @@ export default function SoldHistoryPanel({
 
   if (!productId) {
     return (
-      <Paper variant="outlined" sx={{ p: 1.5, bgcolor: (t) => alpha(t.palette.primary.main, 0.04) }}>
-        <Typography variant="caption" color="text.secondary">
+      <Paper variant="outlined" sx={{ p: 1.5, bgcolor: (t) => alpha(t.palette.primary.main, 0.04), borderRadius: 1.5 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.35 }}>
           Select a line to see sold history
         </Typography>
       </Paper>
