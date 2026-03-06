@@ -729,7 +729,7 @@ export default function PosBillingPage() {
               onExpensesChange={setAdditionalExpenses}
             />
           </Box>
-          <Box sx={{ px: 1, pb: 1, flexShrink: 0 }}>
+          <Box sx={{ px: 1, pb: 1.25, mb: 0.75, flexShrink: 0 }}>
             <SoldHistoryPanel
               productId={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productId : null}
               productCode={focusedRowIndex >= 0 && cart[focusedRowIndex] ? cart[focusedRowIndex].productCode : null}

@@ -4,7 +4,7 @@ import { useTheme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 
-const CONTAINER_WIDE = '900px';
+const CONTAINER_WIDE = '1020px';
 
 /**
  * Bottom strip below table.
@@ -100,6 +100,7 @@ export default function InvoiceBottomStrip({
         marginBottom: 1,
         // Wide container: one-row emphasis.
         [`@container main (min-width: ${CONTAINER_WIDE})`]: {
+          flexWrap: 'nowrap',
           rowGap: 0,
           columnGap: 2,
         },
@@ -114,6 +115,11 @@ export default function InvoiceBottomStrip({
           gap: 1.5,
           minWidth: 0,
           flex: '1 1 560px',
+          [`@container main (min-width: ${CONTAINER_WIDE})`]: {
+            flexWrap: 'nowrap',
+            gap: 1.25,
+            flex: '1 1 auto',
+          },
         }}
       >
         <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
