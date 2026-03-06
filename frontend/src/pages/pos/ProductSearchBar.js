@@ -50,7 +50,7 @@ export default function ProductSearchBar(props) {
   );
 
   return (
-    <Box ref={containerRef} sx={{ p: 1, borderBottom: 1, borderColor: 'divider', position: 'relative' }}>
+    <Box ref={containerRef} sx={{ p: 0.75, borderBottom: 1, borderColor: 'divider', position: 'relative' }}>
       <TextField
         fullWidth
         size="small"
@@ -66,7 +66,7 @@ export default function ProductSearchBar(props) {
             </InputAdornment>
           ),
         }}
-        sx={{ minWidth: 200, '& .MuiInputBase-input': { py: 0.75 } }}
+        sx={{ minWidth: 200, '& .MuiInputBase-input': { py: 0.65, fontSize: '0.875rem' } }}
         aria-label="Product search"
         aria-haspopup="listbox"
         aria-expanded={showDropdown}
@@ -77,7 +77,7 @@ export default function ProductSearchBar(props) {
         variant="caption"
         color="text.secondary"
         component="span"
-        sx={{ display: 'block', mt: 0.5, lineHeight: 1.4 }}
+        sx={{ display: 'block', mt: 0.35, lineHeight: 1.3, fontSize: '0.78rem' }}
         aria-hidden
       >
         ↑↓ select · Enter add

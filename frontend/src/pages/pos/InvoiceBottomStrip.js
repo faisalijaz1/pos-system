@@ -55,9 +55,9 @@ export default function InvoiceBottomStrip({
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'flex-end',
-          minWidth: 128,
+          minWidth: 120,
           px: 2,
-          py: 1,
+          py: 0.8,
           borderRadius: 2,
           bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.25) : alpha(theme.palette.primary.main, 0.12),
           border: '2px solid',
@@ -68,7 +68,7 @@ export default function InvoiceBottomStrip({
         <Typography
           component="span"
           sx={{
-            fontSize: '1.35rem',
+            fontSize: '1.2rem',
             fontWeight: 800,
             color: 'primary.main',
             fontVariantNumeric: 'tabular-nums',
@@ -132,7 +132,7 @@ export default function InvoiceBottomStrip({
           value={additionalDiscount}
           onChange={(e) => onDiscountChange(Number(e.target.value) || 0)}
           inputProps={{ min: 0, 'aria-label': 'Discount' }}
-          sx={{ width: 96, flexShrink: 0 }}
+          sx={{ width: 96, flexShrink: 0, '& .MuiInputBase-input': { fontSize: '0.875rem' }, '& .MuiInputLabel-root': { fontSize: '0.78rem' } }}
         />
         <TextField
           size="small"
@@ -141,7 +141,7 @@ export default function InvoiceBottomStrip({
           value={additionalExpenses}
           onChange={(e) => onExpensesChange(Number(e.target.value) || 0)}
           inputProps={{ min: 0, 'aria-label': 'Expenses' }}
-          sx={{ width: 96, flexShrink: 0 }}
+          sx={{ width: 96, flexShrink: 0, '& .MuiInputBase-input': { fontSize: '0.875rem' }, '& .MuiInputLabel-root': { fontSize: '0.78rem' } }}
         />
       </Box>
 

@@ -616,7 +616,48 @@ export default function PosBillingPage() {
   });
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 88px)', minHeight: 480 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: 'calc(100vh - 88px)',
+        minHeight: 480,
+        // Compact POS density tuned for 100% zoom while preserving readability.
+        fontSize: '0.875rem',
+        '& .MuiTab-root': {
+          minHeight: 36,
+          py: 0.5,
+          fontSize: '0.875rem',
+          lineHeight: 1.2,
+        },
+        '& .MuiTypography-body1': {
+          fontSize: '0.875rem',
+          lineHeight: 1.3,
+        },
+        '& .MuiTypography-body2': {
+          fontSize: '0.875rem',
+          lineHeight: 1.3,
+        },
+        '& .MuiTypography-caption': {
+          fontSize: '0.78rem',
+          lineHeight: 1.25,
+        },
+        '& .MuiInputBase-input': {
+          fontSize: '0.875rem',
+          lineHeight: 1.25,
+        },
+        '& .MuiInputLabel-root': {
+          fontSize: '0.78rem',
+        },
+        '& .MuiFormHelperText-root': {
+          fontSize: '0.75rem',
+        },
+        '& .MuiButton-root': {
+          fontSize: '0.8125rem',
+          lineHeight: 1.2,
+        },
+      }}
+    >
       <Tabs value={tab} onChange={function (_, v) { setTab(v); }} sx={{ minHeight: 40, borderBottom: 1, borderColor: 'divider' }}>
         <Tab label="Billing" id="pos-tab-0" />
         <Tab label="Sales History" icon={<MuiIcons.History />} iconPosition="start" id="pos-tab-1" />

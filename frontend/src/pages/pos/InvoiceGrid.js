@@ -78,9 +78,10 @@ export default function InvoiceGrid({
               color: '#fff',
               fontWeight: 600,
               py: 0.5,
-              fontSize: '0.75rem',
+              fontSize: '0.8125rem',
               borderBottom: 'none',
               whiteSpace: 'nowrap',
+              lineHeight: 1.2,
               boxShadow: theme.palette.mode === 'dark' ? '0 1px 0 rgba(255,255,255,0.08)' : '0 1px 0 rgba(0,0,0,0.08)',
             },
             '& tbody': {
@@ -93,6 +94,8 @@ export default function InvoiceGrid({
               bgcolor: 'background.paper',
               paddingTop: 4,
               paddingBottom: 4,
+              fontSize: '0.8125rem',
+              lineHeight: 1.25,
             },
             '& tbody tr:hover td': {
               bgcolor: 'action.hover',
@@ -130,14 +133,14 @@ export default function InvoiceGrid({
                   selected={focusedRowIndex === idx}
                   onClick={() => onRowClick(idx)}
                   sx={{
-                    '& td': { py: 0.25, fontSize: '0.8rem' },
+                    '& td': { py: 0.25, fontSize: '0.8125rem', lineHeight: 1.25 },
                     bgcolor: focusedRowIndex === idx ? alpha(theme.palette.primary.main, 0.08) : undefined,
                   }}
                 >
                   <TableCell>{idx + 1}</TableCell>
                   <TableCell sx={{ fontFamily: 'monospace' }}>{r.productCode ?? r.code}</TableCell>
                   <TableCell>{r.productName ?? r.product_name ?? r.productCode ?? r.code}</TableCell>
-                  <TableCell align="right">
+                  <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums' }}>
                     <Typography
                       component="span"
                       variant="caption"
@@ -203,8 +206,8 @@ export default function InvoiceGrid({
                       <Typography variant="caption">{r.uomName ?? r.uom_name ?? '—'}</Typography>
                     )}
                   </TableCell>
-                  <TableCell align="right">{formatMoney(r.unitPrice ?? r.unit_price)}</TableCell>
-                  <TableCell align="right">{formatMoney(r.lineTotal ?? r.line_total ?? (Number(r.quantity) * Number(r.unitPrice ?? r.unit_price)))}</TableCell>
+                  <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums' }}>{formatMoney(r.unitPrice ?? r.unit_price)}</TableCell>
+                  <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums' }}>{formatMoney(r.lineTotal ?? r.line_total ?? (Number(r.quantity) * Number(r.unitPrice ?? r.unit_price)))}</TableCell>
                   <TableCell align="right">
                     <IconButton
                       size="small"
