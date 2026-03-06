@@ -14,12 +14,39 @@ import { formatMoney, formatLedgerDate } from './ledgerUtils';
 
 export default function LedgerTable({ entries, emptyMessage }) {
   const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const headerBg = isDark ? '#3b4b63' : '#4f6696';
+  const rowOddBg = isDark ? '#1e2a40' : '#ffffff';
+  const rowEvenBg = isDark ? '#223048' : '#f7faff';
+  const rowHoverBg = isDark ? '#2a3953' : '#edf3ff';
 
   if (!entries || entries.length === 0) {
     return (
       <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
         <TableContainer>
-          <Table size="small" stickyHeader>
+          <Table
+            size="small"
+            stickyHeader
+            sx={{
+              '& thead th': {
+                backgroundColor: headerBg,
+                color: '#fff',
+                fontWeight: 600,
+                borderBottom: '1px solid',
+                borderBottomColor: isDark ? alpha('#ffffff', 0.08) : alpha('#000000', 0.12),
+                whiteSpace: 'nowrap',
+              },
+              '& tbody td': {
+                borderColor: isDark ? alpha('#ffffff', 0.07) : alpha('#000000', 0.1),
+              },
+              '& tbody tr:nth-of-type(odd) td': {
+                bgcolor: rowOddBg,
+              },
+              '& tbody tr:nth-of-type(even) td': {
+                bgcolor: rowEvenBg,
+              },
+            }}
+          >
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: 600 }}>Vch #</TableCell>
@@ -48,18 +75,37 @@ export default function LedgerTable({ entries, emptyMessage }) {
   return (
     <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
       <TableContainer sx={{ maxHeight: 480, overflow: 'auto' }}>
-        <Table size="small" stickyHeader sx={{ minWidth: 640 }}>
+        <Table
+          size="small"
+          stickyHeader
+          sx={{
+            minWidth: 640,
+            '& thead th': {
+              backgroundColor: headerBg,
+              color: '#fff',
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+              borderBottom: '1px solid',
+              borderBottomColor: isDark ? alpha('#ffffff', 0.08) : alpha('#000000', 0.12),
+            },
+            '& tbody td': {
+              borderColor: isDark ? alpha('#ffffff', 0.07) : alpha('#000000', 0.1),
+              fontSize: '0.8125rem',
+              lineHeight: 1.25,
+            },
+            '& tbody tr:nth-of-type(odd) td': {
+              bgcolor: rowOddBg,
+            },
+            '& tbody tr:nth-of-type(even) td': {
+              bgcolor: rowEvenBg,
+            },
+            '& tbody tr:hover td': {
+              bgcolor: rowHoverBg,
+            },
+          }}
+        >
           <TableHead>
-            <TableRow
-              sx={{
-                '& th': {
-                  backgroundColor: theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main,
-                  color: '#fff',
-                  fontWeight: 600,
-                  whiteSpace: 'nowrap',
-                },
-              }}
-            >
+            <TableRow>
               <TableCell>Vch #</TableCell>
               <TableCell>Date</TableCell>
               <TableCell>Particulars</TableCell>
@@ -73,20 +119,18 @@ export default function LedgerTable({ entries, emptyMessage }) {
               <TableRow
                 key={row.ledgerEntryId}
                 hover
-                sx={{
-                  '&:nth-of-type(even)': { bgcolor: alpha(theme.palette.action.hover, 0.04) },
-                }}
+                sx={{}}
               >
                 <TableCell sx={{ fontFamily: 'monospace' }}>{row.voucherNo}</TableCell>
                 <TableCell>{formatLedgerDate(row.transactionDate)}</TableCell>
                 <TableCell>{row.description || '—'}</TableCell>
-                <TableCell align="right">
+                <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums' }}>
                   {Number(row.debitAmount) > 0 ? formatMoney(row.debitAmount) : '—'}
                 </TableCell>
-                <TableCell align="right">
+                <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums' }}>
                   {Number(row.creditAmount) > 0 ? formatMoney(row.creditAmount) : '—'}
                 </TableCell>
-                <TableCell align="right" sx={{ fontWeight: 500 }}>
+                <TableCell align="right" sx={{ fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>
                   {formatMoney(row.runningBalance)} {row.balanceType || 'Dr'}
                 </TableCell>
               </TableRow>

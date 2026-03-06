@@ -186,7 +186,38 @@ export default function Ledger() {
   const totalPages = report?.totalPages ?? 0;
 
   return (
-    <Box sx={{ p: 2, maxWidth: 1200, mx: 'auto' }}>
+    <Box
+      sx={{
+        p: 2,
+        maxWidth: 1200,
+        mx: 'auto',
+        // Match POS page density at 100% zoom.
+        fontSize: '0.875rem',
+        '& .MuiTypography-body1': {
+          fontSize: '0.875rem',
+          lineHeight: 1.3,
+        },
+        '& .MuiTypography-body2': {
+          fontSize: '0.875rem',
+          lineHeight: 1.3,
+        },
+        '& .MuiTypography-caption': {
+          fontSize: '0.78rem',
+          lineHeight: 1.25,
+        },
+        '& .MuiInputBase-input': {
+          fontSize: '0.875rem',
+          lineHeight: 1.25,
+        },
+        '& .MuiInputLabel-root': {
+          fontSize: '0.78rem',
+        },
+        '& .MuiButton-root': {
+          fontSize: '0.8125rem',
+          lineHeight: 1.2,
+        },
+      }}
+    >
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 2 }}>
         <Typography variant="h5" fontWeight={700}>Ledger Report</Typography>
         <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setManualOpen(true)}>Manual Entry</Button>
