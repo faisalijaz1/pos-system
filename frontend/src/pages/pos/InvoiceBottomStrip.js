@@ -27,29 +27,40 @@ export default function InvoiceBottomStrip({
       sx={{
         display: 'flex',
         flexWrap: 'nowrap',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        alignContent: 'center',
         gap: 2,
-        padding: '14px 24px 18px 16px',
+        padding: '14px 16px 14px 16px',
         background: stripBg,
         borderTop: '2px solid',
         borderBottom: '1px solid',
         borderColor: 'divider',
         borderRadius: 0,
-        minHeight: 64,
+        minHeight: 56,
+        maxHeight: 56,
         flexShrink: 0,
         marginBottom: 2,
+        overflowX: 'auto',
+        overflowY: 'hidden',
+        position: 'relative',
       }}
     >
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, minWidth: 0, flex: '1 1 auto' }}>
-        <Typography variant="body2" color="text.secondary">
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'nowrap',
+          alignItems: 'center',
+          gap: 2,
+          flexShrink: 0,
+          minWidth: 0,
+        }}
+      >
+        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
           No. titles: <strong>{noOfTitles}</strong>
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
           Qty: <strong>{totalQuantity}</strong>
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
           Subtotal: <strong>{formatMoney(grandTotal)}</strong>
         </Typography>
         <TextField
@@ -59,7 +70,7 @@ export default function InvoiceBottomStrip({
           value={additionalDiscount}
           onChange={(e) => onDiscountChange(Number(e.target.value) || 0)}
           inputProps={{ min: 0, 'aria-label': 'Discount' }}
-          sx={{ width: 100 }}
+          sx={{ width: 100, flexShrink: 0 }}
         />
         <TextField
           size="small"
@@ -68,7 +79,7 @@ export default function InvoiceBottomStrip({
           value={additionalExpenses}
           onChange={(e) => onExpensesChange(Number(e.target.value) || 0)}
           inputProps={{ min: 0, 'aria-label': 'Expenses' }}
-          sx={{ width: 100 }}
+          sx={{ width: 100, flexShrink: 0 }}
         />
       </Box>
       <Box
@@ -80,6 +91,10 @@ export default function InvoiceBottomStrip({
           marginLeft: 'auto',
           flexShrink: 0,
           paddingLeft: 2,
+          position: 'sticky',
+          right: 0,
+          background: stripBg,
+          zIndex: 1,
         }}
       >
         <Typography className="net-total-label" variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
