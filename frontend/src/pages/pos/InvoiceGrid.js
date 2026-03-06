@@ -43,6 +43,12 @@ export default function InvoiceGrid({
   emptyMessage = 'Scan barcode or type code/name — F2 Search, Enter to add',
 }) {
   const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const headerBg = isDark ? '#3b4b63' : '#4f6696';
+  const rowOddBg = isDark ? '#1e2a40' : '#ffffff';
+  const rowEvenBg = isDark ? '#223048' : '#f7faff';
+  const rowHoverBg = isDark ? '#2a3953' : '#edf3ff';
+  const rowSelectedBg = isDark ? alpha(theme.palette.primary.main, 0.2) : alpha(theme.palette.primary.main, 0.12);
   const cartItems = cartItemsProp ?? cartProp ?? [];
   const items = Array.isArray(cartItems) ? cartItems : [];
 
@@ -74,31 +80,37 @@ export default function InvoiceGrid({
             '& thead th': {
               zIndex: 1,
               top: 0,
-              backgroundColor: theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main,
+              backgroundColor: headerBg,
               color: '#fff',
               fontWeight: 600,
               py: 0.5,
               fontSize: '0.8125rem',
-              borderBottom: 'none',
+              borderBottom: '1px solid',
+              borderBottomColor: isDark ? alpha('#ffffff', 0.08) : alpha('#000000', 0.12),
               whiteSpace: 'nowrap',
               lineHeight: 1.2,
-              boxShadow: theme.palette.mode === 'dark' ? '0 1px 0 rgba(255,255,255,0.08)' : '0 1px 0 rgba(0,0,0,0.08)',
+              boxShadow: 'none',
             },
             '& tbody': {
               minHeight: 80,
             },
             '& tbody td': {
-              borderColor: 'divider',
+              borderColor: isDark ? alpha('#ffffff', 0.07) : alpha('#000000', 0.1),
               borderBottomWidth: 1,
               color: 'text.primary',
-              bgcolor: 'background.paper',
               paddingTop: 4,
               paddingBottom: 4,
               fontSize: '0.8125rem',
               lineHeight: 1.25,
             },
+            '& tbody tr:nth-of-type(odd) td': {
+              bgcolor: rowOddBg,
+            },
+            '& tbody tr:nth-of-type(even) td': {
+              bgcolor: rowEvenBg,
+            },
             '& tbody tr:hover td': {
-              bgcolor: 'action.hover',
+              bgcolor: rowHoverBg,
             },
           }}
         >
@@ -134,7 +146,13 @@ export default function InvoiceGrid({
                   onClick={() => onRowClick(idx)}
                   sx={{
                     '& td': { py: 0.25, fontSize: '0.8125rem', lineHeight: 1.25 },
-                    bgcolor: focusedRowIndex === idx ? alpha(theme.palette.primary.main, 0.08) : undefined,
+                    ...(focusedRowIndex === idx
+                      ? {
+                          '& td': {
+                            bgcolor: rowSelectedBg,
+                          },
+                        }
+                      : {}),
                   }}
                 >
                   <TableCell>{idx + 1}</TableCell>

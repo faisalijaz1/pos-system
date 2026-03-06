@@ -66,7 +66,7 @@ export default function InvoiceBottomStrip({
           boxShadow: theme.palette.mode === 'dark' ? '0 2px 7px rgba(0,0,0,0.28)' : '0 1px 6px rgba(0,0,0,0.08)',
         }}
       >
-        <Typography
+        <Box
           component="span"
           sx={{
             fontSize: '1.38rem',
@@ -78,7 +78,7 @@ export default function InvoiceBottomStrip({
           }}
         >
           {formatMoney(netTotal)}
-        </Typography>
+        </Box>
       </Box>
     </Box>
   );

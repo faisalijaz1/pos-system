@@ -23,6 +23,8 @@ import InputLabel from '@mui/material/InputLabel';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Add';
+import { alpha } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 
 const TOUCH_TARGET = 44;
@@ -48,6 +50,12 @@ export default function NewOrderPanel({
   onHalfQty,
   onClearAll,
 }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const headerBg = isDark ? '#3b4b63' : '#4f6696';
+  const rowOddBg = isDark ? '#1e2a40' : '#ffffff';
+  const rowEvenBg = isDark ? '#223048' : '#f7faff';
+  const rowHoverBg = isDark ? '#2a3953' : '#edf3ff';
   const newTotal = items.reduce((sum, it) => sum + (Number(it.lineTotal) || 0), 0);
   const selectedCustomer = customersList.find((c) => c.customerId === selectedCustomerId);
 
@@ -114,9 +122,34 @@ export default function NewOrderPanel({
         </FormControl>
       </Box>
       <TableContainer sx={{ width: '100%', maxHeight: 320, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
-        <Table size="small" stickyHeader sx={{ minWidth: 560 }}>
+        <Table
+          size="small"
+          stickyHeader
+          sx={{
+            minWidth: 560,
+            '& thead th': {
+              backgroundColor: headerBg,
+              color: '#fff',
+              fontWeight: 600,
+              borderBottom: '1px solid',
+              borderBottomColor: isDark ? alpha('#ffffff', 0.08) : alpha('#000000', 0.12),
+            },
+            '& tbody td': {
+              borderColor: isDark ? alpha('#ffffff', 0.07) : alpha('#000000', 0.1),
+            },
+            '& tbody tr:nth-of-type(odd) td': {
+              bgcolor: rowOddBg,
+            },
+            '& tbody tr:nth-of-type(even) td': {
+              bgcolor: rowEvenBg,
+            },
+            '& tbody tr:hover td': {
+              bgcolor: rowHoverBg,
+            },
+          }}
+        >
           <TableHead>
-            <TableRow sx={{ bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.800' : '#f5f5f5') }}>
+            <TableRow>
               <TableCell sx={{ fontWeight: 600 }}>Code</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Product</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>Qty</TableCell>
@@ -131,7 +164,7 @@ export default function NewOrderPanel({
               const stock = it.currentStock != null ? Number(it.currentStock) : null;
               const overStock = stock != null && qty > stock;
               return (
-                <TableRow key={it.productId || idx} sx={{ '&:nth-of-type(even)': { bgcolor: 'action.hover' } }}>
+                <TableRow key={it.productId || idx}>
                   <TableCell sx={{ fontFamily: 'monospace' }}>{it.productCode}</TableCell>
                   <TableCell>
                     <Box>

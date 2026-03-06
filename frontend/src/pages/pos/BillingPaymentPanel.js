@@ -142,7 +142,7 @@ export default function BillingPaymentPanel({
               borderColor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.light, 0.8) : alpha(theme.palette.primary.main, 0.7),
             }}
           >
-            <Typography
+            <Box
               component="span"
               sx={{
                 fontSize: '1.35rem',
@@ -153,7 +153,7 @@ export default function BillingPaymentPanel({
               }}
             >
               {formatMoney(netTotal)}
-            </Typography>
+            </Box>
           </Box>
         </Box>
         <TextField

@@ -12,6 +12,8 @@ import TableRow from '@mui/material/TableRow';
 import TableHead from '@mui/material/TableHead';
 import TableContainer from '@mui/material/TableContainer';
 import LockIcon from '@mui/icons-material/Lock';
+import { alpha } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 import { DELIVERY_MODES, TRANSACTION_TYPES } from './posUtils';
 
@@ -24,6 +26,13 @@ export default function HistoricalOrderPanel({
   deliveryModeOptions = DELIVERY_MODES,
   transactionTypes = TRANSACTION_TYPES,
 }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const headerBg = isDark ? '#3b4b63' : '#4f6696';
+  const rowOddBg = isDark ? '#1e2a40' : '#ffffff';
+  const rowEvenBg = isDark ? '#223048' : '#f7faff';
+  const rowHoverBg = isDark ? '#2a3953' : '#edf3ff';
+
   const items = (displayItems != null && displayItems.length > 0)
     ? displayItems
     : (invoice?.items || []);
@@ -107,9 +116,34 @@ export default function HistoricalOrderPanel({
         Historical Items
       </Typography>
       <TableContainer sx={{ width: '100%', maxHeight: 320, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
-        <Table size="small" stickyHeader sx={{ minWidth: 720 }}>
+        <Table
+          size="small"
+          stickyHeader
+          sx={{
+            minWidth: 720,
+            '& thead th': {
+              backgroundColor: headerBg,
+              color: '#fff',
+              fontWeight: 600,
+              borderBottom: '1px solid',
+              borderBottomColor: isDark ? alpha('#ffffff', 0.08) : alpha('#000000', 0.12),
+            },
+            '& tbody td': {
+              borderColor: isDark ? alpha('#ffffff', 0.07) : alpha('#000000', 0.1),
+            },
+            '& tbody tr:nth-of-type(odd) td': {
+              bgcolor: rowOddBg,
+            },
+            '& tbody tr:nth-of-type(even) td': {
+              bgcolor: rowEvenBg,
+            },
+            '& tbody tr:hover td': {
+              bgcolor: rowHoverBg,
+            },
+          }}
+        >
           <TableHead>
-            <TableRow sx={{ bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'grey.800' : '#f5f5f5') }}>
+            <TableRow>
               <TableCell sx={{ fontWeight: 600 }}>Code</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Product</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Brand</TableCell>
@@ -122,7 +156,7 @@ export default function HistoricalOrderPanel({
           </TableHead>
           <TableBody>
             {items.map((it) => (
-              <TableRow key={it.salesInvoiceItemId || it.productId} sx={{ '&:nth-of-type(even)': { bgcolor: 'action.hover' } }}>
+              <TableRow key={it.salesInvoiceItemId || it.productId}>
                 <TableCell sx={{ fontFamily: 'monospace' }}>{it.productCode}</TableCell>
                 <TableCell>{it.productName}</TableCell>
                 <TableCell>{it.brandName ?? '—'}</TableCell>
