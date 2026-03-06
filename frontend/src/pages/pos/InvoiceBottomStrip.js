@@ -4,13 +4,11 @@ import { useTheme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 
-// Keep two-row layout at medium widths (common when sidebar is open) so NET total never gets clipped.
-const CONTAINER_WIDE = '980px';
+const CONTAINER_WIDE = '900px';
 
 /**
  * Bottom strip below table.
- * - When main content is WIDE (sidebar closed): single row — summary + Discount + Expenses left, NET Total right (original look).
- * - When main content is NARROW (sidebar open): two rows — Row 1 = summary + inputs, Row 2 = NET Total (full visibility).
+ * Uses fluid wrapping so NET Total stays visible at all container widths.
  */
 export default function InvoiceBottomStrip({
   noOfTitles,
@@ -32,16 +30,18 @@ export default function InvoiceBottomStrip({
         display: 'flex',
         justifyContent: 'flex-end',
         alignItems: 'center',
-        gap: 1.5,
-        paddingTop: 1,
+        gap: 1.25,
+        width: '100%',
+        paddingTop: 0.75,
         borderTop: '1px solid',
         borderColor: 'divider',
-        marginLeft: 'auto',
         flexShrink: 0,
-        // Wide container: same row, no top border
+        // Wide container: keep on same visual row and remove separator line.
         [`@container main (min-width: ${CONTAINER_WIDE})`]: {
+          width: 'auto',
           paddingTop: 0,
           borderTop: 'none',
+          marginLeft: 'auto',
           marginTop: 0,
         },
       }}
@@ -55,9 +55,9 @@ export default function InvoiceBottomStrip({
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'flex-end',
-          minWidth: 140,
-          px: 2.5,
-          py: 1.5,
+          minWidth: 128,
+          px: 2,
+          py: 1,
           borderRadius: 2,
           bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.25) : alpha(theme.palette.primary.main, 0.12),
           border: '2px solid',
@@ -68,7 +68,7 @@ export default function InvoiceBottomStrip({
         <Typography
           component="span"
           sx={{
-            fontSize: '1.5rem',
+            fontSize: '1.35rem',
             fontWeight: 800,
             color: 'primary.main',
             fontVariantNumeric: 'tabular-nums',
@@ -86,33 +86,34 @@ export default function InvoiceBottomStrip({
       className="bottom-strip"
       sx={{
         display: 'flex',
-        flexDirection: 'column',
-        gap: 1.5,
-        padding: '16px 20px',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        rowGap: 1,
+        columnGap: 1.5,
+        padding: '12px 16px',
         background: stripBg,
         borderTop: '2px solid',
         borderBottom: '1px solid',
         borderColor: 'divider',
         borderRadius: 0,
         flexShrink: 0,
-        marginBottom: 2,
-        // Wide container: single row, same as original
+        marginBottom: 1,
+        // Wide container: one-row emphasis.
         [`@container main (min-width: ${CONTAINER_WIDE})`]: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 2,
+          rowGap: 0,
+          columnGap: 2,
         },
       }}
     >
-      {/* Row 1 (or left part when wide): Summary + Discount + Expenses */}
+      {/* Summary + inputs naturally wrap before NET total when width is tight. */}
       <Box
         sx={{
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
-          gap: 2.5,
+          gap: 1.5,
           minWidth: 0,
-          flex: '1 1 auto',
+          flex: '1 1 560px',
         }}
       >
         <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
@@ -131,7 +132,7 @@ export default function InvoiceBottomStrip({
           value={additionalDiscount}
           onChange={(e) => onDiscountChange(Number(e.target.value) || 0)}
           inputProps={{ min: 0, 'aria-label': 'Discount' }}
-          sx={{ width: 100, flexShrink: 0 }}
+          sx={{ width: 96, flexShrink: 0 }}
         />
         <TextField
           size="small"
@@ -140,7 +141,7 @@ export default function InvoiceBottomStrip({
           value={additionalExpenses}
           onChange={(e) => onExpensesChange(Number(e.target.value) || 0)}
           inputProps={{ min: 0, 'aria-label': 'Expenses' }}
-          sx={{ width: 100, flexShrink: 0 }}
+          sx={{ width: 96, flexShrink: 0 }}
         />
       </Box>
 

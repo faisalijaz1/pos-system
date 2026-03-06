@@ -666,7 +666,15 @@ export default function PosBillingPage() {
             />
           </Box>
           <Box sx={{ flexShrink: 0, border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'visible', bgcolor: 'background.paper' }}>
-            <Box sx={{ height: 320, minHeight: 320, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <Box
+              sx={{
+                height: { xs: 210, sm: 230, md: 250, lg: 280 },
+                minHeight: { xs: 210, sm: 230, md: 250, lg: 280 },
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+              }}
+            >
               <InvoiceGrid cartItems={cart} cart={cart} focusedRowIndex={focusedRowIndex} onRowClick={setFocusedRowIndex} onQtyChange={updateQty} onQtyDirect={setQtyDirect} onRemove={removeFromCart} uomList={uomList} onUnitChange={setUnit} />
             </Box>
             <InvoiceBottomStrip
@@ -694,12 +702,12 @@ export default function PosBillingPage() {
           sx={{
             px: { xs: 1, md: 2 },
             pb: 2,
-            pt: '22px',
-            mt: 1,
-            // Add a little more breathing room above Billing Details when main area is narrower.
-            '@container main (max-width: 980px)': {
-              pt: '30px',
-              mt: 1.5,
+            pt: '12px',
+            mt: 0.5,
+            // Keep a small but clear visual gap so summary rows remain separated from Billing Details.
+            '@container main (max-width: 900px)': {
+              pt: '14px',
+              mt: 0.75,
             },
           }}
         >
