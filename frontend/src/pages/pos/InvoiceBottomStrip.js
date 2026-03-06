@@ -4,7 +4,8 @@ import { useTheme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 
-const CONTAINER_WIDE = '800px'; // main content above this = one row (sidebar closed); below = two rows (sidebar open)
+// Keep two-row layout at medium widths (common when sidebar is open) so NET total never gets clipped.
+const CONTAINER_WIDE = '980px';
 
 /**
  * Bottom strip below table.

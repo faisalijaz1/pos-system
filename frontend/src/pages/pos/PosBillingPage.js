@@ -690,7 +690,19 @@ export default function PosBillingPage() {
             />
           </Box>
         </Paper>
-        <Box sx={{ px: { xs: 1, md: 2 }, pb: 2, pt: '22px', mt: 1 }}>
+        <Box
+          sx={{
+            px: { xs: 1, md: 2 },
+            pb: 2,
+            pt: '22px',
+            mt: 1,
+            // Add a little more breathing room above Billing Details when main area is narrower.
+            '@container main (max-width: 980px)': {
+              pt: '30px',
+              mt: 1.5,
+            },
+          }}
+        >
           <InvoiceBottomPanel
             billingNo={billingNo}
             billingDate={billingDate}
