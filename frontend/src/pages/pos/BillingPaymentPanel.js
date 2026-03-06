@@ -9,6 +9,8 @@ import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
+import { alpha } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import { formatMoney } from './posUtils';
 import { DATE_INPUT_SX } from './posUtils';
 
@@ -36,6 +38,7 @@ export default function BillingPaymentPanel({
   onPrintWithoutHeaderChange,
   onRemarksChange,
 }) {
+  const theme = useTheme();
   const dateStr = billingDate && (typeof billingDate === 'string' ? billingDate : billingDate.toISOString?.().slice(0, 10));
 
   return (
@@ -112,9 +115,47 @@ export default function BillingPaymentPanel({
           inputProps={{ min: 0 }}
           sx={{ width: '100%' }}
         />
-        <Typography variant="body2" color="text.secondary">
-          Net Total: <strong>{formatMoney(netTotal)}</strong>
-        </Typography>
+        <Box
+          sx={{
+            mt: 0.5,
+            mb: 0.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 1,
+          }}
+        >
+          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
+            NET Total
+          </Typography>
+          <Box
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              minWidth: 130,
+              px: 2,
+              py: 0.8,
+              borderRadius: 2,
+              bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.28) : alpha(theme.palette.primary.main, 0.14),
+              border: '1.5px solid',
+              borderColor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.light, 0.8) : alpha(theme.palette.primary.main, 0.7),
+            }}
+          >
+            <Typography
+              component="span"
+              sx={{
+                fontSize: '1.35rem',
+                fontWeight: 800,
+                color: theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.dark,
+                fontVariantNumeric: 'tabular-nums',
+                lineHeight: 1,
+              }}
+            >
+              {formatMoney(netTotal)}
+            </Typography>
+          </Box>
+        </Box>
         <TextField
           size="small"
           type="number"

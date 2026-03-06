@@ -57,23 +57,24 @@ export default function InvoiceBottomStrip({
           alignItems: 'center',
           justifyContent: 'flex-end',
           minWidth: 120,
-          px: 2,
-          py: 0.8,
+          px: 2.25,
+          py: 0.9,
           borderRadius: 2,
-          bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.25) : alpha(theme.palette.primary.main, 0.12),
-          border: '2px solid',
-          borderColor: 'primary.main',
-          boxShadow: theme.palette.mode === 'dark' ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)',
+          bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.28) : alpha(theme.palette.primary.main, 0.14),
+          border: '1.5px solid',
+          borderColor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.light, 0.8) : alpha(theme.palette.primary.main, 0.7),
+          boxShadow: theme.palette.mode === 'dark' ? '0 2px 7px rgba(0,0,0,0.28)' : '0 1px 6px rgba(0,0,0,0.08)',
         }}
       >
         <Typography
           component="span"
           sx={{
-            fontSize: '1.2rem',
+            fontSize: '1.38rem',
             fontWeight: 800,
-            color: 'primary.main',
+            color: theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.dark,
             fontVariantNumeric: 'tabular-nums',
             letterSpacing: '0.02em',
+            lineHeight: 1,
           }}
         >
           {formatMoney(netTotal)}
